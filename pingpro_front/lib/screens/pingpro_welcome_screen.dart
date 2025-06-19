@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/screens/pingpro_splash_screen.dart';
 
 class PingproWelcomeScreen extends StatefulWidget {
   const PingproWelcomeScreen({super.key});
@@ -9,7 +11,7 @@ class PingproWelcomeScreen extends StatefulWidget {
 }
 
 class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
-  final PageController _imageController  = PageController();
+  final PageController _imageController = PageController();
   int _currentPage = 0;
 
   final List<_WelcomePageData> _pages = [
@@ -23,13 +25,15 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
     _WelcomePageData(
       image: 'assets/images/welcome_image_2.jpg',
       title: 'Visualiza en 3D',
-      description: 'Mira ejercicios y entrenamientos de una manera innovadora para el tenis de mesa',
+      description:
+          'Mira ejercicios y entrenamientos de una manera innovadora para el tenis de mesa',
       buttonText: 'Siguiente',
     ),
     _WelcomePageData(
       image: 'assets/images/welcome_image_3.jpg',
       title: 'Crea y registra',
-      description: 'Crea tus propios ejercicios y entrenamientos personalizados',
+      description:
+          'Crea tus propios ejercicios y entrenamientos personalizados',
       buttonText: 'Empecemos',
     ),
   ];
@@ -41,7 +45,10 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      Navigator.of(context).pushReplacementNamed('/home');
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PingproSplashScreen()),
+      );
     }
   }
 
@@ -77,23 +84,21 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
             // El texto y el botón cambian con animación fade
             Container(
               color: AppColors.background,
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 32.0,
+              ),
               child: AnimatedSwitcher(
                 duration: Duration(milliseconds: 400),
-                transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: child,
-                ),
+                transitionBuilder:
+                    (child, animation) =>
+                        FadeTransition(opacity: animation, child: child),
                 child: Column(
                   key: ValueKey(_currentPage),
                   children: [
                     Text(
                       page.title,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyles.title,
                       textAlign: TextAlign.center,
                     ),
                     if (page.description.isNotEmpty)
@@ -101,10 +106,7 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
                         padding: const EdgeInsets.only(top: 12.0),
                         child: Text(
                           page.description,
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 15,
-                          ),
+                          style: TextStyles.paragraph,
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -118,12 +120,18 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(32),
                         ),
-                        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 40,
+                          vertical: 12,
+                        ),
                       ),
                       onPressed: _onButtonPressed,
                       child: Text(
                         page.buttonText,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ],
@@ -146,7 +154,10 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
           width: 18,
           height: 4,
           decoration: BoxDecoration(
-            color: _currentPage == index ? AppColors.widgetBackgroundSelected : AppColors.widgetBackground,
+            color:
+                _currentPage == index
+                    ? AppColors.widgetBackgroundSelected
+                    : AppColors.widgetBackground,
             borderRadius: BorderRadius.circular(8),
           ),
         ),
