@@ -22,6 +22,8 @@ class TextStyles {
 
   static const paragraph = TextStyle(color: AppColors.textWhite, fontSize: 16);
 
+  static const aditional = TextStyle(color: AppColors.textBlack, fontSize: 14);
+
   static const loginRegister = TextStyle(
     color: AppColors.secundary,
     fontWeight: FontWeight.bold,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/screens/pingpro_home_screen.dart';
 import 'package:pingpro_front/widgets/custom_text_field.dart';
 
 class PingproLoginScreen extends StatelessWidget {
@@ -16,15 +17,9 @@ class PingproLoginScreen extends StatelessWidget {
           child: Column(
             children: [
               SizedBox(height: 60),
-              Image.asset(
-                'assets/images/LogoInv_PingPro.png',
-                height: 180,
-              ),
+              Image.asset('assets/images/LogoInv_PingPro.png', height: 180),
               SizedBox(height: 32),
-              Text(
-                'Iniciar sesión',
-                style: TextStyles.subTitle,
-              ),
+              Text('Iniciar sesión', style: TextStyles.subTitle),
               SizedBox(height: 32),
               CustomTextField(hint: 'Email'),
               SizedBox(height: 16),
@@ -41,11 +36,15 @@ class PingproLoginScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  onPressed: () {},
-                  child: Text(
-                    'Iniciar sesión',
-                    style: TextStyles.buttons,
-                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PingproHomeScreen(),
+                      ),
+                    );
+                  },
+                  child: Text('Iniciar sesión', style: TextStyles.buttons),
                 ),
               ),
               SizedBox(height: 90),
@@ -67,10 +66,7 @@ class PingproLoginScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.of(context).pushReplacementNamed('/register');
                     },
-                    child: Text(
-                      'Regístrate',
-                      style: TextStyles.loginRegister,
-                    ),
+                    child: Text('Regístrate', style: TextStyles.loginRegister),
                   ),
                 ],
               ),
