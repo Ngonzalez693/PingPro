@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/widgets/exercise_card.dart';
-import 'package:pingpro_front/widgets/custom_bottom_navigation.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/widgets/exercise_card.dart';
 
 class PingproExercisesScreen extends StatefulWidget {
   const PingproExercisesScreen({super.key});
@@ -14,41 +13,68 @@ class PingproExercisesScreen extends StatefulWidget {
 class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
   int selectedTab = 0; // 0: All, 1: Footwork, 2: Técnicos
   String searchQuery = '';
-  List<Exercise> allExercises = [
-    // Aquí irían tus ejercicios
+
+  // Mock data — reemplazar por datos reales
+  final List<Exercise> allExercises = [
+    Exercise(
+      id: '1',
+      name: 'Falkenberg',
+      category: 'Footwork',
+      imageUrl: 'assets/images/exercise_1.jpg',
+      isFavorite: false,
+    ),
+    Exercise(
+      id: '2',
+      name: 'Tres Puntos',
+      category: 'Footwork',
+      imageUrl: 'assets/images/exercise_1.jpg',
+      isFavorite: true,
+    ),
+    // Agregar más ejercicios aquí...
   ];
 
   @override
   Widget build(BuildContext context) {
-    // Filtrado por tab
-    List<Exercise> filtered = allExercises.where((ex) {
+    // Filtrado por pestaña y búsqueda
+    final filtered = allExercises.where((ex) {
       if (selectedTab == 1 && ex.category != 'Footwork') return false;
       if (selectedTab == 2 && ex.category != 'Técnicos') return false;
-      if (searchQuery.isNotEmpty && !ex.name.toLowerCase().contains(searchQuery.toLowerCase())) return false;
+      if (searchQuery.isNotEmpty &&
+          !ex.name.toLowerCase().contains(searchQuery.toLowerCase())) {
+        return false;
+      }
       return true;
     }).toList();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        title: Text('Ejercicios', style: TextStyles.title),
-        centerTitle: true,
-      ),
-      body: Column(
+    return SafeArea(
+      child: Column(
         children: [
-          // Barra de búsqueda
+          // AppBar manual
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Ejercicios',
+                    style: TextStyles.title,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Buscar
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
-              onChanged: (value) => setState(() => searchQuery = value),
+              onChanged: (v) => setState(() => searchQuery = v),
               decoration: InputDecoration(
                 hintText: 'Buscar',
                 prefixIcon: Icon(Icons.search, color: AppColors.secundary),
                 filled: true,
                 fillColor: AppColors.textGray,
-                contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -57,57 +83,53 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
               style: TextStyle(color: AppColors.secundary),
             ),
           ),
-          // Tabs personalizados
+
+          // Tabs
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
               children: [
-                _buildTabButton('All', 0),
-                SizedBox(width: 8),
-                _buildTabButton('Footwork', 1),
-                SizedBox(width: 8),
-                _buildTabButton('Técnicos', 2),
+                _buildTab('All', 0),
+                const SizedBox(width: 8),
+                _buildTab('Footwork', 1),
+                const SizedBox(width: 8),
+                _buildTab('Técnicos', 2),
               ],
             ),
           ),
+
           // Lista de ejercicios
           Expanded(
             child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: filtered.length,
-              itemBuilder: (context, index) {
+              itemBuilder: (context, i) {
+                final ex = filtered[i];
                 return ExerciseCard(
-                  exercise: filtered[index],
+                  exercise: ex,
+                  showTopDivider: i != 0,
                   onFavoritePressed: () {
-                    setState(() {
-                      filtered[index].isFavorite = !filtered[index].isFavorite;
-                    });
+                    setState(() => ex.isFavorite = !ex.isFavorite);
                   },
                   onViewPressed: () {
-                    // Acción al presionar "ver"
+                    // Navegar a detalle
                   },
-                  showTopDivider: index != 0,
                 );
               },
             ),
           ),
         ],
       ),
-      bottomNavigationBar: CustomBottomNavigation(
-        currentIndex: 1, 
-        onTap: (index) {
-          // Navegación entre tabs
-        },
-      ),
     );
   }
 
-  Widget _buildTabButton(String label, int tabIndex) {
-    final bool selected = selectedTab == tabIndex;
+  Widget _buildTab(String label, int index) {
+    final selected = selectedTab == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => selectedTab = tabIndex),
+        onTap: () => setState(() => selectedTab = index),
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: selected ? AppColors.primary : AppColors.secundary,
             borderRadius: BorderRadius.circular(20),
