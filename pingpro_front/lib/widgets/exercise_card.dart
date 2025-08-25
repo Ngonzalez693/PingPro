@@ -139,7 +139,7 @@ class Exercise {
   final String name;
   final String category;
   final String imageUrl;
-  final bool isFavorite;
+  bool isFavorite;
 
   Exercise({
     required this.id,

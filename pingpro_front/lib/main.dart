@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pingpro_front/screens/pingpro_exercises_screen.dart';
 import 'package:pingpro_front/screens/pingpro_home_screen.dart';
 import 'package:pingpro_front/screens/pingpro_login_screen.dart';
 import 'package:pingpro_front/screens/pingpro_register_screen.dart';
@@ -23,6 +24,7 @@ class MainApp extends StatelessWidget {
         '/register': (context) => const PingproRegisterScreen(),
         '/splash': (context) => const PingproSplashScreen(),
         '/home': (context) => const PingproHomeScreen(),
+        '/exercise': (context) => const PingproExercisesScreen(),
       },
     );
   }
