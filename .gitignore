@@ -3,7 +3,7 @@ node_modules/
 
 # Sensitive configuration files
 .env
-permisos-firebase.json
+permissions-firebase.json
 
 # Logs & cache
 npm-debug.log*
