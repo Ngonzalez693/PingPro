@@ -1,0 +1,53 @@
+# Node modules folder
+node_modules/
+
+# Sensitive configuration files
+.env
+.env.*
+!.env.example
+permissions-firebase.json
+
+# TypeScript build output
+dist/
+build/
+*.tsbuildinfo
+
+# TypeScript declaration files
+# Solo si los generas automáticamente, si los escribes manualmente no los ignores
+# *.d.ts
+
+# Logs & cache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# Testing & Coverage (NUEVO)
+coverage/
+.nyc_output/
+.coverage/
+
+# Editor & IDE files (NUEVO)
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Mac/OS & system
+.DS_Store
+Thumbs.db
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Tools outputs
+coverage/
+dist/
+build/
+
+# ESLint & Prettier cache (NUEVO)
+.eslintcache
