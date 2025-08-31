@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Schema } from 'joi';
 
+// Validate body for JSON
 export const validateBody = (schema: Schema) => (
   req: Request, res: Response, next: NextFunction
 ) => {

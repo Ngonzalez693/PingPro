@@ -1,10 +1,10 @@
-// src/middlewares/errorHandler.ts
 import { Request, Response, NextFunction } from 'express';
 
 interface HttpError extends Error {
   status?: number;
 }
 
+// Error handler helper
 export default function errorHandler(
   err: HttpError,
   req: Request,

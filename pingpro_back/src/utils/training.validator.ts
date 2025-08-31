@@ -1,5 +1,6 @@
 import Joi from 'joi';
 
+// Info to validate trainings
 export const trainingSchema = Joi.object({
   name: Joi.string().required(),
   description: Joi.string().allow('').optional(),

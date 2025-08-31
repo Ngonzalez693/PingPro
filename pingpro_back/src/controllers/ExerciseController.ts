@@ -3,9 +3,10 @@ import { ExerciseService } from '@services/ExerciseService';
 import { success, error } from '@utils/apiResponse';
 import { HTTP_STATUS } from '@utils/constants';
 
-const service = new ExerciseService();
+const service = new ExerciseService();    // Object type service
 
 export default class ExerciseController {
+  // Get all exercises from service
   static async getAll(req: Request, res: Response, next: NextFunction) {
     try {
       const exercises = await service.getAll();
@@ -15,6 +16,7 @@ export default class ExerciseController {
     }
   }
 
+  // Get exercises by id from service
   static async getById(req: Request, res: Response, next: NextFunction) {
     try {
       const exercise = await service.getById(req.params.id);
@@ -24,6 +26,7 @@ export default class ExerciseController {
     }
   }
 
+  // Create exercise from service
   static async create(req: Request, res: Response, next: NextFunction) {
     try {
       const id = await service.create(req.body);
@@ -33,6 +36,7 @@ export default class ExerciseController {
     }
   }
 
+  // Update exercise from service
   static async update(req: Request, res: Response, next: NextFunction) {
     try {
       await service.update(req.params.id, req.body);
@@ -42,6 +46,7 @@ export default class ExerciseController {
     }
   }
 
+  // Delete exercise from service
   static async delete(req: Request, res: Response, next: NextFunction) {
     try {
       await service.delete(req.params.id);

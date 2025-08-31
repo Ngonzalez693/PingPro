@@ -7,7 +7,7 @@ export class Exercise implements IExercise {
   image: string;
   isFavorite: boolean;
   description: string;
-  sequence: IExercise['sequence'];
+  sequence: IExercise['sequence'];    // Array, every hit of the exercise
 
   constructor(data: IExercise) {
     this.id = data.id;

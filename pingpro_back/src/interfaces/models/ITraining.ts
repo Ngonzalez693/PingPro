@@ -1,3 +1,4 @@
+// Interface for training model
 export interface ITraining {
   id?: string;
   name: string;

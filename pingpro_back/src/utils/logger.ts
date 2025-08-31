@@ -1,5 +1,6 @@
 import { createLogger, transports, format } from 'winston';
 
+// Info for logger
 const logger = createLogger({
   level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
   format: format.combine(

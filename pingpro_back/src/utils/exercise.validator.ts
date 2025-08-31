@@ -1,5 +1,6 @@
 import Joi from 'joi';
 
+// Info to validate exercises
 export const exerciseSchema = Joi.object({
   name: Joi.string().required(),
   category: Joi.string().required(),

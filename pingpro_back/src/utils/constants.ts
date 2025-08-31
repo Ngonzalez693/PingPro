@@ -1,3 +1,4 @@
+// HTTP status constants
 export const HTTP_STATUS = {
   OK: 200,
   CREATED: 201,
@@ -8,6 +9,7 @@ export const HTTP_STATUS = {
   INTERNAL_ERROR: 500,
 } as const;
 
+// User roles constats
 export const USER_ROLES = {
   ADMIN: 'admin',
   USER: 'user',

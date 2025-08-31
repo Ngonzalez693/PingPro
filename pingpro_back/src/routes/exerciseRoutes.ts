@@ -1,3 +1,4 @@
+// Exercise Routes
 import { Router } from 'express';
 import ExerciseController from '@controllers/ExerciseController';
 import { validateBody } from '@middlewares/validation';

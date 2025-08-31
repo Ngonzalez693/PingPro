@@ -1,5 +1,6 @@
 import { ITraining } from '../models/ITraining';
 
+// Interface for training repository
 export interface ITrainingRepository {
   getAll(): Promise<ITraining[]>;
   getById(id: string): Promise<ITraining | null>;

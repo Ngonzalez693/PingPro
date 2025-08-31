@@ -1,14 +1,6 @@
-import { HitCode, RotationCode, ZoneCode, DirectionCode, SideCode } from '@utils/enums';
+import { ISequenceStep } from "./ISequenceStep";
 
-
-export interface ISequenceStep {
-  hit: HitCode;
-  rotation: RotationCode;
-  zone: ZoneCode;
-  direction: DirectionCode;
-  side: SideCode;
-}
-
+// Interface for exercise model
 export interface IExercise {
   id?: string;
   name: string;

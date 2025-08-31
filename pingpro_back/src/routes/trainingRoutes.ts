@@ -1,3 +1,4 @@
+// Training Routes
 import { Router } from 'express';
 import TrainingController from '@controllers/TrainingController';
 import { validateBody } from '@middlewares/validation';

@@ -1,3 +1,4 @@
+// Routes Barrel
 import { Router } from 'express';
 import exerciseRoutes from './exerciseRoutes';
 import trainingRoutes from './trainingRoutes';

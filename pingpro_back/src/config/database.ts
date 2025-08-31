@@ -4,7 +4,7 @@ import { db as firestoreDb } from './firebase';
 export interface IDatabase {
   firestore: Firestore;
   
-  // más conexiones posibles:
+  // more posible connections
   
 }
 

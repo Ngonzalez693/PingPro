@@ -1,4 +1,4 @@
-// Valores para golpes
+// Values for hits
 export enum HitCode {
   FOREHAND           = 1,
   BACKHAND           = 2,
@@ -11,7 +11,7 @@ export enum HitCode {
   HASTA_QUE_SE_CAIGA = 9,
 }
 
-// Valores para rotaciones
+// Values for rotations
 export enum RotationCode {
   BACK_SPIN   = 1,
   TOPSPIN     = 2,
@@ -22,7 +22,7 @@ export enum RotationCode {
   LIBRE       = 7,
 }
 
-// Valores para zona de la mesa
+// Values for table zone
 export enum ZoneCode {
   CORTO      = 1,
   INTERMEDIO = 2,
@@ -30,7 +30,7 @@ export enum ZoneCode {
   LIBRE      = 4,
 }
 
-// Valores para dirección
+// Values for direction
 export enum DirectionCode {
   LATERAL_DERECHO   = 1,
   ESQUINA_DERECHA   = 2,
@@ -42,6 +42,7 @@ export enum DirectionCode {
   LIBRE             = 8,
 }
 
+// Values for table side
 export enum SideCode {
   ESQUINA_DERECHA   = 1,
   MEDIO_DERECHA     = 2,

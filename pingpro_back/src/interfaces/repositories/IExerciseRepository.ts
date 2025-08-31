@@ -1,5 +1,6 @@
 import { IExercise } from '../models/IExercise';
 
+// Interface for exercise repository
 export interface IExerciseRepository {
   getAll(): Promise<IExercise[]>;
   getById(id: string): Promise<IExercise | null>;

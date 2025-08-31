@@ -1,4 +1,3 @@
-// src/app.ts
 import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -7,20 +6,20 @@ import dotenv from 'dotenv';
 import routes from '@routes/index';
 import { errorHandler } from '@middlewares/index';
 
-dotenv.config();
+dotenv.config();           // Look for .env configuration
 
 const app: Application = express();
 
-// Seguridad y parsing
-app.use(helmet());         // Protege HTTP headers
-app.use(cors());           // Habilita CORS para todas las rutas
-app.use(express.json());   // Parseo automático de JSON
-app.use(morgan('dev'));    // Logging de peticiones
+// Security and parsing
+app.use(helmet());         // Protect HTTP headers
+app.use(cors());           // Enable CORS for all routes
+app.use(express.json());   // JSON automatic parsing
+app.use(morgan('dev'));    // Logging of petitions
 
-// Prefijo para todas las rutas de API
+// Prefix for all API routes
 app.use('/api', routes);
 
-// Manejo centralizado de errores
+// Error centralized control
 app.use(errorHandler);
 
 export default app;

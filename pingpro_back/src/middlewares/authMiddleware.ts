@@ -1,9 +1,9 @@
-// src/middlewares/authMiddleware.ts
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 interface JwtPayload { uid: string; }
 
+// Middleware for auth
 export default function authMiddleware(
   req: Request, res: Response, next: NextFunction
 ) {
