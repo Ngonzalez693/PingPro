@@ -1,0 +1,9 @@
+import { IExercise } from '../models/IExercise';
+
+export interface IExerciseRepository {
+  getAll(): Promise<IExercise[]>;
+  getById(id: string): Promise<IExercise | null>;
+  create(exercise: IExercise): Promise<string>;
+  update(id: string, exercise: Partial<IExercise>): Promise<void>;
+  delete(id: string): Promise<void>;
+}

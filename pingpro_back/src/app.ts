@@ -1,25 +1,26 @@
+// src/app.ts
 import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import routes from './routes';
-import errorHandler from './middlewares/errorHandler';
+import routes from '@routes/index';
+import { errorHandler } from '@middlewares/index';
 
 dotenv.config();
 
 const app: Application = express();
 
-// Middlewares globales
-app.use(helmet());                  // Seguridad HTTP headers
-app.use(cors());                    // CORS
-app.use(express.json());            // Parseo JSON
-app.use(morgan('dev'));             // Logging
+// Seguridad y parsing
+app.use(helmet());         // Protege HTTP headers
+app.use(cors());           // Habilita CORS para todas las rutas
+app.use(express.json());   // Parseo automático de JSON
+app.use(morgan('dev'));    // Logging de peticiones
 
-// Rutas principales
+// Prefijo para todas las rutas de API
 app.use('/api', routes);
 
-// Middleware de manejo de errores
+// Manejo centralizado de errores
 app.use(errorHandler);
 
 export default app;

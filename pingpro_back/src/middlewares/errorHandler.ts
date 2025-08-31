@@ -1,3 +1,4 @@
+// src/middlewares/errorHandler.ts
 import { Request, Response, NextFunction } from 'express';
 
 interface HttpError extends Error {
@@ -10,7 +11,7 @@ export default function errorHandler(
   res: Response,
   next: NextFunction
 ) {
+  console.error(err.stack);
   const status = err.status || 500;
-  const message = err.message || 'Internal Server Error';
-  res.status(status).json({ error: message });
+  res.status(status).json({ success: false, message: err.message });
 }
