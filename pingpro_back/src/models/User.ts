@@ -1,0 +1,23 @@
+import { IUser } from '@interfaces/models/IUser';
+
+export class User implements IUser {
+  id?: string;
+  email: string;
+  passwordHash: string;
+  displayName?: string;
+  photoURL?: string;
+  roles: string[];
+  createdAt: Date;
+  updatedAt: Date;
+
+  constructor(data: IUser) {
+    this.id = data.id;
+    this.email = data.email;
+    this.passwordHash = data.passwordHash;
+    this.displayName = data.displayName ?? '';
+    this.photoURL = data.photoURL ?? '';
+    this.roles = data.roles ?? ['user'];
+    this.createdAt = data.createdAt ?? new Date();
+    this.updatedAt = data.updatedAt ?? new Date();
+  }
+}

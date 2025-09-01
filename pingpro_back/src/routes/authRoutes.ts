@@ -1,7 +1,11 @@
-// src/routes/authRoutes.ts
 import { Router } from 'express';
-//import AuthController from '../controllers/AuthController';
+import AuthController from '@controllers/AuthController';
+import { validateBody } from '@middlewares/validation';
+import { signUpSchema } from '@utils/auth.validator';
 
 const router = Router();
-//router.get('/profile', AuthController.getProfile);
+
+router.post('/signup', validateBody(signUpSchema), AuthController.signUp);
+router.post('/verify', AuthController.verifyToken);
+
 export default router;
