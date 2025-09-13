@@ -1,15 +1,28 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '@services/AuthService';
+import { UserService } from '@services/UserService';
 import { success, error } from '@utils/apiResponse';
 import { HTTP_STATUS } from '@utils/constants';
 
 const authService = new AuthService();
+const userService = new UserService();
 
 export default class AuthController {
   static async signUp(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password, displayName } = req.body;
       const userRecord = await authService.signUp(email, password, displayName);
+
+      // Crear perfil usuario en Firestore con UID
+      await userService.create({
+        id: userRecord.uid,
+        email,
+        displayName: displayName ?? '',
+        roles: ['user'],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       return success(res, { uid: userRecord.uid, email: userRecord.email }, HTTP_STATUS.CREATED);
     } catch (err) {
       return error(res, (err as Error).message, HTTP_STATUS.BAD_REQUEST);

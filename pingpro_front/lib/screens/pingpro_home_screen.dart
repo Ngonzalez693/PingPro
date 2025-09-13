@@ -5,11 +5,15 @@ import 'package:pingpro_front/widgets/exercise_card.dart';
 import 'package:pingpro_front/widgets/image_banner_carousel.dart';
 import 'package:pingpro_front/widgets/statistics_chart.dart';
 import 'package:pingpro_front/widgets/training_card.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class PingproHomeScreen extends StatelessWidget {
   const PingproHomeScreen({super.key});
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final displayName = user?.displayName ?? 'Usuario';
+    
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -28,7 +32,7 @@ class PingproHomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Bienvenido, Juan',
+              'Bienvenido, $displayName',
               style: TextStyles.paragraph.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),

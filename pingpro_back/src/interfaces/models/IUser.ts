@@ -2,10 +2,9 @@
 export interface IUser {
   id?: string;
   email: string;
-  passwordHash: string;
   displayName?: string;
   photoURL?: string;
-  roles?: string[];        // ['user', 'admin']
+  roles?: string[];
   createdAt?: Date;
   updatedAt?: Date;
 }

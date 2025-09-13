@@ -1,4 +1,3 @@
-// src/services/AuthService.ts
 import { getAuth, UserRecord } from 'firebase-admin/auth';
 
 export class AuthService {

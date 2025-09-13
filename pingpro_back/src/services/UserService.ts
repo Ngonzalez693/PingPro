@@ -10,7 +10,7 @@ export class UserService {
 
   async getById(id: string): Promise<IUser> {
     const user = await this.repo.getById(id);
-    if (!user) throw Object.assign(new Error('User not found'), { status: 404 });
+    if (!user) throw Object.assign(new Error("User not found"), { status: 404 });
     return user;
   }
 
@@ -18,17 +18,18 @@ export class UserService {
     return this.repo.getByEmail(email);
   }
 
-  async create(data: IUser): Promise<string> {
-    return this.repo.create(data);
+  async create(data: IUser): Promise<void> {
+    if (!data.id) throw new Error("User id (UID) required for creation");
+    return this.repo.createWithUID(data.id, data);
   }
 
   async update(id: string, data: Partial<IUser>): Promise<void> {
-    await this.getById(id);
+    await this.getById(id); // validar existencia
     await this.repo.update(id, data);
   }
 
   async delete(id: string): Promise<void> {
-    await this.getById(id);
+    await this.getById(id); // validar existencia
     await this.repo.delete(id);
   }
 }
