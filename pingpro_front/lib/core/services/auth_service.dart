@@ -1,10 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class AuthService {
   final _firebaseAuth = FirebaseAuth.instance;
-  final _baseUrl = 'PUERTO_BACKEND';
+  final _baseUrl = dotenv.env['API_BASE_URL']!;
 
   Future<void> register({
     required String email,

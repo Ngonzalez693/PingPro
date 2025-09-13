@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/models/exercise_model.dart';
 
 class ExerciseCard extends StatelessWidget {
-  final Exercise exercise;
+  final ExerciseModel exercise;
   final VoidCallback onFavoritePressed;
   final VoidCallback onViewPressed;
   final bool showTopDivider;
@@ -29,8 +30,9 @@ class ExerciseCard extends StatelessWidget {
           ),
         Container(
           color: AppColors.background,
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Imagen a la izquierda
               Container(
@@ -40,7 +42,7 @@ class ExerciseCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   image: DecorationImage(
-                    image: AssetImage(exercise.imageUrl),
+                    image: AssetImage(exercise.image),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -54,8 +56,7 @@ class ExerciseCard extends StatelessWidget {
                       exercise.name,
                       style: TextStyles.subTitle,
                     ),
-                    SizedBox(height: 20),
-                    // Categoría
+                    const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -67,9 +68,7 @@ class ExerciseCard extends StatelessWidget {
                       ),
                       child: Text(
                         exercise.category,
-                        style: TextStyles.buttons.copyWith(
-                          fontSize: 14,
-                        ),
+                        style: TextStyles.buttons.copyWith(fontSize: 14),
                       ),
                     ),
                   ],
@@ -82,7 +81,7 @@ class ExerciseCard extends StatelessWidget {
                   // Botón favorito
                   Container(
                     width: 36,
-                    height: 44,
+                    height: 36,
                     decoration: BoxDecoration(
                       color: AppColors.widgetGrayBackground,
                       shape: BoxShape.circle,
@@ -90,30 +89,31 @@ class ExerciseCard extends StatelessWidget {
                     child: IconButton(
                       onPressed: onFavoritePressed,
                       icon: Icon(
-                        exercise.isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: exercise.isFavorite ? AppColors.primary : AppColors.primary,
-                        size: 22,
+                        exercise.isFavorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: AppColors.primary,
+                        size: 20,
                       ),
                       padding: EdgeInsets.zero,
-                      constraints: BoxConstraints(),
-                      splashRadius: 24, 
+                      constraints: const BoxConstraints(),
+                      splashRadius: 20,
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   // Botón ver
                   GestureDetector(
                     onTap: onViewPressed,
                     child: Container(
-                      margin: const EdgeInsets.only(top: 8),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
-                        vertical: 4,
+                        vertical: 6,
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.textGray,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text(
+                      child: const Text(
                         'Ver',
                         style: TextStyle(
                           color: AppColors.textWhite,
@@ -132,20 +132,4 @@ class ExerciseCard extends StatelessWidget {
       ],
     );
   }
-}
-
-class Exercise {
-  final String id;
-  final String name;
-  final String category;
-  final String imageUrl;
-  bool isFavorite;
-
-  Exercise({
-    required this.id,
-    required this.name,
-    required this.category,
-    required this.imageUrl,
-    required this.isFavorite,
-  });
 }
