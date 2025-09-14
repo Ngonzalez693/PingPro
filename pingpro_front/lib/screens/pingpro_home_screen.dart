@@ -1,9 +1,13 @@
+// lib/screens/pingpro_home_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/services/training_services.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/core/services/exercises_service.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
+import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
 import 'package:pingpro_front/widgets/image_banner_carousel.dart';
 import 'package:pingpro_front/widgets/statistics_chart.dart';
@@ -17,19 +21,23 @@ class PingproHomeScreen extends StatefulWidget {
 
 class _PingproHomeScreenState extends State<PingproHomeScreen> {
   final _exService = ExercisesService();
-  late List<ExerciseModel> _allExercises;
+  final _trService = TrainingsService();
+
+  late List<ExerciseModel> _allExercises = [];
+  late List<TrainingModel> _allTrainings = [];
   bool _loading = true;
   String _error = '';
 
   @override
   void initState() {
     super.initState();
-    _loadExercises();
+    _loadData();
   }
 
-  Future<void> _loadExercises() async {
+  Future<void> _loadData() async {
     try {
       _allExercises = await _exService.fetchAll();
+      _allTrainings = await _trService.fetchAll();
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -39,69 +47,97 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error.isNotEmpty) {
+      return Center(child: Text('Error: $_error'));
+    }
+
     final user = FirebaseAuth.instance.currentUser;
     final displayName = user?.displayName ?? 'Usuario';
 
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const SizedBox(height: 20),
-          Center(child: Text('PingPro', style: TextStyles.title.copyWith(fontSize: 28, color: AppColors.primary))),
-          const SizedBox(height: 16),
-          Text('Bienvenido, $displayName', style: TextStyles.paragraph.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
-          const ImageBannerCarousel(),
-          const SizedBox(height: 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Center(
+              child: Text(
+                'PingPro',
+                style: TextStyles.title.copyWith(
+                  fontSize: 28,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Bienvenido, $displayName',
+              style: TextStyles.paragraph.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            const ImageBannerCarousel(),
+            const SizedBox(height: 32),
 
-          Text('Recomendaciones', style: TextStyles.subTitle),
-          const SizedBox(height: 16),
+            // Recomendaciones
+            Text('Recomendaciones', style: TextStyles.title),
+            const SizedBox(height: 12),
 
-          if (_loading) 
-            const Center(child: CircularProgressIndicator())
-          else if (_error.isNotEmpty)
-            Center(child: Text('Error: $_error'))
-          else ...[
-            // Mostrar hasta 2 ejercicios en columna
+            // Entrenamientos
+            Text('Entrenamientos', style: TextStyles.paragraph),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 160,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _allTrainings.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemBuilder: (_, i) {
+                  final t = _allTrainings[i];
+                  return SizedBox(
+                    width: 120,
+                    child: TrainingCard(
+                      training: t,
+                      onTap: () {
+                        // navegar a detalle con t.id
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            //Ejercicios
+            Text('Ejercicios', style: TextStyles.paragraph),
+            const SizedBox(height: 16),
             for (var ex in _allExercises.take(2))
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: ExerciseCard(
                   exercise: ex,
-                  onFavoritePressed: () => setState(() => ex.isFavorite = !ex.isFavorite),
+                  onFavoritePressed:
+                      () => setState(() => ex.isFavorite = !ex.isFavorite),
                   onViewPressed: () {
                     // navegar a detalle con ex.id
                   },
                 ),
               ),
+
+            const SizedBox(height: 24),
+
+            // Estadísticas
+            Text('Estadísticas', style: TextStyles.subTitle),
+            const SizedBox(height: 16),
+            const StatisticsChart(),
+            const SizedBox(height: 24),
           ],
-
-          const SizedBox(height: 24),
-          Text('Entrenamientos', style: TextStyles.subTitle),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 160,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _mockTrainings.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (_, i) => TrainingCard(training: _mockTrainings[i], onTap: () {}),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-          Text('Estadísticas', style: TextStyles.subTitle),
-          const SizedBox(height: 16),
-          const StatisticsChart(),
-          const SizedBox(height: 24),
-        ]),
+        ),
       ),
     );
   }
-
-  static final _mockTrainings = [
-    Training(id: '1', type: 'Regular', imageUrl: 'assets/images/training_1.jpg'),
-    Training(id: '2', type: 'Irregular', imageUrl: 'assets/images/training_2.jpg'),
-    Training(id: '3', type: 'Técnico', imageUrl: 'assets/images/training_3.jpg'),
-  ];
 }

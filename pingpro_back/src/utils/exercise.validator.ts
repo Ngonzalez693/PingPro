@@ -4,7 +4,7 @@ import Joi from 'joi';
 export const exerciseSchema = Joi.object({
   name: Joi.string().required(),
   category: Joi.string().required(),
-  image: Joi.string().uri().required(),
+  image: Joi.string().required(),
   isFavorite: Joi.boolean().optional(),
   description: Joi.string().allow('').optional(),
   sequence: Joi.array()
