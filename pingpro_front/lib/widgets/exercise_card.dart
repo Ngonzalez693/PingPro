@@ -2,20 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
+import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
 
 class ExerciseCard extends StatelessWidget {
   final ExerciseModel exercise;
   final VoidCallback onFavoritePressed;
-  final VoidCallback onViewPressed;
+  final VoidCallback? onViewPressed;
   final bool showTopDivider;
 
   const ExerciseCard({
     super.key,
     required this.exercise,
     required this.onFavoritePressed,
-    required this.onViewPressed,
+    this.onViewPressed,
     this.showTopDivider = true,
   });
+
+  void _navigateToDetail(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PingproExerciseDetailScreen(
+          exercise: exercise,
+          returnRoute: '/exercises',
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +60,7 @@ class ExerciseCard extends StatelessWidget {
                   ),
                 ),
               ),
+              
               // Info central
               Expanded(
                 child: Column(
@@ -74,6 +88,7 @@ class ExerciseCard extends StatelessWidget {
                   ],
                 ),
               ),
+              
               // Botones a la derecha
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -101,9 +116,10 @@ class ExerciseCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  
                   // Botón ver
                   GestureDetector(
-                    onTap: onViewPressed,
+                    onTap: onViewPressed ?? () => _navigateToDetail(context),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,

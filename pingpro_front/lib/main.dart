@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
 import 'package:pingpro_front/screens/pingpro_login_screen.dart';
 import 'package:pingpro_front/screens/pingpro_register_screen.dart';
 import 'package:pingpro_front/screens/pingpro_splash_screen.dart';
@@ -34,15 +35,22 @@ class MainApp extends StatelessWidget {
       // Empieza en Welcome, y AuthWrapper decidirá siguiente pantalla
       initialRoute: '/welcome',
       routes: {
-        '/welcome':  (ctx) => const PingproWelcomeScreen(),
-        '/login':    (ctx) => const PingproLoginScreen(),
+        '/welcome': (ctx) => const PingproWelcomeScreen(),
+        '/login': (ctx) => const PingproLoginScreen(),
         '/register': (ctx) => const PingproRegisterScreen(),
-        '/splash':   (ctx) => const PingproSplashScreen(),
-        '/home':     (ctx) => const HomeNavigation(),
+        '/splash': (ctx) => const PingproSplashScreen(),
+        '/home': (ctx) => const HomeNavigation(),
         '/exercises': (ctx) => const PingproExercisesScreen(),
-        '/create':    (ctx) => const PingproCreateScreen(),
+        '/exerciseDetail': (ctx) {
+          final args = ModalRoute.of(ctx)!.settings.arguments as Map;
+          return PingproExerciseDetailScreen(
+            exercise: args['exercise'],
+            returnRoute: args['returnRoute'],
+          );
+        },
+        '/create': (ctx) => const PingproCreateScreen(),
         '/trainings': (ctx) => const PingproTrainingsScreen(),
-        '/profile':   (ctx) => const PingproProfileScreen(),
+        '/profile': (ctx) => const PingproProfileScreen(),
       },
       home: const AuthWrapper(),
     );
@@ -60,7 +68,9 @@ class AuthWrapper extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             backgroundColor: AppColors.background,
-            body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
           );
         }
         if (snapshot.hasData && snapshot.data != null) {

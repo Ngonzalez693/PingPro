@@ -8,6 +8,12 @@ class TextStyles {
     fontWeight: FontWeight.bold,
   );
 
+  static const titleBlack = TextStyle(
+    color: AppColors.textBlack,
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+  );
+
   static const subTitle = TextStyle(
     color: AppColors.textWhite,
     fontSize: 20,

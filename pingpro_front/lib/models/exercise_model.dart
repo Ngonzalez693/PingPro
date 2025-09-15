@@ -1,3 +1,5 @@
+import 'package:pingpro_front/models/sequence_step_model.dart';
+
 class ExerciseModel {
   final String id;
   final String name;
@@ -5,6 +7,7 @@ class ExerciseModel {
   final String image;
   bool isFavorite;
   final String description;
+  final List<SequenceStep> sequence;
 
   ExerciseModel({
     required this.id,
@@ -13,6 +16,7 @@ class ExerciseModel {
     required this.image,
     this.isFavorite = false,
     required this.description,
+    required this.sequence,
   });
 
   factory ExerciseModel.fromJson(Map<String, dynamic> json) {
@@ -23,15 +27,19 @@ class ExerciseModel {
       image: json['image'] as String,
       isFavorite: json['isFavorite'] as bool? ?? false,
       description: json['description'] as String? ?? '',
+      sequence: (json['sequence'] as List<dynamic>?)
+          ?.map((step) => SequenceStep.fromJson(step as Map<String, dynamic>))
+          .toList() ?? [],
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'category': category,
-        'image': image,
-        'isFavorite': isFavorite,
-        'description': description,
-      };
+    'id': id,
+    'name': name,
+    'category': category,
+    'image': image,
+    'isFavorite': isFavorite,
+    'description': description,
+    'sequence': sequence.map((step) => step.toJson()).toList(),
+  };
 }

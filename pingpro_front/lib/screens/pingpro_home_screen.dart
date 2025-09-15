@@ -8,6 +8,7 @@ import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/core/services/exercises_service.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
+import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
 import 'package:pingpro_front/widgets/image_banner_carousel.dart';
 import 'package:pingpro_front/widgets/statistics_chart.dart';
@@ -123,7 +124,16 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
                   onFavoritePressed:
                       () => setState(() => ex.isFavorite = !ex.isFavorite),
                   onViewPressed: () {
-                    // navegar a detalle con ex.id
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => PingproExerciseDetailScreen(
+                              exercise: ex,
+                              returnRoute: '/home',
+                            ),
+                      ),
+                    );
                   },
                 ),
               ),

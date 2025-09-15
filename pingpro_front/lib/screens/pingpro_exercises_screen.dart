@@ -145,7 +145,14 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
                     onFavoritePressed:
                         () => setState(() => ex.isFavorite = !ex.isFavorite),
                     onViewPressed: () {
-                      // navegar a detalle
+                      Navigator.pushNamed(
+                        context,
+                        '/exerciseDetail',
+                        arguments: {
+                          'exercise': ex,
+                          'returnRoute': '/exercises',
+                        },
+                      );
                     },
                   ),
                 );
