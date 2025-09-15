@@ -9,10 +9,7 @@ import 'package:pingpro_front/widgets/exercise_card.dart';
 class PingproTrainingDetailScreen extends StatefulWidget {
   final TrainingModel training;
 
-  const PingproTrainingDetailScreen({
-    super.key,
-    required this.training,
-  });
+  const PingproTrainingDetailScreen({super.key, required this.training});
 
   @override
   State<PingproTrainingDetailScreen> createState() =>
@@ -21,10 +18,17 @@ class PingproTrainingDetailScreen extends StatefulWidget {
 
 class _PingproTrainingDetailScreenState
     extends State<PingproTrainingDetailScreen> {
-  // Lista de ejercicios del entrenamiento
-  List<ExerciseModel> _exercises = [];
-  // Índice del siguiente ejercicio a realizar
-  int _currentIndex = 0;
+  List<ExerciseModel> _exercises = []; // Lista de ejercicios del entrenamiento
+  int _currentIndex = 0; // Índice del siguiente ejercicio a realizar
+
+  // Mapeo de categorías completas
+  final Map<String, String> _categoryDescriptions = {
+    'Grado': 'Por grado de oposición',
+    'Objetivo': 'Por objetivo técnico',
+    'Momento': 'Por el momento del juego',
+    'Estilo': 'Por estilo de juego',
+    'Estructura': 'Por estructura del ejercicio',
+  };
 
   @override
   void initState() {
@@ -36,9 +40,10 @@ class _PingproTrainingDetailScreenState
   Future<void> _loadExercises() async {
     final all = await ExercisesService().fetchAll();
     setState(() {
-      _exercises = all
-          .where((ex) => widget.training.exerciseIds.contains(ex.id))
-          .toList();
+      _exercises =
+          all
+              .where((ex) => widget.training.exerciseIds.contains(ex.id))
+              .toList();
     });
   }
 
@@ -51,10 +56,7 @@ class _PingproTrainingDetailScreenState
       Navigator.pushNamed(
         context,
         '/exerciseDetail',
-        arguments: {
-          'exercise': exerciseToShow,
-          'returnRoute': '/trainings',
-        },
+        arguments: {'exercise': exerciseToShow, 'returnRoute': '/trainings'},
       );
       // Luego incrementa el índice para la próxima vez
       if (_currentIndex < _exercises.length - 1) {
@@ -82,28 +84,27 @@ class _PingproTrainingDetailScreenState
       body: SafeArea(
         child: Column(
           children: [
-            // ► Header con flecha y nombre del entrenamiento
+            // Header con flecha y nombre del entrenamiento
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back,
-                        color: AppColors.textWhite),
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: AppColors.textWhite,
+                    ),
                     onPressed: _onBackPressed,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      widget.training.name,
-                      style: TextStyles.title,
-                    ),
+                    child: Text(widget.training.name, style: TextStyles.title),
                   ),
                 ],
               ),
             ),
 
-            // ► Cuadro superior con descripción y datos del entrenamiento
+            // Cuadro superior con descripción y datos del entrenamiento
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
@@ -120,7 +121,9 @@ class _PingproTrainingDetailScreenState
                       'Descripción del Entrenamiento',
                       style: TextStyles.titleBlack,
                     ),
+
                     const SizedBox(height: 8),
+
                     // Descripción, categoría y duración
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,8 +142,11 @@ class _PingproTrainingDetailScreenState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Categoría:', style: TextStyles.buttons),
-                            Text(widget.training.category,
-                                style: TextStyles.paragraphBlack),
+                            Text(
+                              _categoryDescriptions[widget.training.category] ??
+                                  widget.training.category,
+                              style: TextStyles.paragraphBlack,
+                            ),
                             const SizedBox(height: 8),
                             Text('Duración:', style: TextStyles.buttons),
                             Text(
@@ -151,8 +157,10 @@ class _PingproTrainingDetailScreenState
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 16),
-                    // ► Recuadro del siguiente ejercicio y botón
+
+                    // Recuadro del siguiente ejercicio y botón
                     if (next != null)
                       Row(
                         children: [
@@ -182,8 +190,10 @@ class _PingproTrainingDetailScreenState
                               ),
                             ),
                             onPressed: _onNextPressed,
-                            child:
-                                const Text('Realizar siguiente', style: TextStyles.buttons),
+                            child: const Text(
+                              'Realizar siguiente',
+                              style: TextStyles.buttons,
+                            ),
                           ),
                         ],
                       ),
@@ -194,7 +204,6 @@ class _PingproTrainingDetailScreenState
 
             const SizedBox(height: 16),
 
-            // ► Título "Ejercicios"
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Align(
@@ -205,7 +214,7 @@ class _PingproTrainingDetailScreenState
 
             const SizedBox(height: 8),
 
-            // ► Lista de ExerciseCard
+            // Lista de ExerciseCard
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -218,8 +227,8 @@ class _PingproTrainingDetailScreenState
                     child: ExerciseCard(
                       exercise: ex,
                       showTopDivider: i != 0,
-                      onFavoritePressed: () =>
-                          setState(() => ex.isFavorite = !ex.isFavorite),
+                      onFavoritePressed:
+                          () => setState(() => ex.isFavorite = !ex.isFavorite),
                       onViewPressed: () {
                         Navigator.pushNamed(
                           context,
