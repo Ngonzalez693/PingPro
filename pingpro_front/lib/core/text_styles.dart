@@ -20,6 +20,12 @@ class TextStyles {
     fontWeight: FontWeight.bold,
   );
 
+  static const subTitleBlack = TextStyle(
+    color: AppColors.textBlack,
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+  );
+
   static const buttons = TextStyle(
     color: AppColors.textBlack,
     fontSize: 16,
@@ -27,6 +33,8 @@ class TextStyles {
   );
 
   static const paragraph = TextStyle(color: AppColors.textWhite, fontSize: 16);
+
+  static const paragraphBlack = TextStyle(color: AppColors.textBlack, fontSize: 16);
 
   static const aditional = TextStyle(color: AppColors.textBlack, fontSize: 14);
 

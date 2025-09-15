@@ -115,7 +115,11 @@ class _PingproTrainingsScreenState extends State<PingproTrainingsScreen> {
                   return TrainingCard(
                     training: t,
                     onTap: () {
-                      // navegar a detalle
+                      Navigator.pushNamed(
+                        context,
+                        '/trainingDetail',
+                        arguments: t, // el objeto TrainingModel
+                      );
                     },
                   );
                 },

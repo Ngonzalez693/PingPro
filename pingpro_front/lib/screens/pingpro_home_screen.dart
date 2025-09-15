@@ -1,5 +1,3 @@
-// lib/screens/pingpro_home_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pingpro_front/core/app_colors.dart';
@@ -94,16 +92,20 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
               height: 160,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: _allTrainings.length,
+                itemCount: _allTrainings.take(4).length,
                 separatorBuilder: (_, __) => const SizedBox(width: 12),
                 itemBuilder: (_, i) {
-                  final t = _allTrainings[i];
+                  final t = _allTrainings.take(4).toList()[i];
                   return SizedBox(
                     width: 120,
                     child: TrainingCard(
                       training: t,
                       onTap: () {
-                        // navegar a detalle con t.id
+                        Navigator.pushNamed(
+                          context,
+                          '/trainingDetail',
+                          arguments: t,
+                        );
                       },
                     ),
                   );

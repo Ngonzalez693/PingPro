@@ -9,6 +9,7 @@ class ExerciseCard extends StatelessWidget {
   final VoidCallback onFavoritePressed;
   final VoidCallback? onViewPressed;
   final bool showTopDivider;
+  final bool done;
 
   const ExerciseCard({
     super.key,
@@ -16,6 +17,7 @@ class ExerciseCard extends StatelessWidget {
     required this.onFavoritePressed,
     this.onViewPressed,
     this.showTopDivider = true,
+    this.done = false,
   });
 
   void _navigateToDetail(BuildContext context) {
