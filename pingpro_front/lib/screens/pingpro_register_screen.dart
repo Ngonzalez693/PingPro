@@ -17,11 +17,10 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
   final _passwordCtrl = TextEditingController();
   bool _isLoading = false;
 
-  Future _onRegisterPressed() async {
+  Future<void> _onRegisterPressed() async {
     final displayName = _displayNameCtrl.text.trim();
     final email = _emailCtrl.text.trim();
     final password = _passwordCtrl.text;
-
     if (displayName.isEmpty || email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Todos los campos son obligatorios')),
@@ -30,20 +29,18 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
     }
 
     setState(() => _isLoading = true);
-
     try {
       await AuthService().register(
         email: email,
         password: password,
         displayName: displayName,
       );
-
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed('/home');
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al registrar: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al registrar: $e')),
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -62,31 +59,33 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Padding(
+        child: ListView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 60),
-              Image.asset('assets/images/LogoInv_PingPro.png', height: 180),
-              const SizedBox(height: 32),
-              Text('Crear cuenta', style: TextStyles.subTitle),
-              const SizedBox(height: 32),
-              CustomTextField(
-                hint: 'Nombre de Usuario',
-                controller: _displayNameCtrl,
-              ),
-              const SizedBox(height: 16),
-              CustomTextField(hint: 'Email', controller: _emailCtrl),
-              const SizedBox(height: 16),
-              CustomTextField(
-                hint: 'Contraseña',
-                obscure: true,
-                controller: _passwordCtrl,
-              ),
-              const SizedBox(height: 24),
-              _isLoading
-                  ? const CircularProgressIndicator(color: AppColors.primary)
-                  : SizedBox(
+          children: [
+            const SizedBox(height: 60),
+            Image.asset('assets/images/LogoInv_PingPro.png', height: 180),
+            const SizedBox(height: 32),
+            Text('Crear cuenta', style: TextStyles.subTitle),
+            const SizedBox(height: 32),
+            CustomTextField(
+              hint: 'Nombre de Usuario',
+              controller: _displayNameCtrl,
+            ),
+            const SizedBox(height: 16),
+            CustomTextField(hint: 'Email', controller: _emailCtrl),
+            const SizedBox(height: 16),
+            CustomTextField(
+              hint: 'Contraseña',
+              obscure: true,
+              controller: _passwordCtrl,
+            ),
+
+            const SizedBox(height: 24),
+
+            _isLoading
+                ? const CircularProgressIndicator(color: AppColors.primary)
+                : SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
@@ -101,28 +100,26 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
                       child: Text('Crear cuenta', style: TextStyles.buttons),
                     ),
                   ),
-              const SizedBox(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Ya tienes cuenta? ',
-                    style: TextStyle(color: AppColors.textGray),
-                  ),
-                  GestureDetector(
-                    onTap:
-                        () => Navigator.of(
-                          context,
-                        ).pushReplacementNamed('/login'),
-                    child: Text(
-                      'Iniciar sesión',
-                      style: TextStyles.loginRegister,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+
+            const SizedBox(height: 32),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Ya tienes cuenta? ',
+                  style: TextStyle(color: AppColors.textGray),
+                ),
+                GestureDetector(
+                  onTap: () =>
+                      Navigator.of(context).pushReplacementNamed('/login'),
+                  child: Text('Iniciar sesión', style: TextStyles.loginRegister),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 32),
+          ],
         ),
       ),
     );

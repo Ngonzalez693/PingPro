@@ -28,9 +28,7 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      // 1) Firebase Auth + backend verify
       await AuthService().login(email: email, password: password);
-      // 2) Navegar a Home
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed('/home');
     } catch (e) {
@@ -54,66 +52,72 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Padding(
+        child: ListView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 60),
-              Image.asset('assets/images/LogoInv_PingPro.png', height: 180),
-              const SizedBox(height: 32),
-              Text('Iniciar sesión', style: TextStyles.subTitle),
-              const SizedBox(height: 32),
-              CustomTextField(hint: 'Email', controller: _emailCtrl),
-              const SizedBox(height: 16),
-              CustomTextField(
-                hint: 'Contraseña',
-                obscure: true,
-                controller: _passwordCtrl,
-              ),
-              const SizedBox(height: 24),
-              _isLoading
-                  ? const CircularProgressIndicator(color: AppColors.primary)
-                  : SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.textBlack,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
+          children: [
+            const SizedBox(height: 60),
+            Image.asset('assets/images/LogoInv_PingPro.png', height: 180),
+            const SizedBox(height: 32),
+            Text('Iniciar sesión', style: TextStyles.subTitle),
+            const SizedBox(height: 32),
+            CustomTextField(hint: 'Email', controller: _emailCtrl),
+            const SizedBox(height: 16),
+            CustomTextField(
+              hint: 'Contraseña',
+              obscure: true,
+              controller: _passwordCtrl,
+            ),
+            const SizedBox(height: 24),
+            _isLoading
+                ? const CircularProgressIndicator(color: AppColors.primary)
+                : SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.textBlack,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        onPressed: _onLoginPressed,
-                        child:
-                            Text('Iniciar sesión', style: TextStyles.buttons),
                       ),
+                      onPressed: _onLoginPressed,
+                      child: Text('Iniciar sesión', style: TextStyles.buttons),
                     ),
-              const SizedBox(height: 90),
-              TextButton(
-                onPressed: () {
-                  // Ruta recuperación contraseña
-                },
-                child: Text('¿Olvidaste tu contraseña?',
-                    style: TextStyle(color: AppColors.secundary)),
-              ),
-              const Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('¿No tienes cuenta? ',
-                      style: TextStyle(color: AppColors.textGray)),
-                  GestureDetector(
-                    onTap: () =>
-                        Navigator.of(context).pushReplacementNamed('/register'),
-                    child:
-                        Text('Regístrate', style: TextStyles.loginRegister),
                   ),
-                ],
+
+            const SizedBox(height: 90),
+
+            TextButton(
+              onPressed: () {
+                // Ruta recuperación contraseña
+              },
+              child: Text(
+                '¿Olvidaste tu contraseña?',
+                style: TextStyle(color: AppColors.secundary),
               ),
-              const SizedBox(height: 32),
-            ],
-          ),
+            ),
+
+            const SizedBox(height: 16),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '¿No tienes cuenta? ',
+                  style: TextStyle(color: AppColors.textGray),
+                ),
+                GestureDetector(
+                  onTap: () =>
+                      Navigator.of(context).pushReplacementNamed('/register'),
+                  child: Text('Regístrate', style: TextStyles.loginRegister),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 32),
+          ],
         ),
       ),
     );
