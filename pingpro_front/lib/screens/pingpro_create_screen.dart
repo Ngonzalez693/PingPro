@@ -1,8 +1,10 @@
-// lib/screens/pingpro_create_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/services/exercises_service.dart';
 import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/models/exercise_model.dart';
+import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
+import 'package:pingpro_front/widgets/exercise_card.dart';
 import 'package:pingpro_front/widgets/pingpong_table.dart';
 
 enum CreateType { exercises, trainings }
@@ -18,12 +20,58 @@ class _PingproCreateScreenState extends State<PingproCreateScreen> {
   CreateType _selectedType = CreateType.exercises;
   final TextEditingController _nameController = TextEditingController();
 
+  final _exService = ExercisesService();
+
+  final String _selectedTrainingImage = 'assets/images/training_1.jpg';
+  final List<ExerciseModel> _addedExercises = [];
+  late List<ExerciseModel> _allExercises = [];
+  String _selectedCategory = 'Grado';
+
+  bool _loading = true;
+  String _error = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      _allExercises = await _exService.fetchAll();
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  void _pickTrainingImage() {
+    /* showModalBottomSheet as before */
+  }
+  void _onEditTrainingName() {
+    /* optional */
+  }
+  void _onAddExerciseToTraining() async {
+    /* push exercises screen and add */
+  }
+  void _onRemoveExerciseFromTraining(ExerciseModel ex) {
+    setState(() => _addedExercises.remove(ex));
+  }
+
   void _onTypeSelected(CreateType type) {
     setState(() => _selectedType = type);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error.isNotEmpty) {
+      return Center(child: Text('Error: $_error'));
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -50,11 +98,7 @@ class _PingproCreateScreenState extends State<PingproCreateScreen> {
 
             if (_selectedType == CreateType.exercises) ...[
               // Mesa de ping pong con botones
-              Expanded(
-                child: Center(
-                  child: const PingPongTable()
-                )
-              ),
+              Expanded(child: Center(child: const PingPongTable())),
 
               const SizedBox(height: 40),
 
@@ -112,13 +156,201 @@ class _PingproCreateScreenState extends State<PingproCreateScreen> {
 
               const SizedBox(height: 40),
             ] else ...[
-              // Vista para entrenamientos (por implementar)
-              const Expanded(
-                child: Center(
-                  child: Text(
-                    'Vista de entrenamientos por implementar',
-                    style: TextStyles.paragraph,
+              // Vista para entrenamientos
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 40,
+                    vertical: 16,
                   ),
+                  children: [
+                    // Imagen e info en fila
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Imagen seleccionable
+                        GestureDetector(
+                          onTap: _pickTrainingImage,
+                          child: Container(
+                            width: 130,
+                            height: 130,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              image: DecorationImage(
+                                image: AssetImage(_selectedTrainingImage),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(width: 16),
+
+                        // Info del entrenamiento
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Nombre
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _nameController,
+                                      style: TextStyles.title,
+                                      decoration: const InputDecoration(
+                                        hintText: 'Nombre',
+                                        border: InputBorder.none,
+                                      ),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: _onEditTrainingName,
+                                    child: Text(
+                                      'Editar',
+                                      style: TextStyles.buttons,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 8),
+
+                              // Selector de categoría
+                              DropdownButtonFormField<String>(
+                                value: _selectedCategory,
+                                items:
+                                    ['Grado', 'Objetivo', 'Momento', 'Estilo', 'Estructura']
+                                        .map(
+                                          (c) => DropdownMenuItem(
+                                            value: c,
+                                            child: Text(
+                                              c,
+                                              style: TextStyles.paragraphBlack,
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: AppColors.widgetGrayBackground,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                onChanged: (v) {
+                                  if (v != null) {
+                                    setState(() => _selectedCategory = v);
+                                  }
+                                },
+                              ),
+                              const SizedBox(height: 8),
+                              // Campo de tiempo
+                              TextField(
+                                style: TextStyles.paragraphBlack,
+                                decoration: InputDecoration(
+                                  hintText: 'Tiempo (min)',
+                                  filled: true,
+                                  fillColor: AppColors.widgetGrayBackground,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Botón agregar ejercicio
+                    Align(
+                      alignment: Alignment.center,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(
+                          Icons.add,
+                          color: AppColors.textBlack,
+                          size: 20,
+                        ),
+                        label: Text(
+                          'Agregar ejercicio',
+                          style: TextStyles.buttons,
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                        onPressed: _onAddExerciseToTraining,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Ejercicios agregados
+                    if (_addedExercises.isNotEmpty) ...[
+                      Text('Ejercicios', style: TextStyles.subTitle),
+                      const SizedBox(height: 8),
+                      for (var ex in _addedExercises)
+                        ListTile(
+                          leading: ExerciseCard(
+                            exercise: ex,
+                            onFavoritePressed: () {},
+                          ),
+                          title: Text(ex.name, style: TextStyles.paragraph),
+                          trailing: TextButton(
+                            onPressed: () => _onRemoveExerciseFromTraining(ex),
+                            child: Text('Eliminar', style: TextStyles.buttons),
+                          ),
+                        ),
+                    ],
+
+                    const SizedBox(height: 24),
+
+                    // Recomendaciones
+                    Text('Ejercicios recomendados', style: TextStyles.subTitle),
+                    const SizedBox(height: 8),
+                    for (var ex in _allExercises.take(3))
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: ExerciseCard(
+                          exercise: ex,
+                          onFavoritePressed:
+                              () => setState(
+                                () => ex.isFavorite = !ex.isFavorite,
+                              ),
+                          onViewPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => PingproExerciseDetailScreen(
+                                      exercise: ex,
+                                      returnRoute: '/create',
+                                    ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],

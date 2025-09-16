@@ -45,8 +45,12 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
                       Icons.arrow_back,
                       color: AppColors.textWhite,
                     ),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      FocusScope.of(context).unfocus();
+                      Navigator.pop(context);
+                    },
                   ),
+
                   const Spacer(),
                   Text('Estadísticas', style: TextStyles.title),
                   const Spacer(),
