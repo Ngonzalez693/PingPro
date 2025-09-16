@@ -7,6 +7,7 @@ import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
 import 'package:pingpro_front/screens/pingpro_login_screen.dart';
 import 'package:pingpro_front/screens/pingpro_register_screen.dart';
 import 'package:pingpro_front/screens/pingpro_splash_screen.dart';
+import 'package:pingpro_front/screens/pingpro_stats_screen.dart';
 import 'package:pingpro_front/screens/pingpro_training_detail_screen.dart';
 import 'package:pingpro_front/screens/pingpro_welcome_screen.dart';
 import 'package:pingpro_front/screens/pingpro_home_screen.dart';
@@ -59,6 +60,7 @@ class MainApp extends StatelessWidget {
           );
         },
         '/profile': (ctx) => const PingproProfileScreen(),
+        '/stats': (ctx) => const PingproStatsScreen(),
       },
       home: const AuthWrapper(),
     );
