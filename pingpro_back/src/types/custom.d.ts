@@ -15,3 +15,14 @@ declare namespace NodeJS {
     // other env vars
   }
 }
+
+declare module '@/*';
+declare module '@config/*';
+declare module '@models/*';
+declare module '@controllers/*';
+declare module '@services/*';
+declare module '@routes/*';
+declare module '@middlewares/*';
+declare module '@repositories/*';
+declare module '@interfaces/*';
+declare module '@utils/*';
