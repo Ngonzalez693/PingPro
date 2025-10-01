@@ -1,19 +1,60 @@
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:pingpro_front/models/training_model.dart';
 
 class TrainingsService {
-  final _baseUrl = dotenv.env['API_BASE_URL']!;
+  final String _baseUrl = dotenv.env['API_BASE_URL']!;
 
-  Future<List<TrainingModel>> fetchAll() async {
-    final uri = Uri.parse('$_baseUrl/api/trainings');
-    final res = await http.get(uri, headers: {'Content-Type': 'application/json'});
-    if (res.statusCode != 200) {
-      throw Exception('Error al cargar trainings (${res.statusCode})');
+  Future<Map<String, String>> _jsonHeaders({bool withAuth = false}) async {
+    final h = <String, String>{'Content-Type': 'application/json'};
+    if (withAuth) {
+      final u = FirebaseAuth.instance.currentUser;
+      if (u != null) h['Authorization'] = 'Bearer ${await u.getIdToken()}';
     }
-    final Map<String, dynamic> json = jsonDecode(res.body) as Map<String, dynamic>;
-    final List<dynamic> list = json['data'] as List<dynamic>;
-    return list.map((item) => TrainingModel.fromJson(item as Map<String, dynamic>)).toList();
+    return h;
+  }
+
+  Uri _u(String p) => Uri.parse('$_baseUrl$p');
+
+  // Listado “puro”
+  Future<List<TrainingModel>> fetchAll() async {
+    final r = await http
+        .get(_u('/api/trainings'), headers: await _jsonHeaders())
+        .timeout(const Duration(seconds: 25));
+    if (r.statusCode != 200) {
+      throw Exception('Error al obtener trainings: ${r.body}');
+    }
+    final data = jsonDecode(r.body);
+    final List list = data is List ? data : data['data'];
+    return list.map((e) => TrainingModel.fromJson(e)).toList();
+  }
+
+  // Listado enriquecido con estado del usuario (endpoint: GET /api/trainings/me/list)
+  Future<List<TrainingModel>> fetchAllWithUserState() async {
+    final r = await http
+        .get(_u('/api/trainings/me/list'), headers: await _jsonHeaders(withAuth: true))
+        .timeout(const Duration(seconds: 25));
+    if (r.statusCode != 200) {
+      throw Exception('Error al obtener trainings del usuario: ${r.body}');
+    }
+    final data = jsonDecode(r.body);
+    final List list = data is List ? data : data['data'];
+    return list.map((e) => TrainingModel.fromJson(e)).toList();
+  }
+
+  // Marcar/unmarcar como completado para el usuario
+  Future<void> setCompleted(String id, bool completed) async {
+    final r = await http
+        .post(
+          _u('/api/trainings/$id/completed'),
+          headers: await _jsonHeaders(withAuth: true),
+          body: jsonEncode({'completed': completed}),
+        )
+        .timeout(const Duration(seconds: 25));
+    if (r.statusCode != 200) {
+      throw Exception('Error al actualizar training: ${r.body}');
+    }
   }
 }

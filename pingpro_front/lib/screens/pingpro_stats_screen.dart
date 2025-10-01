@@ -5,7 +5,9 @@ import 'package:pingpro_front/widgets/statistics_chart.dart';
 import 'package:pingpro_front/widgets/statistics_secundary_cart.dart';
 import 'package:pingpro_front/widgets/summary_icon_row.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
+import 'package:pingpro_front/core/services/trainings_state.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
+import 'package:pingpro_front/models/training_model.dart';
 
 enum StatType { exercises, trainings, created }
 enum StatPeriod { daily, weekly, monthly }
@@ -25,6 +27,7 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
   void initState() {
     super.initState();
     ExercisesState.instance.load();
+    TrainingsState.instance.load();
   }
 
   void _onPeriodSelected(StatPeriod p) {
@@ -35,23 +38,31 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
     setState(() => _activeType = t);
   }
 
-  int _countDoneByPeriod(List<ExerciseModel> all, StatPeriod p) {
-    final now = DateTime.now();
-    bool inPeriod(DateTime d) {
-      switch (p) {
-        case StatPeriod.daily:
-          return d.year == now.year && d.month == now.month && d.day == now.day;
-        case StatPeriod.weekly:
-          // últimos 7 días incluyendo hoy
-          return d.isAfter(now.subtract(const Duration(days: 6))) &&
-                 d.isBefore(now.add(const Duration(days: 1)));
-        case StatPeriod.monthly:
-          return d.year == now.year && d.month == now.month;
-      }
+  // Helpers de conteo por período
+  bool _inPeriod(DateTime d, StatPeriod p, DateTime now) {
+    switch (p) {
+      case StatPeriod.daily:
+        return d.year == now.year && d.month == now.month && d.day == now.day;
+      case StatPeriod.weekly:
+        // últimos 7 días incluyendo hoy
+        return d.isAfter(now.subtract(const Duration(days: 6))) &&
+            d.isBefore(now.add(const Duration(days: 1)));
+      case StatPeriod.monthly:
+        return d.year == now.year && d.month == now.month;
     }
+  }
 
+  int _countExercisesByPeriod(List<ExerciseModel> all, StatPeriod p) {
+    final now = DateTime.now();
     return all
-        .where((e) => e.completedAt != null && inPeriod(e.completedAt!))
+        .where((e) => e.completedAt != null && _inPeriod(e.completedAt!, p, now))
+        .length;
+  }
+
+  int _countTrainingsByPeriod(List<TrainingModel> all, StatPeriod p) {
+    final now = DateTime.now();
+    return all
+        .where((t) => t.completedAt != null && _inPeriod(t.completedAt!, p, now))
         .length;
   }
 
@@ -61,17 +72,21 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: AnimatedBuilder(
-          animation: ExercisesState.instance,
+          animation: Listenable.merge([ExercisesState.instance, TrainingsState.instance]),
           builder: (context, _) {
-            final s = ExercisesState.instance;
+            final es = ExercisesState.instance;
+            final ts = TrainingsState.instance;
 
-            // Lista completa de ejercicios hechos
-            final done = s.all.where((e) => e.completedAt != null).toList();
+            // Listas completas de hechos
+            final doneExercises =
+                es.all.where((e) => e.completedAt != null).toList();
+            final doneTrainings =
+                ts.all.where((t) => t.completedAt != null).toList();
 
-            // Conteos para el row de resumen (ejercicios según período elegido)
-            final exercisesCount = _countDoneByPeriod(done, _period);
-            final trainingsCount = 0; // lo conectamos cuando hagamos trainings por usuario
-            final createdCount = 0;   // si luego llevas métrica de creados
+            // Conteos por período actual
+            final exercisesCount = _countExercisesByPeriod(doneExercises, _period);
+            final trainingsCount = _countTrainingsByPeriod(doneTrainings, _period);
+            final createdCount = 0; // conecta esto si llevas métrica de creados
 
             return Column(
               children: [
@@ -81,10 +96,7 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
                   child: Row(
                     children: [
                       IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back,
-                          color: AppColors.textWhite,
-                        ),
+                        icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
                         onPressed: () {
                           FocusScope.of(context).unfocus();
                           Navigator.pop(context);
@@ -93,7 +105,7 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
                       const Spacer(),
                       Text('Estadísticas', style: TextStyles.title),
                       const Spacer(),
-                      const SizedBox(width: 48), // placeholder for symmetry
+                      const SizedBox(width: 48), // placeholder para simetría
                     ],
                   ),
                 ),
@@ -115,7 +127,7 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
 
                 const SizedBox(height: 16),
 
-                // Main statistics chart (lo dejas igual por ahora)
+                // Gráfico principal (placeholder actual)
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: StatisticsChart(),
@@ -123,7 +135,7 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
 
                 const SizedBox(height: 16),
 
-                // Summary icons con conteos reales de ejercicios
+                // Summary icons (conteos reales)
                 SummaryIconRow(
                   active: _activeType,
                   onSelected: _onTypeSelected,
@@ -134,7 +146,7 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
 
                 const SizedBox(height: 8),
 
-                // Secondary chart (título dinámico, el widget ya lo maneja)
+                // Gráfico secundario (solo cambia el título)
                 Padding(
                   padding: const EdgeInsets.only(left: 16, right: 16),
                   child: SizedBox(
@@ -149,8 +161,9 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
                   ),
                 ),
 
-                // Loader sencillo si aún no cargaron los ejercicios
-                if (s.isLoading && !s.loadedOnce)
+                // Loader sencillo si alguna store aún no cargó nada
+                if ((es.isLoading && !es.loadedOnce) ||
+                    (ts.isLoading && !ts.loadedOnce))
                   const Padding(
                     padding: EdgeInsets.all(16),
                     child: SizedBox(

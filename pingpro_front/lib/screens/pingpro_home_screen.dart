@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
-import 'package:pingpro_front/core/services/training_services.dart';
+import 'package:pingpro_front/core/services/trainings_state.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
@@ -19,27 +19,12 @@ class PingproHomeScreen extends StatefulWidget {
 }
 
 class _PingproHomeScreenState extends State<PingproHomeScreen> {
-  final _trService = TrainingsService();
-
-  late List<TrainingModel> _allTrainings = [];
-  bool _loading = true;
-  String _error = '';
 
   @override
   void initState() {
     super.initState();
-    _loadData();
     ExercisesState.instance.load();
-  }
-
-  Future<void> _loadData() async {
-    try {
-      _allTrainings = await _trService.fetchAll();
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    TrainingsState.instance.load();
   }
 
   Future<void> _toggleFavorite(String id) async {
@@ -56,13 +41,6 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_error.isNotEmpty) {
-      return Center(child: Text('Error: $_error'));
-    }
-
     final user = FirebaseAuth.instance.currentUser;
     final displayName = user?.displayName ?? 'Usuario';
 
@@ -100,24 +78,43 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
             const SizedBox(height: 16),
             SizedBox(
               height: 160,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _allTrainings.take(4).length,
-                separatorBuilder: (_, __) => const SizedBox(width: 12),
-                itemBuilder: (_, i) {
-                  final t = _allTrainings.take(4).toList()[i];
-                  return SizedBox(
-                    width: 120,
-                    child: TrainingCard(
-                      training: t,
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          '/trainingDetail',
-                          arguments: t,
-                        );
-                      },
-                    ),
+              child: AnimatedBuilder(
+                animation: TrainingsState.instance,
+                builder: (context, _) {
+                  final ts = TrainingsState.instance;
+
+                  if (ts.isLoading && !ts.loadedOnce) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (ts.error != null) {
+                    return Center(child: Text('Error al cargar entrenamientos: ${ts.error}'));
+                  }
+
+                  final List<TrainingModel> trainings = ts.all.take(4).toList();
+                  if (trainings.isEmpty) {
+                    return const Center(child: Text('No hay entrenamientos'));
+                  }
+
+                  return ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: trainings.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 12),
+                    itemBuilder: (_, i) {
+                      final t = trainings[i];
+                      return SizedBox(
+                        width: 120,
+                        child: TrainingCard(
+                          training: t,
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/trainingDetail',
+                              arguments: t,
+                            );
+                          },
+                        ),
+                      );
+                    },
                   );
                 },
               ),

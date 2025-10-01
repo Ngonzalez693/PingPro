@@ -9,6 +9,7 @@ import 'package:pingpro_front/widgets/training_card.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
+import 'package:pingpro_front/core/services/trainings_state.dart';
 
 class PingproProfileScreen extends StatefulWidget {
   const PingproProfileScreen({super.key});
@@ -18,13 +19,11 @@ class PingproProfileScreen extends StatefulWidget {
 }
 
 class _PingproProfileScreenState extends State<PingproProfileScreen> {
-  // Placeholder (cuando marquemos trainings hechos por usuario lo llenamos)
-  final List<TrainingModel> _recentTrainings = [];
-
   @override
   void initState() {
     super.initState();
-    ExercisesState.instance.load(); // idempotente
+    ExercisesState.instance.load();
+    TrainingsState.instance.load();
   }
 
   Future<void> _toggleFavorite(String id) async {
@@ -47,20 +46,29 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: AnimatedBuilder(
-          animation: ExercisesState.instance,
+          animation: Listenable.merge([ExercisesState.instance, TrainingsState.instance]),
           builder: (context, _) {
-            final s = ExercisesState.instance;
+            final exState = ExercisesState.instance;
+            final trState = TrainingsState.instance;
 
-            // ejercicios completados (recientes primero)
-            final List<ExerciseModel> done = s.all
+            // Ejercicios hechos (recientes primero)
+            final List<ExerciseModel> doneExercises = exState.all
                 .where((e) => e.completedAt != null)
                 .toList()
               ..sort((a, b) => b.completedAt!.compareTo(a.completedAt!));
-            final recentExercises = done.take(5).toList();
+            final recentExercises = doneExercises.take(5).toList();
 
-            final exercisesCount = done.length;
-            final trainingsCount = _recentTrainings.length; // placeholder
-            final createdCount = 0;
+            // Trainings hechos (recientes primero)
+            final List<TrainingModel> doneTrainings = trState.all
+                .where((t) => t.completedAt != null)
+                .toList()
+              ..sort((a, b) => b.completedAt!.compareTo(a.completedAt!));
+            final recentTrainings = doneTrainings.take(3).toList();
+
+            // Conteos para resumen
+            final exercisesCount = doneExercises.length;
+            final trainingsCount = doneTrainings.length;
+            final createdCount = 0; // ajústalo si llevas esta métrica
 
             return SingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 24),
@@ -69,8 +77,7 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                 children: [
                   // Header
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                     child: Row(
                       children: [
                         const CircleAvatar(
@@ -89,10 +96,8 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.settings,
-                              color: AppColors.textWhite),
-                          onPressed: () =>
-                              Navigator.pushNamed(context, '/editProfile'),
+                          icon: const Icon(Icons.settings, color: AppColors.textWhite),
+                          onPressed: () => Navigator.pushNamed(context, '/editProfile'),
                         ),
                       ],
                     ),
@@ -149,6 +154,7 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                     child: Text('Actividad reciente', style: TextStyles.title),
                   ),
 
+                  // Últimos ejercicios (lista vertical)
                   const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -156,7 +162,7 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  if (s.isLoading && !s.loadedOnce && recentExercises.isEmpty)
+                  if (exState.isLoading && !exState.loadedOnce && recentExercises.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
                       child: Center(child: CircularProgressIndicator()),
@@ -176,7 +182,9 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                         children: [
                           for (int i = 0; i < recentExercises.length; i++)
                             Padding(
-                              padding: EdgeInsets.only(bottom: i == recentExercises.length - 1 ? 0 : 12),
+                              padding: EdgeInsets.only(
+                                bottom: i == recentExercises.length - 1 ? 0 : 12,
+                              ),
                               child: ExerciseCard(
                                 exercise: recentExercises[i],
                                 showTopDivider: i != 0,
@@ -191,7 +199,6 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                                       'returnRoute': '/profile',
                                     },
                                   );
-                                  // No hace falta setState: el store se encarga
                                 },
                               ),
                             ),
@@ -199,15 +206,20 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                       ),
                     ),
 
-                  // Últimos entrenamientos (placeholder)
+                  // Últimos entrenamientos
                   const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child:
-                        Text('Últimos entrenamientos', style: TextStyles.subTitle),
+                    child: Text('Últimos entrenamientos', style: TextStyles.subTitle),
                   ),
                   const SizedBox(height: 8),
-                  if (_recentTrainings.isEmpty)
+
+                  if (trState.isLoading && !trState.loadedOnce && recentTrainings.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (recentTrainings.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
@@ -221,19 +233,21 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                       child: ListView.separated(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         scrollDirection: Axis.horizontal,
-                        itemCount: _recentTrainings.length.clamp(0, 3),
+                        itemCount: recentTrainings.length,
                         separatorBuilder: (_, __) => const SizedBox(width: 12),
                         itemBuilder: (_, i) {
-                          final t = _recentTrainings[i];
+                          final t = recentTrainings[i];
                           return SizedBox(
                             width: 120,
                             child: TrainingCard(
                               training: t,
-                              onTap: () => Navigator.pushNamed(
-                                context,
-                                '/trainingDetail',
-                                arguments: t,
-                              ),
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/trainingDetail',
+                                  arguments: t,
+                                );
+                              },
                             ),
                           );
                         },

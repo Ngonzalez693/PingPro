@@ -5,6 +5,7 @@ import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
+import 'package:pingpro_front/core/services/trainings_state.dart';
 
 class PingproTrainingDetailScreen extends StatefulWidget {
   final TrainingModel training;
@@ -20,6 +21,9 @@ class _PingproTrainingDetailScreenState
     extends State<PingproTrainingDetailScreen> {
   int _currentIndex = 0;
 
+  // Para evitar llamar setCompleted durante build varias veces
+  bool _completionPosted = false;
+
   // Mapeo de categorías completas
   final Map<String, String> _categoryDescriptions = const {
     'Grado': 'Por grado de oposición',
@@ -33,27 +37,27 @@ class _PingproTrainingDetailScreenState
   void initState() {
     super.initState();
     ExercisesState.instance.load();
+    TrainingsState.instance.load();
   }
 
   void _onBackPressed() => Navigator.pop(context);
 
-  // Al presionar "Realizar siguiente": navega al ejercicio actual y avanza el índice
+  // Ir al primer ejercicio incompleto
   void _onNextPressed(List<ExerciseModel> list) {
     if (list.isEmpty) return;
+    final nextIdx = list.indexWhere((e) => e.completedAt == null);
+    if (nextIdx == -1) return; // todos hechos
 
-    // Aseguramos que el índice no se pase si cambia la lista
-    final idx = _currentIndex.clamp(0, list.length - 1);
-    final exerciseToShow = list[idx];
-
+    final exerciseToShow = list[nextIdx];
     Navigator.pushNamed(
       context,
       '/exerciseDetail',
       arguments: {'exercise': exerciseToShow, 'returnRoute': '/trainings'},
     );
 
-    if (idx < list.length - 1) {
-      setState(() => _currentIndex = idx + 1);
-    }
+    setState(() {
+      _currentIndex = (nextIdx < list.length - 1) ? nextIdx + 1 : nextIdx;
+    });
   }
 
   @override
@@ -64,48 +68,63 @@ class _PingproTrainingDetailScreenState
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: AnimatedBuilder(
-          animation: ExercisesState.instance,
+          animation: Listenable.merge([ExercisesState.instance, TrainingsState.instance]),
           builder: (context, _) {
-            final s = ExercisesState.instance;
+            final exState = ExercisesState.instance;
+            final trState = TrainingsState.instance;
 
+            // Ejercicios del training desde el store
             final List<ExerciseModel> exercises = exerciseIds
-                .map((id) => s.getById(id))
+                .map((id) => exState.getById(id))
                 .whereType<ExerciseModel>()
                 .toList();
 
-            // Cálculo de duración por ejercicio
-            final totalDuration = widget.training.duration;
-            final count = exercises.length;
-            final perExercise =
-                count > 0 ? (totalDuration / count).round() : totalDuration;
-
-            // Siguiente ejercicio a mostrar
-            final hasNext = exercises.isNotEmpty;
-            final safeIndex =
-                hasNext ? _currentIndex.clamp(0, exercises.length - 1) : 0;
-            final next = hasNext ? exercises[safeIndex] : null;
-
-            // Estados de carga/errores del store (solo si aún no hay nada)
-            if (s.isLoading && !s.loadedOnce && exercises.isEmpty) {
+            // Carga/errores iniciales
+            if (exState.isLoading && !exState.loadedOnce && exercises.isEmpty) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (s.error != null && exercises.isEmpty) {
-              return Center(child: Text('Error: ${s.error}'));
+            if (exState.error != null && exercises.isEmpty) {
+              return Center(child: Text('Error: ${exState.error}'));
             }
+
+            // Progreso
+            final total = exercises.length;
+            final doneCount = exercises.where((e) => e.completedAt != null).length;
+            final progress = total == 0 ? 0.0 : doneCount / total;
+
+            // Marcar training como completado (post-frame, una sola vez)
+            final tLive = trState.getById(widget.training.id) ?? widget.training;
+            final alreadyCompleted = tLive.completedAt != null;
+
+            if (total > 0 && doneCount == total && !alreadyCompleted && !_completionPosted) {
+              _completionPosted = true; // evita múltiples posts
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                TrainingsState.instance.setCompleted(widget.training.id, true);
+              });
+            }
+
+            // Duración por ejercicio
+            final totalDuration = widget.training.duration;
+            final perExercise =
+                total > 0 ? (totalDuration / total).round() : totalDuration;
+
+            // Siguiente sugerido: primer incompleto; si no hay, null
+            final nextIdx = exercises.indexWhere((e) => e.completedAt == null);
+            final next = nextIdx == -1
+                ? (exercises.isNotEmpty
+                    ? exercises[_currentIndex.clamp(0, exercises.length - 1)]
+                    : null)
+                : exercises[nextIdx];
 
             return Column(
               children: [
-                // Header con flecha y nombre del entrenamiento
+                // Header
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
                       IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back,
-                          color: AppColors.textWhite,
-                        ),
+                        icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
                         onPressed: _onBackPressed,
                       ),
                       const SizedBox(width: 8),
@@ -116,7 +135,7 @@ class _PingproTrainingDetailScreenState
                   ),
                 ),
 
-                // Cuadro superior con descripción y datos del entrenamiento
+                // Cuadro superior con info + PROGRESO
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Container(
@@ -128,19 +147,13 @@ class _PingproTrainingDetailScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // "Descripción del Entrenamiento"
-                        Text(
-                          'Descripción del Entrenamiento',
-                          style: TextStyles.titleBlack,
-                        ),
-
+                        Text('Descripción del Entrenamiento',
+                            style: TextStyles.titleBlack),
                         const SizedBox(height: 8),
 
-                        // Descripción, categoría y duración
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Descripción amplia
                             Expanded(
                               flex: 2,
                               child: Text(
@@ -151,7 +164,6 @@ class _PingproTrainingDetailScreenState
 
                             const SizedBox(width: 16),
 
-                            // Datos extra: categoría y duración
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -161,7 +173,9 @@ class _PingproTrainingDetailScreenState
                                       widget.training.category,
                                   style: TextStyles.paragraphBlack,
                                 ),
+
                                 const SizedBox(height: 8),
+
                                 Text('Duración:', style: TextStyles.buttons),
                                 Text(
                                   '$totalDuration min ($perExercise min por ejercicio)',
@@ -170,6 +184,29 @@ class _PingproTrainingDetailScreenState
                               ],
                             ),
                           ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // ---- Barra de progreso ----
+                        Text('Progreso del entrenamiento',
+                            style: TextStyles.subTitleBlack),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            minHeight: 10,
+                            backgroundColor: AppColors.widgetGrayBackground,
+                            color: AppColors.primary,
+                          ),
+                        ),
+
+                        const SizedBox(height: 6),
+
+                        Text(
+                          '$doneCount de $total ejercicios completados',
+                          style: TextStyles.paragraphBlack,
                         ),
 
                         const SizedBox(height: 16),
@@ -197,7 +234,7 @@ class _PingproTrainingDetailScreenState
                               ),
 
                               const SizedBox(width: 12),
-
+                              
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
@@ -206,8 +243,8 @@ class _PingproTrainingDetailScreenState
                                   ),
                                 ),
                                 onPressed: () => _onNextPressed(exercises),
-                                child: const Text(
-                                  'Realizar siguiente',
+                                child: Text(
+                                  nextIdx == -1 ? 'Completado' : 'Realizar siguiente',
                                   style: TextStyles.buttons,
                                 ),
                               ),
@@ -237,16 +274,14 @@ class _PingproTrainingDetailScreenState
                     itemCount: exercises.length,
                     itemBuilder: (ctx, i) {
                       final ex = exercises[i];
-                      final done = i < _currentIndex;
+                      final done = ex.completedAt != null;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: ExerciseCard(
                           exercise: ex,
                           showTopDivider: i != 0,
-                          // Favorito sincronizado con otras pantallas
                           onFavoritePressed: () =>
                               ExercisesState.instance.toggleFavorite(ex.id),
-                          // Navegación al detalle (completed se maneja allá)
                           onViewPressed: () {
                             Navigator.pushNamed(
                               context,
