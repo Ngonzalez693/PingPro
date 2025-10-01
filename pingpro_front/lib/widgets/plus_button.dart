@@ -7,8 +7,8 @@ class PlusButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 32,
-      height: 32,
+      width: 28,
+      height: 28,
       decoration: BoxDecoration(
         color: AppColors.widgetGrayBackground,
         shape: BoxShape.circle,

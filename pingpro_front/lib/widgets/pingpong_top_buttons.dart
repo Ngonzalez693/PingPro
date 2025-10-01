@@ -9,7 +9,7 @@ class PingPongTopButtons extends StatelessWidget {
   const PingPongTopButtons({
     super.key,
     this.startTop = 250,
-    this.startLeft = 0,
+    this.startLeft = -1,
     this.count = 5,
   });
 
@@ -19,7 +19,7 @@ class PingPongTopButtons extends StatelessWidget {
       children: List.generate(count, (index) {
         return Positioned(
           top: startTop + (index * 0.1),
-          left: startLeft + (index * 61),
+          left: startLeft + (index * 62.6),
           child: const PlusButton(),
         );
       }),

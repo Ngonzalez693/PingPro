@@ -3,6 +3,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pingpro_front/models/training_model.dart';
+import 'package:pingpro_front/screens/pingpro_create_sequence_screen.dart';
+import 'package:pingpro_front/screens/pingpro_edit_profile_screen.dart';
 import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
 import 'package:pingpro_front/screens/pingpro_login_screen.dart';
 import 'package:pingpro_front/screens/pingpro_register_screen.dart';
@@ -52,6 +54,7 @@ class MainApp extends StatelessWidget {
           );
         },
         '/create': (ctx) => const PingproCreateScreen(),
+        '/createSequence': (ctx) => const PingproCreateSequenceScreen(),
         '/trainings': (ctx) => const PingproTrainingsScreen(),
         '/trainingDetail': (ctx) {
           final training = ModalRoute.of(ctx)!.settings.arguments as TrainingModel;
@@ -60,6 +63,7 @@ class MainApp extends StatelessWidget {
           );
         },
         '/profile': (ctx) => const PingproProfileScreen(),
+        '/editProfile': (ctx) => const PingproEditProfileScreen(),
         '/stats': (ctx) => const PingproStatsScreen(),
       },
       home: const AuthWrapper(),

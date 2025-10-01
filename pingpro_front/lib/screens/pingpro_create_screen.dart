@@ -136,7 +136,7 @@ class _PingproCreateScreenState extends State<PingproCreateScreen> {
                   alignment: Alignment.center,
                   child: GestureDetector(
                     onTap: () {
-                      // TODO: continuar al siguiente paso
+                      Navigator.pushNamed(context, '/createSequence');
                     },
                     child: Container(
                       width: 50,

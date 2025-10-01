@@ -36,7 +36,7 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
         displayName: displayName,
       );
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed('/home');
+      Navigator.of(context).pushReplacementNamed('/login');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al registrar: $e')),

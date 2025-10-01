@@ -66,7 +66,7 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                       color: AppColors.textWhite,
                     ),
                     onPressed: () {
-                      // TODO: navigate to settings
+                      Navigator.pushNamed(context, '/editProfile');
                     },
                   ),
                 ],

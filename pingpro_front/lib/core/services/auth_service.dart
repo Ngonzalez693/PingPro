@@ -48,10 +48,12 @@ class AuthService {
     );
     final idToken = await cred.user!.getIdToken();
 
-    final resp = await http.post(
-      Uri.parse('$_baseUrl/api/auth/verify'),
-      headers: {'Authorization': 'Bearer $idToken'},
-    );
+    final resp = await http
+        .post(
+          Uri.parse('$_baseUrl/api/auth/verify'),
+          headers: {'Authorization': 'Bearer $idToken'},
+        )
+        .timeout(const Duration(seconds: 20));
 
     if (resp.statusCode != 200) {
       throw Exception('Token inválido');
