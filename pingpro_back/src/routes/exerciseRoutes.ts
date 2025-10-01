@@ -12,4 +12,7 @@ router.post('/', validateBody(exerciseSchema), ExerciseController.create);
 router.put('/:id', validateBody(exerciseSchema), ExerciseController.update);
 router.delete('/:id', ExerciseController.delete);
 
+router.post('/:id/favorite', ExerciseController.favorite);
+router.post('/:id/completed', ExerciseController.completed);
+
 export default router;

@@ -34,4 +34,17 @@ export class ExerciseService {
     await this.getById(id);
     await this.repo.delete(id);
   }
+
+  // Set exercise as favorite or not
+  async setFavorite(id: string, isFavorite: boolean): Promise<void> {
+    await this.getById(id); // validate existance
+    await this.repo.setFavorite(id, isFavorite);
+  }
+
+    // Marcar ejercicio como completado o no, según el booleano
+  async setCompleted(id: string, completed: boolean): Promise<void> {
+    await this.getById(id); // validar existencia
+    const completedAt = completed ? new Date() : null;
+    await this.repo.setCompleted(id, completedAt);
+  }
 }

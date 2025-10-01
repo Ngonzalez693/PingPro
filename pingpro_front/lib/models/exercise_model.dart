@@ -8,6 +8,7 @@ class ExerciseModel {
   bool isFavorite;
   final String description;
   final List<SequenceStep> sequence;
+  DateTime? completedAt;
 
   ExerciseModel({
     required this.id,
@@ -17,6 +18,7 @@ class ExerciseModel {
     this.isFavorite = false,
     required this.description,
     required this.sequence,
+    this.completedAt,
   });
 
   factory ExerciseModel.fromJson(Map<String, dynamic> json) {
@@ -30,6 +32,9 @@ class ExerciseModel {
       sequence: (json['sequence'] as List<dynamic>?)
           ?.map((step) => SequenceStep.fromJson(step as Map<String, dynamic>))
           .toList() ?? [],
+      completedAt: json['completedAt'] != null
+          ? DateTime.tryParse(json['completedAt'].toString())
+          : null,
     );
   }
 
@@ -41,5 +46,6 @@ class ExerciseModel {
     'isFavorite': isFavorite,
     'description': description,
     'sequence': sequence.map((step) => step.toJson()).toList(),
+    'completedAt': completedAt?.toIso8601String(),
   };
 }

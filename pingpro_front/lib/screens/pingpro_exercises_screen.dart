@@ -37,6 +37,22 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
     }
   }
 
+  Future<void> _toggleFavorite(String id) async {
+    final i = _allExercises.indexWhere((e) => e.id == id);
+    if (i == -1) return;
+    final old = _allExercises[i].isFavorite;
+    setState(() => _allExercises[i].isFavorite = !old);
+    try {
+      await _service.setFavorite(id: id, isFavorite: !old);
+    } catch (e) {
+      setState(() => _allExercises[i].isFavorite = old);
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error actualizando favorito')),
+      );
+    }
+  }
+
   void _applyFilter() {
     _filtered =
         _allExercises.where((ex) {
@@ -142,8 +158,7 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
                   child: ExerciseCard(
                     exercise: ex,
                     showTopDivider: i != 0,
-                    onFavoritePressed:
-                        () => setState(() => ex.isFavorite = !ex.isFavorite),
+                    onFavoritePressed: () => _toggleFavorite(ex.id),
                     onViewPressed: () {
                       Navigator.pushNamed(
                         context,

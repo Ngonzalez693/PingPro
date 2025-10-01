@@ -55,4 +55,28 @@ export default class ExerciseController {
       return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
     }
   }
+
+  // Set exercise as favorite or not
+  static async favorite(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = req.params.id;
+      const { isFavorite } = req.body as { isFavorite: boolean };
+      await service.setFavorite(id, isFavorite);
+      return success(res, { id, isFavorite }, HTTP_STATUS.OK);
+    } catch (err) {
+      return error(res, (err as Error).message, HTTP_STATUS.BAD_REQUEST);
+    }
+  }
+
+  // Mark exercise as completed or not
+  static async completed(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = req.params.id;
+      const { completed } = req.body as { completed: boolean };
+      await service.setCompleted(id, completed);
+      return success(res, { id, completed }, HTTP_STATUS.OK);
+    } catch (err) {
+      return error(res, (err as Error).message, HTTP_STATUS.BAD_REQUEST);
+    }
+  }
 }

@@ -1,8 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/widgets/exercise_done.dart';
+import 'package:pingpro_front/core/services/exercises_service.dart';
 
 class PingproExerciseDetailScreen extends StatefulWidget {
   final ExerciseModel exercise;
@@ -22,6 +25,8 @@ class PingproExerciseDetailScreen extends StatefulWidget {
 class _PingproExerciseDetailScreenState
     extends State<PingproExerciseDetailScreen> {
   late bool _isFavorite;
+  final _exService = ExercisesService();
+  bool _actionLoading = false;
 
   // Maping
   final Map<int, String> _hits = {
@@ -104,14 +109,33 @@ class _PingproExerciseDetailScreenState
     Navigator.pop(context);
   }
 
-  void _onFavoritePressed() {
+  void _onFavoritePressed() async {
+    if (_actionLoading) return;
+    final old = _isFavorite;
     setState(() {
       _isFavorite = !_isFavorite;
+      widget.exercise.isFavorite = _isFavorite;
     });
-    // TODO: Actualizar en el servicio/backend
+
+    try {
+      await _exService.setFavorite(
+        id: widget.exercise.id,
+        isFavorite: _isFavorite,
+      );
+    } catch (e) {
+      // rollback
+      setState(() {
+        _isFavorite = old;
+        widget.exercise.isFavorite = old;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo actualizar favorito')),
+      );
+    }
   }
 
   void _onDonePressed() {
+    if (_actionLoading) return;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -119,10 +143,27 @@ class _PingproExerciseDetailScreenState
           (_) => ExerciseDone(
             onFinalize: () {
               Navigator.of(context).pop();
-              Navigator.of(context).pop();
+              _handleFinalize();
             },
           ),
     );
+  }
+
+  Future<void> _handleFinalize() async {
+    setState(() => _actionLoading = true);
+    try {
+      await _exService.setCompleted(id: widget.exercise.id, completed: true);
+      setState(() {
+        widget.exercise.completedAt = DateTime.now();
+      });
+      Navigator.of(context).pop(); // close detail screen and return
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo marcar como hecho')),
+      );
+    } finally {
+      if (mounted) setState(() => _actionLoading = false);
+    }
   }
 
   @override

@@ -32,4 +32,20 @@ export class FirebaseExerciseRepository implements IExerciseRepository {
   async delete(id: string): Promise<void> {
     await this.collection.doc(id).delete();
   }
+
+  // Set exercise as favorite or not
+  async setFavorite(id: string, isFavorite: boolean): Promise<void> {
+    await this.collection.doc(id).update({
+      isFavorite,
+      updatedAt: new Date()
+    });
+  }
+
+  // Mark exercise as completed with current date
+  async setCompleted(id: string, completedAt: Date | null): Promise<void> {
+    await this.collection.doc(id).update({
+      completedAt,
+      updatedAt: new Date()
+    });
+  }
 }

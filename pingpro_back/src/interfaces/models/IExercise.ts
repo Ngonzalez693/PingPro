@@ -7,6 +7,7 @@ export interface IExercise {
   category: string;
   image: string;
   isFavorite?: boolean;
+  completedAt?: Date | null;
   description?: string;
   sequence: ISequenceStep[];
 }

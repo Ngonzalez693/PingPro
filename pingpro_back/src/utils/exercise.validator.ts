@@ -6,6 +6,7 @@ export const exerciseSchema = Joi.object({
   category: Joi.string().required(),
   image: Joi.string().required(),
   isFavorite: Joi.boolean().optional(),
+  completedAt: Joi.date().optional().allow(null),
   description: Joi.string().allow('').optional(),
   sequence: Joi.array()
     .items(
@@ -20,3 +21,8 @@ export const exerciseSchema = Joi.object({
     .min(1)
     .required(),
 });
+
+export const updateExerciseSchema = exerciseSchema.keys({
+  name: Joi.string().optional(),
+});
+  
