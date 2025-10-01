@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
-import 'package:pingpro_front/core/services/exercises_service.dart';
+import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
 
@@ -12,79 +12,54 @@ class PingproExercisesScreen extends StatefulWidget {
 }
 
 class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
-  final _service = ExercisesService();
-  late List<ExerciseModel> _allExercises;
-  List<ExerciseModel> _filtered = [];
-  bool _loading = true;
-  String _error = '';
   int _selectedTab = 0;
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _loadExercises();
-  }
-
-  Future<void> _loadExercises() async {
-    try {
-      _allExercises = await _service.fetchAll();
-      _applyFilter();
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      setState(() => _loading = false);
-    }
+    ExercisesState.instance.load();
   }
 
   Future<void> _toggleFavorite(String id) async {
-    final i = _allExercises.indexWhere((e) => e.id == id);
-    if (i == -1) return;
-    final old = _allExercises[i].isFavorite;
-    setState(() => _allExercises[i].isFavorite = !old);
     try {
-      await _service.setFavorite(id: id, isFavorite: !old);
-    } catch (e) {
-      setState(() => _allExercises[i].isFavorite = old);
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error actualizando favorito')),
-      );
+      await ExercisesState.instance.toggleFavorite(id);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error actualizando favorito')),
+        );
+      }
     }
   }
 
-  void _applyFilter() {
-    _filtered =
-        _allExercises.where((ex) {
-          if (_selectedTab == 1 && ex.category != 'Footwork') return false;
-          if (_selectedTab == 2 && ex.category != 'Técnico') return false;
-          if (_selectedTab == 3 && ex.category != 'Táctico') return false;
-          if (_selectedTab == 4 && ex.category != 'Estrategia') return false;
-          if (_searchQuery.isNotEmpty &&
-              !ex.name.toLowerCase().contains(_searchQuery.toLowerCase())) {
-            return false;
-          }
-          return true;
-        }).toList();
-  }
-
   void _onSearchChanged(String v) {
-    _searchQuery = v;
-    _applyFilter();
-    setState(() {});
+    setState(() => _searchQuery = v);
   }
 
   void _onTabSelected(int index) {
-    _selectedTab = index;
-    _applyFilter();
-    setState(() {});
+    setState(() => _selectedTab = index);
+  }
+
+  List<ExerciseModel> _applyFilter(List<ExerciseModel> all) {
+    return all.where((ex) {
+      // Tabs
+      if (_selectedTab == 1 && ex.category != 'Footwork') return false;
+      if (_selectedTab == 2 && ex.category != 'Técnico') return false;
+      if (_selectedTab == 3 && ex.category != 'Táctico') return false;
+      if (_selectedTab == 4 && ex.category != 'Estrategia') return false;
+
+      // Search
+      if (_searchQuery.isNotEmpty &&
+          !ex.name.toLowerCase().contains(_searchQuery.toLowerCase())) {
+        return false;
+      }
+      return true;
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_error.isNotEmpty) return Center(child: Text('Error: $_error'));
-
     return SafeArea(
       child: Column(
         children: [
@@ -148,28 +123,49 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
 
           // Lista vertical
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: _filtered.length,
-              itemBuilder: (context, i) {
-                final ex = _filtered[i];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: ExerciseCard(
-                    exercise: ex,
-                    showTopDivider: i != 0,
-                    onFavoritePressed: () => _toggleFavorite(ex.id),
-                    onViewPressed: () {
-                      Navigator.pushNamed(
-                        context,
-                        '/exerciseDetail',
-                        arguments: {
-                          'exercise': ex,
-                          'returnRoute': '/exercises',
+            child: AnimatedBuilder(
+              animation: ExercisesState.instance,
+              builder: (context, _) {
+                final s = ExercisesState.instance;
+
+                if (s.isLoading && !s.loadedOnce) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (s.error != null) {
+                  return Center(child: Text('Error: ${s.error}'));
+                }
+
+                final all = s.all;
+                final filtered = _applyFilter(all);
+
+                if (filtered.isEmpty) {
+                  return const Center(child: Text('No hay ejercicios'));
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: filtered.length,
+                  itemBuilder: (context, i) {
+                    final ex = filtered[i];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: ExerciseCard(
+                        exercise: ex,
+                        showTopDivider: i != 0,
+                        onFavoritePressed: () => _toggleFavorite(ex.id),
+                        onViewPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/exerciseDetail',
+                            arguments: {
+                              'exercise': ex,
+                              'returnRoute': '/exercises',
+                            },
+                          );
                         },
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 );
               },
             ),

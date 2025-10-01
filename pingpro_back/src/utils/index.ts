@@ -1,6 +1,7 @@
 // Utils barrel
 export * from './constants';
 export * from './exercise.validator';
+export * from './exerciseState.validator';
 export * from './training.validator';
 export * from './user.validator';
 export * from './stats.validator';

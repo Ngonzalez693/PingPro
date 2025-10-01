@@ -1,6 +1,7 @@
 import { ITraining } from '@interfaces/models/ITraining';
 import { ITrainingRepository } from '@interfaces/repositories/ITrainingRepository';
 import { database } from '@config/database';
+import { firestore } from 'firebase-admin';
 
 export class FirebaseTrainingRepository implements ITrainingRepository {
   private collection = database.firestore.collection('trainings');    // Database collection
@@ -31,5 +32,11 @@ export class FirebaseTrainingRepository implements ITrainingRepository {
   // Delete trainings from database
   async delete(id: string): Promise<void> {
     await this.collection.doc(id).delete();
+  }
+
+  async exists(id: string): Promise<boolean> {
+    const ref = firestore().collection('trainings').doc(id);
+    const snap = await ref.get();
+    return snap.exists;
   }
 }

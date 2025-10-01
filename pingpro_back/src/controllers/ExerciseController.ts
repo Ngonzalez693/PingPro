@@ -57,26 +57,55 @@ export default class ExerciseController {
   }
 
   // Set exercise as favorite or not
-  static async favorite(req: Request, res: Response, next: NextFunction) {
+  static async favorite(req: Request, res: Response, _next: NextFunction) {
     try {
-      const id = req.params.id;
-      const { isFavorite } = req.body as { isFavorite: boolean };
-      await service.setFavorite(id, isFavorite);
-      return success(res, { id, isFavorite }, HTTP_STATUS.OK);
+      // uid viene del authMiddleware que ya activaste
+      const uid = (req as any).user?.uid || req.user?.uid;
+      if (!uid) {
+        return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
+      }
+
+      const { id } = req.params;
+      // si no envían body, default true
+      const isFavorite = req.body?.isFavorite ?? true;
+
+      const state = await service.setFavoriteForUser(uid, id, !!isFavorite);
+      return success(res, state, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, HTTP_STATUS.BAD_REQUEST);
+      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
     }
   }
 
   // Mark exercise as completed or not
-  static async completed(req: Request, res: Response, next: NextFunction) {
+  static async completed(req: Request, res: Response, _next: NextFunction) {
     try {
-      const id = req.params.id;
-      const { completed } = req.body as { completed: boolean };
-      await service.setCompleted(id, completed);
-      return success(res, { id, completed }, HTTP_STATUS.OK);
+      const uid = (req as any).user?.uid || req.user?.uid;
+      if (!uid) {
+        return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
+      }
+
+      const { id } = req.params;
+      const completed = req.body?.completed ?? true;
+
+      const state = await service.setCompletedForUser(uid, id, !!completed);
+      return success(res, state, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, HTTP_STATUS.BAD_REQUEST);
+      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+    }
+  }
+
+  // Obtener TODOS los estados del usuario autenticado
+  static async myStates(req: Request, res: Response, _next: NextFunction) {
+    try {
+      const uid = (req as any).user?.uid || req.user?.uid;
+      if (!uid) {
+        return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
+      }
+
+      const states = await service.getUserExerciseStates(uid);
+      return success(res, states, HTTP_STATUS.OK);
+    } catch (err) {
+      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
     }
   }
 }

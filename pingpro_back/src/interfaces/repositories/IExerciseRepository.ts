@@ -7,4 +7,6 @@ export interface IExerciseRepository {
   create(exercise: IExercise): Promise<string>;
   update(id: string, exercise: Partial<IExercise>): Promise<void>;
   delete(id: string): Promise<void>;
+
+  exists(id: string): Promise<boolean>;
 }

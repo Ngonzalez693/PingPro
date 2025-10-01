@@ -5,7 +5,7 @@ import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/widgets/exercise_done.dart';
-import 'package:pingpro_front/core/services/exercises_service.dart';
+import 'package:pingpro_front/core/services/exercises_state.dart';
 
 class PingproExerciseDetailScreen extends StatefulWidget {
   final ExerciseModel exercise;
@@ -24,8 +24,6 @@ class PingproExerciseDetailScreen extends StatefulWidget {
 
 class _PingproExerciseDetailScreenState
     extends State<PingproExerciseDetailScreen> {
-  late bool _isFavorite;
-  final _exService = ExercisesService();
   bool _actionLoading = false;
 
   // Maping
@@ -72,12 +70,12 @@ class _PingproExerciseDetailScreenState
   @override
   void initState() {
     super.initState();
-    _isFavorite = widget.exercise.isFavorite;
+    ExercisesState.instance.load();
   }
 
   // Contrucción de la descripción
-  String _buildSequenceDescription() {
-    final sequence = widget.exercise.sequence;
+  String _buildSequenceDescription(ExerciseModel ex) {
+    final sequence = ex.sequence;
     final List<String> steps = [];
 
     for (int i = 0; i < sequence.length; i++) {
@@ -92,11 +90,9 @@ class _PingproExerciseDetailScreenState
         hit = _hits[step.hit] ?? 'Desconocido';
       }
 
-      // Rotación en descripción
+      // Rotación, zona, dirección
       final rotation = _rotations[step.rotation] ?? 'Desconocido';
-      // Zona en descripción
       final zone = _zones[step.zone] ?? 'Desconocido';
-      // Dirección en descripción
       final direction = _directions[step.direction] ?? 'Desconocido';
 
       steps.add('$stepNumber. $hit $rotation $zone a $direction');
@@ -105,29 +101,13 @@ class _PingproExerciseDetailScreenState
     return steps.join('\n');
   }
 
-  void _onBackPressed() {
-    Navigator.pop(context);
-  }
+  void _onBackPressed() => Navigator.pop(context);
 
-  void _onFavoritePressed() async {
+  Future<void> _onFavoritePressed(String id, bool current) async {
     if (_actionLoading) return;
-    final old = _isFavorite;
-    setState(() {
-      _isFavorite = !_isFavorite;
-      widget.exercise.isFavorite = _isFavorite;
-    });
-
     try {
-      await _exService.setFavorite(
-        id: widget.exercise.id,
-        isFavorite: _isFavorite,
-      );
-    } catch (e) {
-      // rollback
-      setState(() {
-        _isFavorite = old;
-        widget.exercise.isFavorite = old;
-      });
+      await ExercisesState.instance.toggleFavorite(id);
+    } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se pudo actualizar favorito')),
       );
@@ -151,12 +131,11 @@ class _PingproExerciseDetailScreenState
 
   Future<void> _handleFinalize() async {
     setState(() => _actionLoading = true);
+    final id = widget.exercise.id;
+
     try {
-      await _exService.setCompleted(id: widget.exercise.id, completed: true);
-      setState(() {
-        widget.exercise.completedAt = DateTime.now();
-      });
-      Navigator.of(context).pop(); // close detail screen and return
+      await ExercisesState.instance.setCompleted(id, true);
+      Navigator.of(context).pop(ExercisesState.instance.getById(id));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se pudo marcar como hecho')),
@@ -168,165 +147,185 @@ class _PingproExerciseDetailScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header con botón de regreso y nombre
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: _onBackPressed,
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      color: AppColors.textWhite,
+    // Usamos AnimatedBuilder para leer el ejercicio vivo del store
+    return AnimatedBuilder(
+      animation: ExercisesState.instance,
+      builder: (context, _) {
+        // Buscar versión "viva" por ID; si no existe, usar la recibida
+        final ex =
+            ExercisesState.instance.getById(widget.exercise.id) ??
+            widget.exercise;
+
+        final isFavorite = ex.isFavorite;
+        final isCompleted = ex.completedAt != null;
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // Header con botón de regreso y nombre
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: _onBackPressed,
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          color: AppColors.textWhite,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(ex.name, style: TextStyles.title)),
+                    ],
+                  ),
+                ),
+
+                // Área para el widget 3D (placeholder por ahora)
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.widgetGrayBackground,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(widget.exercise.name, style: TextStyles.title),
-                  ),
-                ],
-              ),
-            ),
-
-            // Área para el widget 3D (placeholder por ahora)
-            Expanded(
-              flex: 2,
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: AppColors.widgetGrayBackground,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Center(
-                  child: Text(
-                    'Widget 3D del Ejercicio\n(En desarrollo)',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.textGray, fontSize: 16),
-                  ),
-                ),
-              ),
-            ),
-
-            // Sección inferior con descripción y botones
-            Expanded(
-              flex: 1,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // Descripción paso a paso
-                    Expanded(
-                      flex: 2,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Container(
-                            height: 200,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.background,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Descripción del ejercicio',
-                                  style: TextStyles.subTitle,
-                                ),
-                                const SizedBox(height: 8),
-                                Expanded(
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          widget.exercise.description,
-                                          style: TextStyles.paragraph,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          'Pasos:',
-                                          style: TextStyles.subTitle,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          _buildSequenceDescription(),
-                                          style: TextStyles.paragraph.copyWith(
-                                            height: 1.5,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                    child: const Center(
+                      child: Text(
+                        'Widget 3D del Ejercicio\n(En desarrollo)',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.textGray,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
+                  ),
+                ),
 
-                    const SizedBox(width: 14),
-
-                    // Botones
-                    Column(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceEvenly, // Empuja hacia abajo
+                // Sección inferior con descripción y botones
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        // Botón favorito
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: AppColors.widgetGrayBackground,
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            onPressed: _onFavoritePressed,
-                            icon: Icon(
-                              _isFavorite
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              color: AppColors.primary,
-                              size: 24,
-                            ),
+                        // Descripción paso a paso
+                        Expanded(
+                          flex: 2,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Container(
+                                height: 200,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.background,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Descripción del ejercicio',
+                                      style: TextStyles.subTitle,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Expanded(
+                                      child: SingleChildScrollView(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              ex.description,
+                                              style: TextStyles.paragraph,
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Text(
+                                              'Pasos:',
+                                              style: TextStyles.subTitle,
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              _buildSequenceDescription(ex),
+                                              style: TextStyles.paragraph
+                                                  .copyWith(height: 1.5),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
 
-                        const SizedBox(height: 16),
+                        const SizedBox(width: 14),
 
-                        // Botón "Hecho"
-                        GestureDetector(
-                          onTap: _onDonePressed,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
+                        // Botones
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            // Botón favorito
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: AppColors.widgetGrayBackground,
+                                shape: BoxShape.circle,
+                              ),
+                              child: IconButton(
+                                onPressed:
+                                    () => _onFavoritePressed(ex.id, isFavorite),
+                                icon: Icon(
+                                  isFavorite
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color: AppColors.primary,
+                                  size: 24,
+                                ),
+                              ),
                             ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(20),
+
+                            const SizedBox(height: 16),
+
+                            // Botón "Hecho" (completed sólo aquí)
+                            GestureDetector(
+                              onTap: _onDonePressed,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  isCompleted ? '¡Listo!' : 'Hecho',
+                                  style: TextStyles.buttons,
+                                ),
+                              ),
                             ),
-                            child: Text('Hecho', style: TextStyles.buttons),
-                          ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

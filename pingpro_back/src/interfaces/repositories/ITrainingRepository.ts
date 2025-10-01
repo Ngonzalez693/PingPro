@@ -7,4 +7,6 @@ export interface ITrainingRepository {
   create(training: ITraining): Promise<string>;
   update(id: string, training: Partial<ITraining>): Promise<void>;
   delete(id: string): Promise<void>;
+
+  exists(id: string): Promise<boolean>;
 }

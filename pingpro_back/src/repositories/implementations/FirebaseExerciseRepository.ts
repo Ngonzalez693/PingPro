@@ -1,6 +1,7 @@
 import { IExercise } from '@interfaces/models/IExercise';
 import { IExerciseRepository } from '@interfaces/repositories/IExerciseRepository';
 import { database } from '@config/database';
+import { firestore } from 'firebase-admin';
 
 export class FirebaseExerciseRepository implements IExerciseRepository {
   private collection = database.firestore.collection('exercises');  // Database collection
@@ -33,19 +34,8 @@ export class FirebaseExerciseRepository implements IExerciseRepository {
     await this.collection.doc(id).delete();
   }
 
-  // Set exercise as favorite or not
-  async setFavorite(id: string, isFavorite: boolean): Promise<void> {
-    await this.collection.doc(id).update({
-      isFavorite,
-      updatedAt: new Date()
-    });
-  }
-
-  // Mark exercise as completed with current date
-  async setCompleted(id: string, completedAt: Date | null): Promise<void> {
-    await this.collection.doc(id).update({
-      completedAt,
-      updatedAt: new Date()
-    });
+  async exists(id: string): Promise<boolean> {
+    const snap = await firestore().collection('exercises').doc(id).get();
+    return snap.exists;
   }
 }

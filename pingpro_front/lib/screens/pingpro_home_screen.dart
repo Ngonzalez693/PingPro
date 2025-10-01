@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/training_services.dart';
 import 'package:pingpro_front/core/text_styles.dart';
-import 'package:pingpro_front/core/services/exercises_service.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
@@ -19,10 +19,8 @@ class PingproHomeScreen extends StatefulWidget {
 }
 
 class _PingproHomeScreenState extends State<PingproHomeScreen> {
-  final _exService = ExercisesService();
   final _trService = TrainingsService();
 
-  late List<ExerciseModel> _allExercises = [];
   late List<TrainingModel> _allTrainings = [];
   bool _loading = true;
   String _error = '';
@@ -31,32 +29,28 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
   void initState() {
     super.initState();
     _loadData();
+    ExercisesState.instance.load();
   }
 
   Future<void> _loadData() async {
     try {
-      _allExercises = await _exService.fetchAll();
       _allTrainings = await _trService.fetchAll();
     } catch (e) {
       _error = e.toString();
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _toggleFavorite(String id) async {
-    final i = _allExercises.indexWhere((e) => e.id == id);
-    if (i == -1) return;
-    final old = _allExercises[i].isFavorite;
-    setState(() => _allExercises[i].isFavorite = !old);
     try {
-      await _exService.setFavorite(id: id, isFavorite: !old);
-    } catch (e) {
-      setState(() => _allExercises[i].isFavorite = old);
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error actualizando favorito')),
-      );
+      await ExercisesState.instance.toggleFavorite(id);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo actualizar favorito')),
+        );
+      }
     }
   }
 
@@ -134,26 +128,51 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
             //Ejercicios
             Text('Ejercicios', style: TextStyles.paragraph),
             const SizedBox(height: 16),
-            for (var ex in _allExercises.take(2))
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: ExerciseCard(
-                  exercise: ex,
-                  onFavoritePressed: () => _toggleFavorite(ex.id),
-                  onViewPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) => PingproExerciseDetailScreen(
-                              exercise: ex,
-                              returnRoute: '/home',
-                            ),
+
+            AnimatedBuilder(
+              animation: ExercisesState.instance,
+              builder: (context, _) {
+                final s = ExercisesState.instance;
+
+                if (s.isLoading && !s.loadedOnce) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (s.error != null) {
+                  return Text('Error al cargar ejercicios: ${s.error}');
+                }
+
+                final List<ExerciseModel> exercises = s.all.take(2).toList();
+                if (exercises.isEmpty) {
+                  return const Text('No hay ejercicios disponibles');
+                }
+
+                return Column(
+                  children: [
+                    for (final ex in exercises)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: ExerciseCard(
+                          exercise: ex,
+                          onFavoritePressed: () => _toggleFavorite(ex.id),
+                          onViewPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => PingproExerciseDetailScreen(
+                                      exercise:
+                                          ex, // puedes seguir pasando el objeto
+                                      returnRoute: '/home',
+                                    ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                    );
-                  },
-                ),
-              ),
+                  ],
+                );
+              },
+            ),
 
             const SizedBox(height: 24),
 

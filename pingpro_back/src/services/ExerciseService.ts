@@ -1,17 +1,19 @@
 import { IExercise } from '@interfaces/models/IExercise';
 import { FirebaseExerciseRepository } from '@repositories/implementations/FirebaseExerciseRepository';
+import FirebaseUserExerciseStateRepository from '@repositories/implementations/FirebaseUserExerciseStateRepository';
+import type { IUserExerciseState } from '@interfaces/models/IUserExerciseState';
 
 export class ExerciseService {
-  private repo = new FirebaseExerciseRepository(); // Object type repository
+  private exerciseRepo = new FirebaseExerciseRepository();
+  private userStateRepo = new FirebaseUserExerciseStateRepository();
 
-  // Get all exercises from repository
+  // LISTADO / DETALLE 
   async getAll(): Promise<IExercise[]> {
-    return this.repo.getAll();
+    return this.exerciseRepo.getAll();
   }
 
-  // Get exercises by id from repository
   async getById(id: string): Promise<IExercise> {
-    const exercise = await this.repo.getById(id);
+    const exercise = await this.exerciseRepo.getById(id);
     if (!exercise) {
       throw Object.assign(new Error('Exercise not found'), { status: 404 });
     }
@@ -20,31 +22,44 @@ export class ExerciseService {
 
   // Create exercise from repository
   async create(data: IExercise): Promise<string> {
-    return this.repo.create(data);
+    return this.exerciseRepo.create(data);
   }
 
   // Update exercise from repository
   async update(id: string, data: Partial<IExercise>): Promise<void> {
     await this.getById(id); // validate existance
-    await this.repo.update(id, data);
+    await this.exerciseRepo.update(id, data);
   }
 
   // Delete exercise from repository
   async delete(id: string): Promise<void> {
     await this.getById(id);
-    await this.repo.delete(id);
+    await this.exerciseRepo.delete(id);
   }
 
-  // Set exercise as favorite or not
-  async setFavorite(id: string, isFavorite: boolean): Promise<void> {
-    await this.getById(id); // validate existance
-    await this.repo.setFavorite(id, isFavorite);
+  // Favorito por USUARIO
+  async setFavoriteForUser(
+    userId: string,
+    exerciseId: string,
+    isFavorite: boolean
+  ): Promise<IUserExerciseState> {
+    // valida que exista el ejercicio (evita estados huérfanos)
+    await this.getById(exerciseId);
+    return this.userStateRepo.setFavorite(userId, exerciseId, isFavorite);
   }
 
-    // Marcar ejercicio como completado o no, según el booleano
-  async setCompleted(id: string, completed: boolean): Promise<void> {
-    await this.getById(id); // validar existencia
-    const completedAt = completed ? new Date() : null;
-    await this.repo.setCompleted(id, completedAt);
+  // Completado por USUARIO
+  async setCompletedForUser(
+    userId: string,
+    exerciseId: string,
+    completed: boolean
+  ): Promise<IUserExerciseState> {
+    await this.getById(exerciseId);
+    return this.userStateRepo.setCompleted(userId, exerciseId, completed);
+  }
+
+  // obtener todos los estados del usuario
+  async getUserExerciseStates(userId: string): Promise<IUserExerciseState[]> {
+    return this.userStateRepo.getAllStates(userId);
   }
 }

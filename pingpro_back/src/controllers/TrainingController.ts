@@ -55,4 +55,44 @@ export default class TrainingController {
       return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
     }
   }
+
+  // Completar entrenamiento por usuario
+  static async completed(req: Request, res: Response, _next: NextFunction) {
+    try {
+      // uid del authMiddleware (usa el que estés populando)
+      const uid = (req as any).user?.uid || (req as any).uid || (req as any).userId || (req as any).auth?.uid;
+      if (!uid) return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
+
+      const { id } = req.params;
+      const completed = req.body?.completed ?? true;
+      const state = await service.setCompletedForUser(uid, id, !!completed);
+      return success(res, state, HTTP_STATUS.OK);
+    } catch (err) {
+      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+    }
+  }
+
+  // Obtener todos los estados del usuario
+  static async myStates(req: Request, res: Response, _next: NextFunction) {
+    try {
+      const uid = (req as any).user?.uid || (req as any).uid || (req as any).userId || (req as any).auth?.uid;
+      if (!uid) return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
+      const states = await service.getUserTrainingStates(uid);
+      return success(res, states, HTTP_STATUS.OK);
+    } catch (err) {
+      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+    }
+  }
+
+  static async listWithUserState(req: Request, res: Response, _next: NextFunction) {
+    try {
+      const uid = (req as any).user?.uid || (req as any).uid || (req as any).userId || req.user?.uid;
+      if (!uid) return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
+
+      const data = await service.getAllWithUserState(uid);
+      return success(res, data, HTTP_STATUS.OK);
+    } catch (err: any) {
+      return error(res, err.message, err.status || HTTP_STATUS.INTERNAL_ERROR);
+    }
+  }
 }
