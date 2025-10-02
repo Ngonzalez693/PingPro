@@ -14,6 +14,6 @@ router.use('/trainings', trainingRoutes);
 router.use('/users', userRoutes);
 router.use('/auth', authRoutes);
 router.use('/stats', statsRoutes);
-router.use('/models3d', model3dRoutes);
+router.use('/model3d', model3dRoutes);
 
 export default router;

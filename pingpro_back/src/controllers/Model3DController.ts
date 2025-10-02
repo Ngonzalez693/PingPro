@@ -1,29 +1,26 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import Model3DService from '@/services/Model3DService';
-import { success, error } from '@/utils/apiResponse';
-import { HTTP_STATUS } from '@/utils/constants';
 
-const service = new Model3DService();
+const service = Model3DService.instance;
 
 export default class Model3DController {
-  static async list(req: Request, res: Response, next: NextFunction) {
+  static async list(_req: Request, res: Response) {
     try {
-      const models = await service.list();
-      return success(res, models, HTTP_STATUS.OK);
-    } catch (err) {
-      return error(res, (err as Error).message, HTTP_STATUS.INTERNAL_ERROR);
+      const data = await service.list();
+      return res.json(data);
+    } catch (e: any) {
+      return res.status(500).json({ message: 'Error listando Model3D', error: e?.message });
     }
   }
 
-  static async upload(req: Request, res: Response, next: NextFunction) {
+  static async get(req: Request, res: Response) {
     try {
-      const { name } = req.body;
-      // req.file provided by multer
-      const filePath = (req.file as any).path;
-      const model = await service.upload(name, filePath);
-      return success(res, model, HTTP_STATUS.CREATED);
-    } catch (err) {
-      return error(res, (err as Error).message, HTTP_STATUS.BAD_REQUEST);
+      const { id } = req.params;
+      const doc = await service.get(id);
+      if (!doc) return res.status(404).json({ message: 'Model3D no encontrado' });
+      return res.json(doc);
+    } catch (e: any) {
+      return res.status(500).json({ message: 'Error obteniendo Model3D', error: e?.message });
     }
   }
 }

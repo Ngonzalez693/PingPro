@@ -6,6 +6,8 @@ import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/widgets/exercise_done.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
+import 'package:pingpro_front/widgets/exercise_glb_sequence_view.dart';
+import 'package:pingpro_front/core/mappers/exercise_to_glb_steps.dart';
 
 class PingproExerciseDetailScreen extends StatefulWidget {
   final ExerciseModel exercise;
@@ -185,25 +187,56 @@ class _PingproExerciseDetailScreenState
                   ),
                 ),
 
-                // Área para el widget 3D (placeholder por ahora)
+                // Visualización del widget 3D
                 Expanded(
                   flex: 2,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: AppColors.widgetGrayBackground,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'Widget 3D del Ejercicio\n(En desarrollo)',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColors.textGray,
-                          fontSize: 16,
+                  child: FutureBuilder<List<GlbStep>>(
+                    future: buildGlbStepsForExercise(widget.exercise),
+                    builder: (context, snap) {
+                      if (snap.connectionState == ConnectionState.waiting) {
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: AppColors.widgetGrayBackground,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+                      if (snap.hasError ||
+                          !snap.hasData ||
+                          snap.data!.isEmpty) {
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: AppColors.widgetGrayBackground,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'No hay animaciones 3D disponibles para este ejercicio',
+                              style: TextStyle(color: Colors.white70),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        );
+                      }
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.widgetGrayBackground,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ),
-                    ),
+                        child: ExerciseGlbSequenceView(
+                          steps: snap.data!,
+                          onStepChange: (i) {
+                            // opcional: sincroniza texto de “Paso i”
+                          },
+                        ),
+                      );
+                    },
                   ),
                 ),
 
