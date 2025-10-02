@@ -46,23 +46,24 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: AnimatedBuilder(
-          animation: Listenable.merge([ExercisesState.instance, TrainingsState.instance]),
+          animation: Listenable.merge([
+            ExercisesState.instance,
+            TrainingsState.instance,
+          ]),
           builder: (context, _) {
             final exState = ExercisesState.instance;
             final trState = TrainingsState.instance;
 
             // Ejercicios hechos (recientes primero)
-            final List<ExerciseModel> doneExercises = exState.all
-                .where((e) => e.completedAt != null)
-                .toList()
-              ..sort((a, b) => b.completedAt!.compareTo(a.completedAt!));
+            final List<ExerciseModel> doneExercises =
+                exState.all.where((e) => e.completedAt != null).toList()
+                  ..sort((a, b) => b.completedAt!.compareTo(a.completedAt!));
             final recentExercises = doneExercises.take(5).toList();
 
             // Trainings hechos (recientes primero)
-            final List<TrainingModel> doneTrainings = trState.all
-                .where((t) => t.completedAt != null)
-                .toList()
-              ..sort((a, b) => b.completedAt!.compareTo(a.completedAt!));
+            final List<TrainingModel> doneTrainings =
+                trState.all.where((t) => t.completedAt != null).toList()
+                  ..sort((a, b) => b.completedAt!.compareTo(a.completedAt!));
             final recentTrainings = doneTrainings.take(3).toList();
 
             // Conteos para resumen
@@ -77,13 +78,17 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                 children: [
                   // Header
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 20,
+                    ),
                     child: Row(
                       children: [
                         const CircleAvatar(
                           radius: 24,
-                          backgroundImage:
-                              AssetImage('assets/images/avatar_placeholder.png'),
+                          backgroundImage: AssetImage(
+                            'assets/images/avatar_placeholder.png',
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -96,8 +101,13 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.settings, color: AppColors.textWhite),
-                          onPressed: () => Navigator.pushNamed(context, '/editProfile'),
+                          icon: const Icon(
+                            Icons.settings,
+                            color: AppColors.textWhite,
+                          ),
+                          onPressed:
+                              () =>
+                                  Navigator.pushNamed(context, '/editProfile'),
                         ),
                       ],
                     ),
@@ -109,12 +119,93 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text('Estadísticas', style: TextStyles.subTitle),
                   ),
+
                   const SizedBox(height: 8),
+
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: GestureDetector(
                       onTap: () => Navigator.pushNamed(context, '/stats'),
-                      child: const StatisticsChart(),
+                      child: AnimatedBuilder(
+                        animation: Listenable.merge([
+                          ExercisesState.instance,
+                          TrainingsState.instance,
+                        ]),
+                        builder: (context, _) {
+                          final es = ExercisesState.instance;
+                          final ts = TrainingsState.instance;
+
+                          // Últimos 7 días (de más viejo -> hoy)
+                          final now = DateTime.now();
+                          final buckets = List.generate(7, (i) {
+                            final d = DateTime(
+                              now.year,
+                              now.month,
+                              now.day,
+                            ).subtract(Duration(days: 6 - i));
+                            return d;
+                          });
+
+                          // Etiquetas: D L M X J V S
+                          const dias = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+                          String labelFor(DateTime d) => dias[d.weekday % 7];
+                          final labels = buckets.map(labelFor).toList();
+
+                          // Fechas completadas
+                          final exercisesDates =
+                              es.all
+                                  .where((e) => e.completedAt != null)
+                                  .map((e) => e.completedAt!)
+                                  .toList();
+
+                          final trainingsDates =
+                              ts.all
+                                  .where((t) => t.completedAt != null)
+                                  .map((t) => t.completedAt!)
+                                  .toList();
+
+                          // Si luego tienes "creados", añade sus fechas aquí
+                          final createdDates = <DateTime>[];
+
+                          bool sameDay(DateTime a, DateTime b) =>
+                              a.year == b.year &&
+                              a.month == b.month &&
+                              a.day == b.day;
+
+                          List<int> countSeries(List<DateTime> dates) => [
+                            for (final b in buckets)
+                              dates.where((d) => sameDay(d, b)).length,
+                          ];
+
+                          final exSeries = countSeries(exercisesDates);
+                          final trSeries = countSeries(trainingsDates);
+                          final crSeries = countSeries(createdDates);
+
+                          // Serie total para el gráfico de líneas
+                          final totalSeries = List<int>.generate(
+                            buckets.length,
+                            (i) => exSeries[i] + trSeries[i] + crSeries[i],
+                          );
+
+                          // Loader mínimo (opcional)
+                          if ((es.isLoading && !es.loadedOnce) ||
+                              (ts.isLoading && !ts.loadedOnce)) {
+                            return const SizedBox(
+                              height: 160,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            );
+                          }
+
+                          return StatisticsChart(
+                            values: totalSeries,
+                            labels: labels,
+                          );
+                        },
+                      ),
                     ),
                   ),
 
@@ -158,13 +249,21 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                   const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('Últimos ejercicios', style: TextStyles.subTitle),
+                    child: Text(
+                      'Últimos ejercicios',
+                      style: TextStyles.subTitle,
+                    ),
                   ),
                   const SizedBox(height: 8),
 
-                  if (exState.isLoading && !exState.loadedOnce && recentExercises.isEmpty)
+                  if (exState.isLoading &&
+                      !exState.loadedOnce &&
+                      recentExercises.isEmpty)
                     const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 24,
+                      ),
                       child: Center(child: CircularProgressIndicator()),
                     )
                   else if (recentExercises.isEmpty)
@@ -183,13 +282,15 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                           for (int i = 0; i < recentExercises.length; i++)
                             Padding(
                               padding: EdgeInsets.only(
-                                bottom: i == recentExercises.length - 1 ? 0 : 12,
+                                bottom:
+                                    i == recentExercises.length - 1 ? 0 : 12,
                               ),
                               child: ExerciseCard(
                                 exercise: recentExercises[i],
                                 showTopDivider: i != 0,
-                                onFavoritePressed: () =>
-                                    _toggleFavorite(recentExercises[i].id),
+                                onFavoritePressed:
+                                    () =>
+                                        _toggleFavorite(recentExercises[i].id),
                                 onViewPressed: () async {
                                   await Navigator.pushNamed(
                                     context,
@@ -210,13 +311,21 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                   const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('Últimos entrenamientos', style: TextStyles.subTitle),
+                    child: Text(
+                      'Últimos entrenamientos',
+                      style: TextStyles.subTitle,
+                    ),
                   ),
                   const SizedBox(height: 8),
 
-                  if (trState.isLoading && !trState.loadedOnce && recentTrainings.isEmpty)
+                  if (trState.isLoading &&
+                      !trState.loadedOnce &&
+                      recentTrainings.isEmpty)
                     const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 24,
+                      ),
                       child: Center(child: CircularProgressIndicator()),
                     )
                   else if (recentTrainings.isEmpty)

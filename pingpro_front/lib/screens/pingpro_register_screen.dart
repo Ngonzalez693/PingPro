@@ -30,7 +30,7 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await AuthService().register(
+      await AuthService().signupViaBackend(
         email: email,
         password: password,
         displayName: displayName,
@@ -38,9 +38,9 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed('/login');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al registrar: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al registrar: $e')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -64,17 +64,32 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
           children: [
             const SizedBox(height: 60),
+
             Image.asset('assets/images/LogoInv_PingPro.png', height: 180),
+
             const SizedBox(height: 32),
-            Text('Crear cuenta', style: TextStyles.subTitle),
+
+            Center(
+              child: Text(
+                'Crear cuenta',
+                style: TextStyles.title,
+                textAlign: TextAlign.center,
+              ),
+            ),
+
             const SizedBox(height: 32),
+
             CustomTextField(
               hint: 'Nombre de Usuario',
               controller: _displayNameCtrl,
             ),
+
             const SizedBox(height: 16),
+
             CustomTextField(hint: 'Email', controller: _emailCtrl),
+
             const SizedBox(height: 16),
+
             CustomTextField(
               hint: 'Contraseña',
               obscure: true,
@@ -86,20 +101,20 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
             _isLoading
                 ? const CircularProgressIndicator(color: AppColors.primary)
                 : SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.textBlack,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.textBlack,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      onPressed: _onRegisterPressed,
-                      child: Text('Crear cuenta', style: TextStyles.buttons),
                     ),
+                    onPressed: _onRegisterPressed,
+                    child: Text('Crear cuenta', style: TextStyles.buttons),
                   ),
+                ),
 
             const SizedBox(height: 32),
 
@@ -111,9 +126,13 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
                   style: TextStyle(color: AppColors.textGray),
                 ),
                 GestureDetector(
-                  onTap: () =>
-                      Navigator.of(context).pushReplacementNamed('/login'),
-                  child: Text('Iniciar sesión', style: TextStyles.loginRegister),
+                  onTap:
+                      () =>
+                          Navigator.of(context).pushReplacementNamed('/login'),
+                  child: Text(
+                    'Iniciar sesión',
+                    style: TextStyles.loginRegister,
+                  ),
                 ),
               ],
             ),

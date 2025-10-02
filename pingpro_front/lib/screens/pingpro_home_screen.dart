@@ -19,7 +19,6 @@ class PingproHomeScreen extends StatefulWidget {
 }
 
 class _PingproHomeScreenState extends State<PingproHomeScreen> {
-
   @override
   void initState() {
     super.initState();
@@ -87,7 +86,11 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (ts.error != null) {
-                    return Center(child: Text('Error al cargar entrenamientos: ${ts.error}'));
+                    return Center(
+                      child: Text(
+                        'Error al cargar entrenamientos: ${ts.error}',
+                      ),
+                    );
                   }
 
                   final List<TrainingModel> trainings = ts.all.take(4).toList();
@@ -177,11 +180,82 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
             Text('Estadísticas', style: TextStyles.subTitle),
             const SizedBox(height: 16),
             GestureDetector(
-              onTap: () {
-                Navigator.pushNamed(context, '/stats');
-              },
-              child: const StatisticsChart(),
+              onTap: () => Navigator.pushNamed(context, '/stats'),
+              child: AnimatedBuilder(
+                animation: Listenable.merge([
+                  ExercisesState.instance,
+                  TrainingsState.instance,
+                ]),
+                builder: (context, _) {
+                  final es = ExercisesState.instance;
+                  final ts = TrainingsState.instance;
+
+                  // Últimos 7 días (de más viejo -> hoy)
+                  final now = DateTime.now();
+                  final buckets = List.generate(7, (i) {
+                    final d = DateTime(
+                      now.year,
+                      now.month,
+                      now.day,
+                    ).subtract(Duration(days: 6 - i));
+                    return d;
+                  });
+
+                  // Etiquetas: D L M X J V S
+                  const dias = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+                  String labelFor(DateTime d) => dias[d.weekday % 7];
+                  final labels = buckets.map(labelFor).toList();
+
+                  // Fechas completadas
+                  final exercisesDates =
+                      es.all
+                          .where((e) => e.completedAt != null)
+                          .map((e) => e.completedAt!)
+                          .toList();
+
+                  final trainingsDates =
+                      ts.all
+                          .where((t) => t.completedAt != null)
+                          .map((t) => t.completedAt!)
+                          .toList();
+
+                  // Si luego tienes "creados", añade sus fechas aquí
+                  final createdDates = <DateTime>[];
+
+                  bool sameDay(DateTime a, DateTime b) =>
+                      a.year == b.year && a.month == b.month && a.day == b.day;
+
+                  List<int> countSeries(List<DateTime> dates) => [
+                    for (final b in buckets)
+                      dates.where((d) => sameDay(d, b)).length,
+                  ];
+
+                  final exSeries = countSeries(exercisesDates);
+                  final trSeries = countSeries(trainingsDates);
+                  final crSeries = countSeries(createdDates);
+
+                  // Serie total para el gráfico de líneas
+                  final totalSeries = List<int>.generate(
+                    buckets.length,
+                    (i) => exSeries[i] + trSeries[i] + crSeries[i],
+                  );
+
+                  // Loader mínimo (opcional)
+                  if ((es.isLoading && !es.loadedOnce) ||
+                      (ts.isLoading && !ts.loadedOnce)) {
+                    return const SizedBox(
+                      height: 160,
+                      child: Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    );
+                  }
+
+                  return StatisticsChart(values: totalSeries, labels: labels);
+                },
+              ),
             ),
+
             const SizedBox(height: 24),
           ],
         ),

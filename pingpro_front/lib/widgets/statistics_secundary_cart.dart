@@ -1,61 +1,80 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 
 class StatisticsSecondaryChart extends StatelessWidget {
   final String title;
+  final List<int> values;       // valores por barra
+  final List<String> labels;    // etiquetas por barra
 
   const StatisticsSecondaryChart({
     super.key,
     required this.title,
+    required this.values,
+    required this.labels,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Reutiliza el layout de StatisticsChart pero con título dinámico
+    final maxY = (values.isEmpty ? 1 : values.reduce((a, b) => a > b ? a : b)).toDouble();
+    final maxYAdj = (maxY == 0 ? 1 : maxY);
+
     return Container(
-      height: 200,
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.widgetGrayBackground,
         borderRadius: BorderRadius.circular(12),
       ),
+      padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: TextStyles.paragraphBlack.copyWith(
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 16),
+          Text(title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+          const SizedBox(height: 8),
           Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: List.generate(7, (index) {
-                final heights = [0.3, 0.7, 0.4, 0.9, 0.6, 0.8, 0.5];
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      width: 20,
-                      height: heights[index] * 100,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+            child: BarChart(
+              BarChartData(
+                minY: 0,
+                maxY: maxYAdj.toDouble(),
+                gridData: FlGridData(show: true, horizontalInterval: (maxYAdj / 4).clamp(1, double.infinity)),
+                borderData: FlBorderData(show: false),
+                barGroups: [
+                  for (int i = 0; i < values.length; i++)
+                    BarChartGroupData(
+                      x: i,
+                      barRods: [
+                        BarChartRodData(
+                          toY: values[i].toDouble(),
+                          width: 14,
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      ['L', 'M', 'X', 'J', 'V', 'S', 'D'][index],
-                      style: TextStyles.paragraphBlack.copyWith(fontSize: 12),
+                ],
+                titlesData: FlTitlesData(
+                  leftTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: true, reservedSize: 28, interval: 1),
+                  ),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 1,
+                      getTitlesWidget: (v, meta) {
+                        final i = v.toInt();
+                        if (i < 0 || i >= labels.length) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(labels[i],
+                              style: const TextStyle(fontSize: 11, color: Colors.black)),
+                        );
+                      },
                     ),
-                  ],
-                );
-              }),
+                  ),
+                ),
+              ),
             ),
           ),
         ],

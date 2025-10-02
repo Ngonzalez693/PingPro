@@ -27,14 +27,19 @@ class ExerciseModel {
       name: json['name'] as String,
       category: json['category'] as String,
       image: json['image'] as String,
-      isFavorite: json['isFavorite'] as bool? ?? false,
+      isFavorite: (json['userState']?['isFavorite'] ?? false) as bool,
       description: json['description'] as String? ?? '',
-      sequence: (json['sequence'] as List<dynamic>?)
-          ?.map((step) => SequenceStep.fromJson(step as Map<String, dynamic>))
-          .toList() ?? [],
-      completedAt: json['completedAt'] != null
-          ? DateTime.tryParse(json['completedAt'].toString())
-          : null,
+      sequence:
+          (json['sequence'] as List<dynamic>?)
+              ?.map(
+                (step) => SequenceStep.fromJson(step as Map<String, dynamic>),
+              )
+              .toList() ??
+          [],
+      completedAt:
+          json['userState']?['completedAt'] != null
+              ? DateTime.tryParse(json['userState']['completedAt'])
+              : null,
     );
   }
 

@@ -38,6 +38,9 @@ class TrainingsState extends ChangeNotifier {
     }
   }
 
+  // Forzar recarga desde servidor (ignora cache en memoria).
+  Future<void> refresh() => load(force: true);
+
   Future<void> setCompleted(String id, bool completed) async {
     final t = _byId[id]; if (t == null) return;
     final prev = t.completedAt;

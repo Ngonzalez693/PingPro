@@ -28,13 +28,13 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await AuthService().login(email: email, password: password);
+      await AuthService().login(email, password);
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed('/home');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al iniciar sesión: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al iniciar sesión: $e')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -57,35 +57,50 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
           children: [
             const SizedBox(height: 60),
+
             Image.asset('assets/images/LogoInv_PingPro.png', height: 180),
+
             const SizedBox(height: 32),
-            Text('Iniciar sesión', style: TextStyles.subTitle),
+
+            Center(
+              child: Text(
+                'Iniciar sesión',
+                style: TextStyles.title,
+                textAlign: TextAlign.center,
+              ),
+            ),
+
             const SizedBox(height: 32),
+
             CustomTextField(hint: 'Email', controller: _emailCtrl),
+
             const SizedBox(height: 16),
+
             CustomTextField(
               hint: 'Contraseña',
               obscure: true,
               controller: _passwordCtrl,
             ),
+
             const SizedBox(height: 24),
+
             _isLoading
                 ? const CircularProgressIndicator(color: AppColors.primary)
                 : SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.textBlack,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.textBlack,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      onPressed: _onLoginPressed,
-                      child: Text('Iniciar sesión', style: TextStyles.buttons),
                     ),
+                    onPressed: _onLoginPressed,
+                    child: Text('Iniciar sesión', style: TextStyles.buttons),
                   ),
+                ),
 
             const SizedBox(height: 90),
 
@@ -109,8 +124,10 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
                   style: TextStyle(color: AppColors.textGray),
                 ),
                 GestureDetector(
-                  onTap: () =>
-                      Navigator.of(context).pushReplacementNamed('/register'),
+                  onTap:
+                      () => Navigator.of(
+                        context,
+                      ).pushReplacementNamed('/register'),
                   child: Text('Regístrate', style: TextStyles.loginRegister),
                 ),
               ],

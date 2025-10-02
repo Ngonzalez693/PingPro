@@ -1,86 +1,103 @@
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class AuthService {
-  final _firebaseAuth = FirebaseAuth.instance;
-  final _baseUrl = dotenv.env['API_BASE_URL']!;
+  final _auth = FirebaseAuth.instance;
+  final String _baseUrl = dotenv.env['API_BASE_URL']!;
 
-  Future<void> register({
-    required String email,
-    required String password,
-    required String displayName,
-  }) async {
-    // 1) Crear usuario Firebase Auth
-    final cred = await _firebaseAuth.createUserWithEmailAndPassword(
+  Uri _u(String p) => Uri.parse('$_baseUrl$p');
+
+  Future<Map<String, String>> _jsonHeaders() async =>
+      {'Content-Type': 'application/json'};
+
+  /// LOGIN normal con Firebase + tu backend si necesitas perfil
+  Future<UserCredential> login(String email, String password) async {
+    final cred = await _auth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
-    await cred.user!.updateDisplayName(displayName);
+    return cred;
+  }
 
-    // 2) Obtener Id Token para autenticación en backend
-    final idToken = await cred.user!.getIdToken();
+  /// SIGNUP backend-driven:
+  /// 1) Llama a /api/auth/signup (backend crea Auth + users doc)
+  /// 2) Si ok, inicia sesión en Firebase con email/pass
+  ///
+  /// Si el backend devuelve "email in use", intentamos login directamente.
+  Future<UserCredential> signupViaBackend({
+    required String displayName,
+    required String email,
+    required String password,
+  }) async {
+    // Cerrar sesión previa para evitar usar token de otro usuario
+    try { await _auth.signOut(); } catch (_) {}
 
-    // 3) Registrar en backend (crea usuario en Firestore)
     final resp = await http.post(
-      Uri.parse('$_baseUrl/api/auth/signup'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $idToken',
-      },
+      _u('/api/auth/signup'),
+      headers: await _jsonHeaders(),
       body: jsonEncode({
+        'displayName': displayName,
         'email': email,
         'password': password,
-        'displayName': displayName,
       }),
     );
 
-    if (resp.statusCode != 201) {
-      throw Exception('Error al registrar usuario en backend: ${resp.body}');
+    if (resp.statusCode == 200 || resp.statusCode == 201) {
+      // Usuario creado por backend → ahora login en Firebase
+      final cred = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return cred;
     }
-  }
 
-  Future<void> login({required String email, required String password}) async {
-    final cred = await _firebaseAuth.signInWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-    final idToken = await cred.user!.getIdToken();
+    // Parsear error del backend
+    String msg = 'Error al registrar usuario en backend';
+    try {
+      final data = jsonDecode(resp.body);
+      msg = data['message']?.toString() ?? msg;
 
-    final resp = await http
-        .post(
-          Uri.parse('$_baseUrl/api/auth/verify'),
-          headers: {'Authorization': 'Bearer $idToken'},
-        )
-        .timeout(const Duration(seconds: 20));
+      // Si ya existía, probamos iniciar sesión
+      if (msg.toLowerCase().contains('already in use')) {
+        final cred = await _auth.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        return cred;
+      }
+    } catch (_) {}
 
-    if (resp.statusCode != 200) {
-      throw Exception('Token inválido');
-    }
-  }
-
-  Future<String?> getIdToken() async {
-    final user = _firebaseAuth.currentUser;
-    if (user == null) throw Exception('No autenticado');
-    return await user.getIdToken();
+    throw Exception('$msg: ${resp.body}');
   }
 
   Future<void> logout() async {
-    await _firebaseAuth.signOut();
+    await _auth.signOut();
   }
 
+  /// Perfil opcional desde backend (si lo tienes)
   Future<Map<String, dynamic>> fetchUserProfile() async {
-    final user = FirebaseAuth.instance.currentUser;
-    final idToken = await user?.getIdToken();
+    final u = _auth.currentUser;
+    if (u == null) return {};
+    final token = await u.getIdToken();
+
     final resp = await http.get(
-      Uri.parse('$_baseUrl/api/users/me'),
-      headers: {'Authorization': 'Bearer $idToken'},
+      _u('/api/users/me'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
     );
-    if (resp.statusCode == 200) {
-      return jsonDecode(resp.body)['data'] as Map<String, dynamic>;
-    } else {
-      throw Exception('No se pudo cargar el perfil');
+
+    if (resp.statusCode != 200) {
+      if (kDebugMode) {
+        print('fetchUserProfile error: ${resp.body}');
+      }
+      return {};
     }
+    final data = jsonDecode(resp.body);
+    return (data is Map && data['data'] is Map) ? Map<String, dynamic>.from(data['data']) : Map<String, dynamic>.from(data);
   }
 }
