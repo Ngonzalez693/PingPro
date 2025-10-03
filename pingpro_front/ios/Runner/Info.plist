@@ -45,5 +45,37 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- **NUEVO**: Permitir HTTP local para WKWebView (model_viewer_plus) -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Permite cargas HTTP dentro de contenido web (WKWebView) -->
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
+
+		<!-- Permite red local (iOS 14+) -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+
+		<!-- Excepciones explícitas para compatibilidad (iOS < 14) -->
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>localhost</key>
+			<dict>
+				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			<key>127.0.0.1</key>
+			<dict>
+				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+
 </dict>
 </plist>

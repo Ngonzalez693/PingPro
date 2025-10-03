@@ -20,8 +20,8 @@ class _ImageBannerCarouselState extends State<ImageBannerCarousel> {
 
     final originalBanners = [
       'assets/images/banner_1.jpg',
-      'assets/images/banner_1.jpg',
-      'assets/images/banner_1.jpg',
+      'assets/images/banner_2.jpg',
+      'assets/images/banner_3.jpg',
     ];
 
     _bannerImages = [...originalBanners, originalBanners[0]];

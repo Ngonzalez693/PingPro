@@ -23,7 +23,7 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
       buttonText: 'Siguiente',
     ),
     _WelcomePageData(
-      image: 'assets/images/welcome_image_2.jpg',
+      image: 'assets/images/welcome_image_2.png',
       title: 'Visualiza en 3D',
       description:
           'Mira ejercicios y entrenamientos de una manera innovadora para el tenis de mesa',

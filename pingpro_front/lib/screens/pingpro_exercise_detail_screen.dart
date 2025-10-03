@@ -26,6 +26,7 @@ class PingproExerciseDetailScreen extends StatefulWidget {
 
 class _PingproExerciseDetailScreenState
     extends State<PingproExerciseDetailScreen> {
+  Future<List<GlbStep>>? _stepsFuture;
   bool _actionLoading = false;
 
   // Maping
@@ -73,6 +74,7 @@ class _PingproExerciseDetailScreenState
   void initState() {
     super.initState();
     ExercisesState.instance.load();
+    _stepsFuture = buildGlbStepsForExercise(widget.exercise);
   }
 
   // Contrucción de la descripción
@@ -191,49 +193,48 @@ class _PingproExerciseDetailScreenState
                 Expanded(
                   flex: 2,
                   child: FutureBuilder<List<GlbStep>>(
-                    future: buildGlbStepsForExercise(widget.exercise),
+                    future: _stepsFuture,
                     builder: (context, snap) {
+                      Widget child;
+
                       if (snap.connectionState == ConnectionState.waiting) {
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: AppColors.widgetGrayBackground,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
+                        child = const Center(
+                          child: CircularProgressIndicator(),
                         );
-                      }
-                      if (snap.hasError ||
+                      } else if (snap.hasError ||
                           !snap.hasData ||
                           snap.data!.isEmpty) {
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: AppColors.widgetGrayBackground,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'No hay animaciones 3D disponibles para este ejercicio',
-                              style: TextStyle(color: Colors.white70),
-                              textAlign: TextAlign.center,
-                            ),
+                        child = const Center(
+                          child: Text(
+                            'No hay animaciones 3D disponibles para este ejercicio',
+                            style: TextStyle(color: Colors.white70),
+                            textAlign: TextAlign.center,
                           ),
                         );
-                      }
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: AppColors.widgetGrayBackground,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ExerciseGlbSequenceView(
+                      } else {
+                        child = ExerciseGlbSequenceView(
                           steps: snap.data!,
-                          onStepChange: (i) {
-                            // opcional: sincroniza texto de “Paso i”
-                          },
+                          onStepChange: (i) {},
+                        );
+                      }
+
+                      // Contenedor con esquinas y fondo, el visor se expande al 100%
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: ColoredBox(
+                            color: AppColors.widgetGrayBackground,
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                return SizedBox(
+                                  width: constraints.maxWidth,
+                                  height: constraints.maxHeight,
+                                  child: child,
+                                );
+                              },
+                            ),
+                          ),
                         ),
                       );
                     },

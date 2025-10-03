@@ -17,10 +17,61 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
   final _passwordCtrl = TextEditingController();
   bool _isLoading = false;
 
+  Future<void> _showRegisterSuccessDialog() async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.widgetGrayBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.all(24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.check_circle, color: AppColors.primary, size: 56),
+            const SizedBox(height: 12),
+            const Text(
+              '¡Registro exitoso!',
+              textAlign: TextAlign.center,
+              style: TextStyles.titleBlack,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Tu cuenta fue creada correctamente. Inicia sesión para continuar.',
+              textAlign: TextAlign.center,
+              style: TextStyles.paragraphBlack,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text(
+                  'Continuar',
+                  style: TextStyle(
+                    color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _onRegisterPressed() async {
     final displayName = _displayNameCtrl.text.trim();
     final email = _emailCtrl.text.trim();
     final password = _passwordCtrl.text;
+
     if (displayName.isEmpty || email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Todos los campos son obligatorios')),
@@ -35,12 +86,18 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
         password: password,
         displayName: displayName,
       );
+
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed('/login');
+
+      // Mostrar modal de éxito y, al cerrarlo, enviar al login
+      await _showRegisterSuccessDialog();
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al registrar: $e')));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al registrar: $e')),
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -99,22 +156,24 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
             const SizedBox(height: 24),
 
             _isLoading
-                ? const CircularProgressIndicator(color: AppColors.primary)
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  )
                 : SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.textBlack,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.textBlack,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
+                      onPressed: _onRegisterPressed,
+                      child: Text('Crear cuenta', style: TextStyles.buttons),
                     ),
-                    onPressed: _onRegisterPressed,
-                    child: Text('Crear cuenta', style: TextStyles.buttons),
                   ),
-                ),
 
             const SizedBox(height: 32),
 
@@ -122,13 +181,12 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Ya tienes cuenta? ',
+                  '¿Ya tienes cuenta? ',
                   style: TextStyle(color: AppColors.textGray),
                 ),
                 GestureDetector(
-                  onTap:
-                      () =>
-                          Navigator.of(context).pushReplacementNamed('/login'),
+                  onTap: () =>
+                      Navigator.of(context).pushReplacementNamed('/login'),
                   child: Text(
                     'Iniciar sesión',
                     style: TextStyles.loginRegister,
