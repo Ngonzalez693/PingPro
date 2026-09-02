@@ -3,6 +3,7 @@
 **Table-tennis training mobile app with 3D drill visualization.**
 
 Undergraduate thesis in Systems Engineering — Universidad de San Buenaventura Cali (2025).
+
 PingPro lets coaches and athletes build drills step by step (stroke, spin, table zone, direction and side) and watch them performed by a 3D human model animated from self-captured motion-capture data.
 
 Flutter · Node.js · TypeScript · Express · Firebase (Auth / Firestore) · Cloudinary · Blender
@@ -154,7 +155,9 @@ Unit tests cover controllers, services, repositories and utilities, alongside in
 ## Author
 
 **Nicolás González Toro** — Software Systems Engineer and Multimedia Engineer
+
 **Camilo González Toro** — Multimedia Engineer
+
 Fifteen years of competitive table tennis are the source of the domain knowledge behind this project.
 
 [LinkedIn](https://www.linkedin.com/in/nicolas-gonzalez-toro) · [Behance](https://www.behance.net/ngonzalez693) · [GitHub](https://github.com/Ngonzalez693)
