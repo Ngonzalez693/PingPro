@@ -88,12 +88,12 @@ class AuthService {
     await _auth.signOut();
   }
 
-  /// Perfil opcional desde backend (si lo tienes)
+  /// Perfil extendido desde el backend (GET /api/users/me).
   ///
-  /// NO FUNCIONA hoy: en el backend la ruta GET /me está declarada después de
-  /// GET /:id, así que Express resuelve /api/users/me como getById("me") y esto
-  /// devuelve {} en silencio. Ver el comentario en userRoutes.ts.
-  /// Por eso la pantalla de perfil termina mostrando los datos de Firebase Auth.
+  /// Devuelve el documento users/{uid} de Firestore, que tiene campos que
+  /// Firebase Auth no guarda (roles, createdAt). Si la petición falla devuelve
+  /// un mapa vacío a propósito: quien lo llama cae en los datos de
+  /// FirebaseAuth.currentUser en lugar de romper la pantalla.
   Future<Map<String, dynamic>> fetchUserProfile() async {
     final u = _auth.currentUser;
     if (u == null) return {};
