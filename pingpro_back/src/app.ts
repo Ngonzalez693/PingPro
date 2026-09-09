@@ -11,8 +11,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import routes from '@routes/index';
-import { errorHandler } from '@middlewares/index';
+import routes from './routes/index';
+import { errorHandler } from './middlewares/index';
 
 dotenv.config();           // Look for .env configuration
 

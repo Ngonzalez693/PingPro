@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { requireRole, requireSelfOrRole } from '@middlewares/roleMiddleware';
+import { requireRole, requireSelfOrRole } from '../../../src/middlewares/roleMiddleware';
 
 // Se mockea UserService para no tocar Firestore: lo que se prueba es la
 // decisión de autorización, no la lectura del documento.
@@ -11,7 +11,7 @@ import { requireRole, requireSelfOrRole } from '@middlewares/roleMiddleware';
 // UserService al importarse, antes de que esta constante exista. Referenciarla
 // directamente daría "Cannot access before initialization".
 const mockGetById = jest.fn();
-jest.mock('@services/UserService', () => ({
+jest.mock('../../../src/services/UserService', () => ({
   UserService: jest.fn().mockImplementation(() => ({
     getById: (...args: unknown[]) => mockGetById(...args),
   })),

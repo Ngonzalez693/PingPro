@@ -7,7 +7,7 @@
  * duplicada en types/express.d.ts, que es donde corresponde. Aquí sobra.
  */
 import Joi from 'joi';
-import { IUserStat } from '@interfaces/models/IUserStat';
+import { IUserStat } from '../interfaces/models/IUserStat';
 
 export const statsSchema = Joi.object({
   id: Joi.string().optional(),

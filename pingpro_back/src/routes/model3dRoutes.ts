@@ -8,8 +8,8 @@
  * Solo lectura: los .glb se suben por fuera de la API.
  */
 import { Router } from 'express';
-import Model3DController from '@/controllers/Model3DController';
-import authMiddleware from '@/middlewares/authMiddleware';
+import Model3DController from '../controllers/Model3DController';
+import authMiddleware from '../middlewares/authMiddleware';
 
 const router = Router();
 

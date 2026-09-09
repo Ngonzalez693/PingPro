@@ -8,9 +8,9 @@
  * Convención en todo el repositorio: Firestore guarda el id fuera del
  * documento, por eso cada lectura hace `{ id: doc.id, ...doc.data() }`.
  */
-import { IExercise } from '@interfaces/models/IExercise';
-import { IExerciseRepository } from '@interfaces/repositories/IExerciseRepository';
-import { database } from '@config/database';
+import { IExercise } from '../../interfaces/models/IExercise';
+import { IExerciseRepository } from '../../interfaces/repositories/IExerciseRepository';
+import { database } from '../../config/database';
 import { firestore } from 'firebase-admin';
 
 export class FirebaseExerciseRepository implements IExerciseRepository {

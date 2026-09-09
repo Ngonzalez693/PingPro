@@ -6,7 +6,7 @@
  * que hay que convertir con toDate().
  */
 import { firestore } from 'firebase-admin';
-import { IModel3D } from '@/interfaces/models/IModel3D';
+import { IModel3D } from '../../interfaces/models/IModel3D';
 
 const col = () => firestore().collection('model3d');
 

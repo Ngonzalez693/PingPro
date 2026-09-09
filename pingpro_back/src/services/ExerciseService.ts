@@ -6,10 +6,10 @@
  * Es la capa que decide qué es un 404 y qué validaciones cruzadas aplican.
  * Los controllers no hablan nunca con Firestore directamente.
  */
-import { IExercise } from '@interfaces/models/IExercise';
-import { FirebaseExerciseRepository } from '@repositories/implementations/FirebaseExerciseRepository';
-import FirebaseUserExerciseStateRepository from '@repositories/implementations/FirebaseUserExerciseStateRepository';
-import type { IUserExerciseState } from '@interfaces/models/IUserExerciseState';
+import { IExercise } from '../interfaces/models/IExercise';
+import { FirebaseExerciseRepository } from '../repositories/implementations/FirebaseExerciseRepository';
+import FirebaseUserExerciseStateRepository from '../repositories/implementations/FirebaseUserExerciseStateRepository';
+import type { IUserExerciseState } from '../interfaces/models/IUserExerciseState';
 
 export class ExerciseService {
   private exerciseRepo = new FirebaseExerciseRepository();

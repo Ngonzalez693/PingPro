@@ -1,7 +1,7 @@
 import { ExerciseService } from '../../../src/services/ExerciseService';
 import { FirebaseExerciseRepository } from '../../../src/repositories/implementations/FirebaseExerciseRepository';
 
-jest.mock('@/repositories/implementations/FirebaseExerciseRepository');
+jest.mock('../../../src/repositories/implementations/FirebaseExerciseRepository');
 
 describe('ExerciseService', () => {
   let service: ExerciseService;

@@ -10,9 +10,9 @@
  * implementados pero sin consumir.
  */
 import { Request, Response, NextFunction } from 'express';
-import { StatsService } from '@services/StatsService';
-import { success, error } from '@utils/apiResponse';
-import { HTTP_STATUS } from '@utils/constants';
+import { StatsService } from '../services/StatsService';
+import { success, error } from '../utils/apiResponse';
+import { HTTP_STATUS } from '../utils/constants';
 
 const service = new StatsService();
 

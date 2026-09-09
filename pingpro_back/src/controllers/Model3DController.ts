@@ -7,7 +7,7 @@
  * Model3dCatalog en la app depende de esa forma.
  */
 import { Request, Response } from 'express';
-import Model3DService from '@/services/Model3DService';
+import Model3DService from '../services/Model3DService';
 
 const service = Model3DService.instance;
 

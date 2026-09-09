@@ -3,9 +3,6 @@
  *
  * ProcessEnv documenta qué variables espera el backend en el .env y hace que
  * process.env.X salga tipado en vez de string | undefined.
- *
- * Los `declare module '@…/*'` acompañan a los alias de importación definidos en
- * tsconfig.json (paths). En runtime los resuelve tsconfig-paths.
  */
 declare namespace NodeJS {
   interface ProcessEnv {
@@ -25,13 +22,3 @@ declare namespace NodeJS {
   }
 }
 
-declare module '@/*';
-declare module '@config/*';
-declare module '@models/*';
-declare module '@controllers/*';
-declare module '@services/*';
-declare module '@routes/*';
-declare module '@middlewares/*';
-declare module '@repositories/*';
-declare module '@interfaces/*';
-declare module '@utils/*';

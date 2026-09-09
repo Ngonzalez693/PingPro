@@ -6,9 +6,9 @@
  * Firebase Auth y el id del documento coincidan.
  */
 import { Request, Response, NextFunction } from 'express';
-import { UserService } from '@services/UserService';
-import { success, error } from '@utils/apiResponse';
-import { HTTP_STATUS } from '@utils/constants';
+import { UserService } from '../services/UserService';
+import { success, error } from '../utils/apiResponse';
+import { HTTP_STATUS } from '../utils/constants';
 
 const service = new UserService();
 
