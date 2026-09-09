@@ -1,3 +1,14 @@
+/// Catálogo de animaciones 3D en memoria: resuelve nombre → URL del .glb.
+///
+/// Es la pieza que conecta el mapper (exercise_to_glb_steps.dart, que razona en
+/// nombres) con la colección 'model3d' del backend (que guarda las URLs).
+///
+/// Singleton con carga perezosa: la primera vez que se abre un ejercicio pide
+/// GET /api/model3d y guarda el índice para el resto de la sesión, así no hay
+/// una petición por animación.
+///
+/// El índice usa el nombre en minúsculas y sin espacios sobrantes como clave,
+/// para que una diferencia de mayúsculas en Firestore no rompa la búsqueda.
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -5,6 +16,8 @@ import 'package:http/http.dart' as http;
 
 final String _baseUrl = dotenv.env['API_BASE_URL']!;
 
+/// DUPLICADO de models/model3d_model.dart. Esta es la copia que se usa de
+/// verdad en el flujo 3D; conviene quedarse con una sola.
 class Model3dModel {
   final String id;
   final String name;
@@ -53,6 +66,8 @@ class Model3dCatalog {
       if (r.statusCode != 200) {
         throw Exception('Model3D list failed: ${r.statusCode} ${r.body}');
       }
+      // Se espera un array pelado, no { success, data }: Model3DController es
+      // el único controller del backend que no envuelve la respuesta.
       final list = (jsonDecode(r.body) as List).cast<Map<String, dynamic>>();
       _byName
         ..clear()
