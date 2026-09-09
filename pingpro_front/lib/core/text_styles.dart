@@ -1,3 +1,8 @@
+// Tipografías de la app, emparejadas con AppColors.
+//
+// Cada estilo viene en dos versiones (`title` / `titleBlack`) porque la app
+// alterna fondo negro y tarjetas claras, y el color del texto tiene que
+// invertirse en cada caso.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 

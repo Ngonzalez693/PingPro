@@ -1,3 +1,8 @@
+// Tarjeta de entrenamiento: imagen arriba, nombre abajo. Se usa en carrusel
+// horizontal (Home, Perfil) y en cuadrícula (Entrenamientos).
+//
+// Como ExerciseCard, es puramente presentacional: la navegación llega por
+// `onTap`. La imagen también es un asset local, con la misma limitación.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';

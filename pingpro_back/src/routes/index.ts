@@ -1,3 +1,7 @@
+/**
+ * Barrel de rutas: agrupa los routers por recurso y los monta bajo el prefijo
+ * que app.ts define (/api). El nombre del segmento aquí define la URL pública.
+ */
 // Routes Barrel
 import { Router } from 'express';
 import exerciseRoutes from './exerciseRoutes';

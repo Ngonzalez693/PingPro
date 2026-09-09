@@ -1,3 +1,7 @@
+/**
+ * Esquema Joi de un entrenamiento. Exige al menos un ejercicio en exerciseIds:
+ * un entrenamiento vacío no tendría sentido en la pantalla de detalle.
+ */
 import Joi from 'joi';
 
 // Info to validate trainings

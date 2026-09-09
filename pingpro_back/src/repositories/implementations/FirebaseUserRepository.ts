@@ -1,3 +1,10 @@
+/**
+ * Acceso a la colección 'users' de Firestore.
+ *
+ * createWithUID es el método que se usa en el registro: fija el id del
+ * documento al uid de Firebase Auth. create() (id automático) queda como parte
+ * del contrato IUserRepository pero no debería usarse para usuarios reales.
+ */
 import { IUser } from '@interfaces/models/IUser';
 import { IUserRepository } from '@interfaces/repositories/IUserRepository';
 import { database } from '@config/database';

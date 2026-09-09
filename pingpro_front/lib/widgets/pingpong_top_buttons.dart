@@ -1,3 +1,7 @@
+// Fila de 5 botones "+" en el lado lejano de la mesa (destino de la pelota).
+//
+// Las posiciones son píxeles absolutos ajustados al tamaño fijo de
+// PingPongTable; ver la limitación explicada allí.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/widgets/plus_button.dart';
 

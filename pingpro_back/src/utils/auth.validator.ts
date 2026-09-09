@@ -1,3 +1,8 @@
+/**
+ * Esquema Joi del registro. El mínimo de 6 caracteres replica la regla de
+ * Firebase Auth: validarlo aquí evita una ida al servidor de Firebase para
+ * devolver el mismo error.
+ */
 import Joi from 'joi';
 
 export const signUpSchema = Joi.object({

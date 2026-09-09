@@ -1,3 +1,9 @@
+/**
+ * Servicio del catálogo de modelos 3D (solo lectura).
+ *
+ * Singleton (`instance`): el catálogo es el mismo para toda la app y no guarda
+ * estado por petición, así que no tiene sentido instanciarlo por request.
+ */
 import FirebaseModel3DRepository from '@/repositories/implementations/FirebaseModel3DRepository';
 import { IModel3D } from '@/interfaces/models/IModel3D';
 

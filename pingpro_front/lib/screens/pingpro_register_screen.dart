@@ -1,3 +1,11 @@
+// Registro de cuenta.
+//
+// A diferencia del login, pasa por el backend (signupViaBackend): es el
+// endpoint el que crea la credencial en Firebase Auth y el documento
+// users/{uid} a la vez. Ver AuthService para el porqué.
+//
+// Después del alta manda al login en vez de entrar directo, aunque
+// signupViaBackend ya deja la sesión iniciada.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';

@@ -1,3 +1,11 @@
+/**
+ * Reglas de negocio de entrenamientos. Mismo esquema que ExerciseService:
+ * catálogo compartido ('trainings') + estado privado
+ * (users/{uid}/trainingStates).
+ *
+ * getAllWithUserState es la pieza clave: Firestore no permite join, así que el
+ * cruce entre catálogo y progreso se hace aquí en memoria.
+ */
 import { ITraining } from '@interfaces/models/ITraining';
 import { FirebaseTrainingRepository } from '@repositories/implementations/FirebaseTrainingRepository';
 import FirebaseUserTrainingStateRepository from '@repositories/implementations/FirebaseUserTrainingStateRepository';
@@ -70,11 +78,13 @@ export class TrainingService {
     isCompleted: boolean;
     completedAt?: string | null; // ISO
   }>> {
+    // Las dos lecturas son independientes → en paralelo, no en secuencia.
     const [trainings, states] = await Promise.all([
       this.getAll(),
       this.userTrainingStateRepo.getAllStates(userId),
     ]);
 
+    // Índice por id para cruzar en O(n) en vez de recorrer states por cada training.
     const byId = new Map(states.map(s => [s.trainingId, s]));
 
     return trainings.map(t => {

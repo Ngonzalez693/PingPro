@@ -1,3 +1,11 @@
+/**
+ * Reglas de negocio de ejercicios. Coordina dos repositorios:
+ *  - exerciseRepo:  catálogo compartido (colección 'exercises')
+ *  - userStateRepo: progreso privado (users/{uid}/exerciseStates)
+ *
+ * Es la capa que decide qué es un 404 y qué validaciones cruzadas aplican.
+ * Los controllers no hablan nunca con Firestore directamente.
+ */
 import { IExercise } from '@interfaces/models/IExercise';
 import { FirebaseExerciseRepository } from '@repositories/implementations/FirebaseExerciseRepository';
 import FirebaseUserExerciseStateRepository from '@repositories/implementations/FirebaseUserExerciseStateRepository';
@@ -44,6 +52,8 @@ export class ExerciseService {
     isFavorite: boolean
   ): Promise<IUserExerciseState> {
     // valida que exista el ejercicio (evita estados huérfanos)
+    // Sin esta comprobación se podrían crear documentos en
+    // users/{uid}/exerciseStates apuntando a ejercicios inexistentes.
     await this.getById(exerciseId);
     return this.userStateRepo.setFavorite(userId, exerciseId, isFavorite);
   }

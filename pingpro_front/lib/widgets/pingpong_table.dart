@@ -1,3 +1,10 @@
+// Mesa de tenis de mesa vista desde arriba, con los puntos de golpeo.
+// Es el lienzo del flujo de creación de ejercicios.
+//
+// LIMITACIÓN: mide 280x400 px fijos y los botones se colocan con coordenadas
+// absolutas calculadas a ojo (`index * 62.6`). No es responsive: en pantallas
+// pequeñas se desborda y en grandes queda diminuta. Para terminar la pantalla
+// de creación habría que rehacerla con LayoutBuilder y posiciones relativas.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/widgets/pingpong_top_buttons.dart';

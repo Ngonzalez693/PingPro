@@ -1,3 +1,18 @@
+// Segundo paso del flujo de creación: dibujar la secuencia de golpes sobre la
+// mesa.
+//
+// ESTADO: prototipo. Funciona la mecánica de interfaz (mantener pulsado un
+// botón de la mesa abre un diálogo de destino, dibuja una flecha y pide el
+// golpe), pero no produce datos reales:
+//   - Los golpes son dos literales de prueba ("Top Der", "Top Izq") en vez de
+//     los códigos de SequenceStep.
+//   - Los destinos son coordenadas fijas escritas a mano, no zonas de la mesa.
+//   - Las posiciones de la mesa y los botones son píxeles absolutos: no se
+//     adaptan al tamaño de pantalla y se descuadran en otros dispositivos.
+//   - El botón "Subir y ver" no hace nada.
+//
+// Para terminarlo hay que producir List<SequenceStep> con los códigos de
+// pingpro_back/src/utils/enums.ts y enviarlo con POST /api/exercises.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/widgets/pingpong_table.dart';

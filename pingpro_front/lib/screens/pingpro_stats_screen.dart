@@ -1,3 +1,16 @@
+// Estadísticas detalladas: gráfica de línea (total) + gráfica de barras del
+// tipo seleccionado, con periodo diario, semanal o mensual.
+//
+// Todo se calcula en el cliente a partir de los `completedAt` que ya están en
+// los stores. Los endpoints /api/stats del backend existen pero no se usan.
+//
+// El cálculo va en tres pasos: _dateRange() genera los cubos del periodo,
+// _belongsToBucket() decide en cuál cae cada fecha y _bucketCounts() los
+// cuenta. Es la versión completa de lo que Home y Perfil hacen en línea solo
+// para 7 días.
+//
+// La serie "Creados" siempre da cero: la creación de ejercicios todavía no
+// guarda nada (ver pingpro_create_screen.dart).
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
@@ -42,6 +55,9 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
         });
       case StatPeriod.weekly:  // últimas 8 semanas (lunes a domingo)
         final today = DateTime(now.year, now.month, now.day);
+        // OJO: `weekday % 7` da 0 para domingo y 1 para lunes, así que esto
+        // aterriza en DOMINGO, no en lunes como dice el comentario original.
+        // Para semanas de lunes a domingo sería `today.weekday - 1`.
         final monday = today.subtract(Duration(days: (today.weekday % 7))); // lunes = weekday 1, domingo=7
         return List.generate(8, (i) => monday.subtract(Duration(days: (7 * (7 - i))))); // 8 inicios de semana
       case StatPeriod.monthly: // últimos 6 meses

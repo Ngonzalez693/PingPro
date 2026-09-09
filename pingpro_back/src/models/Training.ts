@@ -1,3 +1,7 @@
+/**
+ * Clase de dominio de un entrenamiento (defaults sobre ITraining).
+ * SIN USO — ver la nota en models/Exercise.ts.
+ */
 import { ITraining } from '@interfaces/models/ITraining';
 
 export class Training implements ITraining {

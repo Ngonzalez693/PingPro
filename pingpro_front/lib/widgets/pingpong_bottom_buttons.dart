@@ -1,3 +1,5 @@
+// Fila de 5 botones "+" en el lado del jugador (origen del golpe).
+// Gemelo de PingPongTopButtons, anclado por abajo.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/widgets/plus_button.dart';
 

@@ -1,3 +1,9 @@
+// Carrusel de banners de la portada, con avance automático cada 4 segundos.
+//
+// Truco del bucle: se añade una copia del primer banner al final de la lista.
+// Al llegar a esa copia se salta con jumpToPage(0), que no anima, de modo que
+// el ciclo se ve continuo en vez de retroceder por todas las páginas.
+// Por eso los indicadores se generan sobre `length - 1`: la copia no cuenta.
 import 'dart:async';
 import 'package:flutter/material.dart';
 

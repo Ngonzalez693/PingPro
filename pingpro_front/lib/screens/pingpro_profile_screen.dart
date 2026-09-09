@@ -1,3 +1,14 @@
+// Pestaña 5: perfil con resumen de actividad e historial reciente.
+//
+// Todo lo que muestra sale de los stores en memoria: no hay ninguna petición
+// propia. "Recientes" se calcula ordenando por completedAt descendente.
+//
+// Los datos del usuario (nombre, avatar) vienen de FirebaseAuth.currentUser, no
+// del backend: GET /api/users/me no funciona hoy (ver auth_service.dart).
+//
+// El bloque de la gráfica está copiado casi literalmente de
+// pingpro_home_screen.dart — extraerlo a un widget compartido es el refactor
+// más rentable de esta pantalla.
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pingpro_front/core/app_colors.dart';

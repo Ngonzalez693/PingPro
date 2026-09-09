@@ -1,3 +1,7 @@
+/**
+ * Contrato del estado por usuario sobre entrenamientos. Equivalente a
+ * IUserExerciseStateRepository, con setProgress en lugar de setFavorite.
+ */
 import type { IUserTrainingState } from '@/interfaces/models/IUserTrainingState';
 
 export interface IUserTrainingStateRepository {

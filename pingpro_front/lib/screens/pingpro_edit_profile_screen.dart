@@ -1,3 +1,17 @@
+// Edición de perfil: nombre, contraseña, foto y cierre de sesión.
+//
+// EXCEPCIÓN ARQUITECTÓNICA: es la única pantalla que escribe en Firestore y
+// Firebase Storage directamente, saltándose el backend. El resto de la app
+// pasa siempre por la API. Se hizo así porque cambiar contraseña y subir foto
+// requieren el SDK cliente de Firebase, pero deja la escritura de users/{uid}
+// dependiendo de las reglas de seguridad de Firestore en lugar de la API.
+//
+// La escritura se hace con merge:true para no borrar los campos que no se
+// tocan (roles, createdAt) ni las subcolecciones de progreso.
+//
+// PENDIENTE: cambiar la contraseña puede fallar con 'requires-recent-login' si
+// la sesión es vieja. Hoy solo se muestra un aviso; falta el flujo de
+// reautenticación.
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:io' show File;
@@ -152,7 +166,8 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
       final uid = FirebaseAuth.instance.currentUser!.uid;
       final ref = FirebaseStorage.instance.ref().child('profiles/$uid.jpg');
 
-      // Carga según plataforma
+      // Carga según plataforma: en web no existe dart:io File, así que la
+      // imagen se sube como bytes en vez de como archivo.
       if (kIsWeb) {
         final bytes = await img.readAsBytes();
         await ref.putData(bytes);

@@ -1,3 +1,10 @@
+/**
+ * Controlador de usuarios (perfil en Firestore, no credenciales).
+ *
+ * create() está deshabilitado a propósito: la creación pasa siempre por
+ * AuthController.signUp, que es el único lugar que garantiza que el uid de
+ * Firebase Auth y el id del documento coincidan.
+ */
 import { Request, Response, NextFunction } from 'express';
 import { UserService } from '@services/UserService';
 import { success, error } from '@utils/apiResponse';
@@ -47,6 +54,8 @@ export default class UserController {
     }
   }
 
+  // Verifica el token a mano en vez de apoyarse en authMiddleware. Es
+  // duplicación: la ruta ya pasa por authMiddleware y podría leer req.user.uid.
   static async getMe(req: Request, res: Response, next: NextFunction) {
     try {
       const authHeader = req.headers.authorization || "";

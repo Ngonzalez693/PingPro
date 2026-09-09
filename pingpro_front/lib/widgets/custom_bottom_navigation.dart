@@ -1,3 +1,10 @@
+// Barra de navegación inferior de las 5 pestañas.
+//
+// Hecha a mano en vez de con BottomNavigationBar para poder usar los SVG de
+// assets/icons/ (cada pestaña tiene versión seleccionada y sin seleccionar) y
+// elevar el icono activo 8 px.
+//
+// Sin estado propio: `currentIndex` y `onTap` los controla HomeNavigation.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:flutter_svg/flutter_svg.dart';

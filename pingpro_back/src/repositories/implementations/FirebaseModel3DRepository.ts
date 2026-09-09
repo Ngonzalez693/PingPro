@@ -1,3 +1,10 @@
+/**
+ * Acceso a la colección 'model3d' (nombre de animación → URL del .glb).
+ *
+ * A diferencia de los otros repositorios, aquí se mapea campo por campo en vez
+ * de hacer spread: Firestore devuelve Timestamp y la interfaz espera Date, así
+ * que hay que convertir con toDate().
+ */
 import { firestore } from 'firebase-admin';
 import { IModel3D } from '@/interfaces/models/IModel3D';
 

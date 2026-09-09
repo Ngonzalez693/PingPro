@@ -1,3 +1,11 @@
+/**
+ * Arma la aplicación de Express: middlewares globales, montaje de rutas y
+ * manejador de errores. No abre el puerto — de eso se encarga server.ts.
+ *
+ * El orden de los `use` importa: los middlewares corren en el mismo orden en
+ * que se registran, y el errorHandler debe ir de último para recibir lo que
+ * los anteriores dejen pasar con `next(err)`.
+ */
 import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -17,6 +25,8 @@ app.use(express.json());   // JSON automatic parsing
 app.use(morgan('dev'));    // Logging of petitions
 
 // Prefix for all API routes
+// Todo cuelga de /api: /api/exercises, /api/trainings, /api/users, /api/auth,
+// /api/stats y /api/model3d (ver routes/index.ts).
 app.use('/api', routes);
 
 // Error centralized control

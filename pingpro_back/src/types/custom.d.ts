@@ -1,3 +1,12 @@
+/**
+ * Declaraciones de tipos globales.
+ *
+ * ProcessEnv documenta qué variables espera el backend en el .env y hace que
+ * process.env.X salga tipado en vez de string | undefined.
+ *
+ * Los `declare module '@…/*'` acompañan a los alias de importación definidos en
+ * tsconfig.json (paths). En runtime los resuelve tsconfig-paths.
+ */
 declare namespace NodeJS {
   interface ProcessEnv {
     NODE_ENV: 'development' | 'production';

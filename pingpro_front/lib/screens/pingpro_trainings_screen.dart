@@ -1,3 +1,8 @@
+// Pestaña 4: catálogo de entrenamientos en cuadrícula de dos columnas.
+//
+// Filtra en memoria por categoría, igual que la pantalla de ejercicios. Aquí
+// las categorías sí coinciden con las etiquetas visibles ('Grado', 'Objetivo',
+// 'Momento', 'Estilo', 'Estructura') y con el desplegable de creación.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';

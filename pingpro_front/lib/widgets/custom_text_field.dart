@@ -1,3 +1,7 @@
+// Campo de texto con el estilo oscuro de la app. Se usa en login y registro.
+//
+// El color de fondo (0xFF313131) está escrito a mano en vez de salir de
+// AppColors: sería el único caso del proyecto y convendría moverlo allí.
 // custom_text_field.dart
 import 'package:flutter/material.dart';
 

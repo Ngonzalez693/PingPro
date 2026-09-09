@@ -1,3 +1,10 @@
+/**
+ * Contrato del estado por usuario sobre ejercicios.
+ *
+ * No es un CRUD genérico: expone acciones del dominio (setFavorite,
+ * setCompleted) en vez de update(), porque cada una es un upsert parcial sobre
+ * el mismo documento y no deben pisarse entre sí.
+ */
 import type { IUserExerciseState } from '../models/IUserExerciseState';
 
 export interface IUserExerciseStateRepository {

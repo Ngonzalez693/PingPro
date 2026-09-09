@@ -1,3 +1,7 @@
+/**
+ * Contrato de persistencia de entrenamientos. Mismo CRUD que
+ * IExerciseRepository; ver ahí la explicación del patrón.
+ */
 import { ITraining } from '../models/ITraining';
 
 // Interface for training repository

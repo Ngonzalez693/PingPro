@@ -1,3 +1,14 @@
+/**
+ * Controlador de ejercicios.
+ *
+ * Su única responsabilidad es traducir HTTP ↔ servicio: leer params/body,
+ * delegar en ExerciseService y envolver la respuesta con success()/error().
+ * No hay lógica de negocio aquí.
+ *
+ * Los métodos de la mitad de abajo (favorite, completed, myStates) trabajan
+ * sobre el estado por usuario y por eso dependen del uid que inyecta
+ * authMiddleware en req.user.
+ */
 import { Request, Response, NextFunction } from 'express';
 import { ExerciseService } from '@services/ExerciseService';
 import { success, error } from '@utils/apiResponse';

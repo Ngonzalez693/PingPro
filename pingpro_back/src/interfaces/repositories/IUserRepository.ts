@@ -1,3 +1,10 @@
+/**
+ * Contrato de persistencia del perfil de usuario.
+ *
+ * Tiene dos formas de crear a propósito: create() deja que Firestore genere el
+ * id, createWithUID() lo fija al uid de Firebase Auth. Para usuarios reales
+ * siempre se usa la segunda.
+ */
 // Interface for user repository
 import { IUser } from '../models/IUser';
 

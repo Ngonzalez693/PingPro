@@ -1,3 +1,9 @@
+// Diálogo de confirmación al terminar un ejercicio.
+//
+// Solo presenta el mensaje: quien marca el ejercicio como completado es
+// pingpro_exercise_detail_screen.dart a través del callback `onFinalize`.
+// Se abre con barrierDismissible: false para que el usuario confirme
+// explícitamente y no cierre por accidente sin registrar el avance.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';

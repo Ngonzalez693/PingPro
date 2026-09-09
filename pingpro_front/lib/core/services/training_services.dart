@@ -1,3 +1,8 @@
+// Cliente HTTP de entrenamientos.
+//
+// Más simple que ExercisesService porque aquí el cruce con el progreso lo hace
+// el backend: /api/trainings/me/list ya devuelve el catálogo con completedAt
+// incluido, así que no hay merge en el cliente.
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -27,11 +32,14 @@ class TrainingsService {
       throw Exception('Error al obtener trainings: ${r.body}');
     }
     final data = jsonDecode(r.body);
+    // El backend envuelve en { success, data }, pero se acepta también el array
+    // pelado por si el endpoint cambia (Model3DController ya responde así).
     final List list = data is List ? data : data['data'];
     return list.map((e) => TrainingModel.fromJson(e)).toList();
   }
 
   // Listado enriquecido con estado del usuario (endpoint: GET /api/trainings/me/list)
+  // Es el que usa TrainingsState; fetchAll() queda para usos sin sesión.
   Future<List<TrainingModel>> fetchAllWithUserState() async {
     final r = await http
         .get(_u('/api/trainings/me/list'), headers: await _jsonHeaders(withAuth: true))

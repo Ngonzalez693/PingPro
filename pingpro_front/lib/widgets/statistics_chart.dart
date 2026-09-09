@@ -1,3 +1,8 @@
+// Gráfica de línea de actividad (fl_chart). La usan Home, Perfil y
+// Estadísticas con series distintas.
+//
+// Solo dibuja: recibe `values` y `labels` ya calculados, no sabe de fechas ni
+// de periodos. Ambas listas deben tener el mismo largo.
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
@@ -14,6 +19,8 @@ class StatisticsChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Sin actividad todos los valores son 0; forzar maxY a 1 evita que fl_chart
+    // reciba un rango vacío y la gráfica quede en blanco.
     final maxY = (values.isEmpty ? 1 : values.reduce((a, b) => a > b ? a : b)).toDouble();
     final maxYAdj = (maxY == 0 ? 1 : maxY);
 

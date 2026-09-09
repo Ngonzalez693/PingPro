@@ -1,3 +1,22 @@
+// Pestaña 3: creación de ejercicios y entrenamientos.
+//
+// ESTADO: es una maqueta, no una función terminada. Toda la interfaz existe
+// (pestañas, mesa, campo de nombre, categoría, duración, lista de ejercicios)
+// pero NADA se guarda: no hay ninguna llamada POST en este archivo ni en
+// pingpro_create_sequence_screen.dart.
+//
+// Lo que falta para cerrarla:
+//   - _pickTrainingImage, _onEditTrainingName y _onAddExerciseToTraining son
+//     stubs vacíos.
+//   - La mesa (PingPongTable) se pinta pero sus botones no capturan la
+//     secuencia; el paso siguiente solo navega a /createSequence.
+//   - No existe POST /api/exercises ni POST /api/trainings desde la app.
+//   - `image` en el modelo es una ruta de asset de Flutter, así que un
+//     ejercicio creado por el usuario no puede tener imagen propia sin
+//     cambiar antes ese campo a URL.
+//
+// Es el hueco funcional más grande de cara a publicar en tiendas: la pantalla
+// de bienvenida promete "crea tus propios ejercicios".
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/services/exercises_service.dart';
@@ -46,6 +65,7 @@ class _PingproCreateScreenState extends State<PingproCreateScreen> {
     }
   }
 
+  // Stubs sin implementar — ver la nota de estado en la cabecera del archivo.
   void _pickTrainingImage() {
     /* showModalBottomSheet as before */
   }

@@ -1,3 +1,28 @@
+// Traduce un ejercicio a la lista de animaciones 3D que hay que reproducir.
+// Es el corazón de la función diferencial de PingPro.
+//
+// La cadena completa:
+//
+//   ExerciseModel.sequence            List<SequenceStep> (5 enteros por golpe)
+//          ↓  este archivo
+//   _hitAnim(step)                    golpe   → nombre de animación
+//   _movementBetween(a, b)            traslado entre dos golpes → animación
+//   _durByName                        nombre  → duración
+//          ↓
+//   Model3dCatalog.urlByName(nombre)  nombre  → URL del .glb (GET /api/model3d)
+//          ↓
+//   List<GlbStep>                     lo que consume ExerciseGlbSequenceView
+//
+// El resultado se intercala así:
+//   Posición Inicial → golpe 1 → desplazamiento → golpe 2 → desplazamiento → …
+// para que la animación se vea como una secuencia continua y no como golpes
+// sueltos. La posición inicial se omite si el ejercicio empieza con un saque,
+// porque el saque ya arranca desde su propia postura.
+//
+// PUNTO FRÁGIL: la unión entre este archivo y la base de datos son cadenas de
+// texto. Si el `name` de un documento de 'model3d' no coincide exactamente con
+// el literal que se escribe aquí, urlByName devuelve null y ese paso se salta
+// en silencio, sin error. Los nombres tienen que mantenerse sincronizados a mano.
 import 'dart:math';
 
 import 'package:pingpro_front/core/services/model3d_catalog.dart';
@@ -6,6 +31,11 @@ import 'package:pingpro_front/widgets/exercise_glb_sequence_view.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 
 /// Duraciones por animación
+///
+/// Están a mano porque model_viewer_plus no expone la duración real del clip
+/// .glb: el reproductor avanza por temporizador, no por evento de fin de
+/// animación. Si un clip se reemplaza por otro más largo, hay que ajustar el
+/// número de aquí o la transición se cortará.
 const Map<String, Duration> _durByName = {
   // GOLPES
   'Saque Péndulo': Duration(seconds: 5),
@@ -40,6 +70,11 @@ const Map<String, Duration> _durByName = {
   'Tpose': Duration(seconds: 1),
 };
 
+/// Reduce SideCode (7 valores) a las 4 zonas que distinguen las animaciones.
+///
+/// Las animaciones no están grabadas por esquina exacta sino por zona, así que
+/// varios códigos comparten clip. Esta reducción es lo que evita necesitar una
+/// animación por cada combinación posible.
 // side: 1-3 derecha, 4-5 pivot, 6-7 izquierda, 8 libre
 String _side(int side) {
   if (side == 4 || side == 5) return 'PIVOT';
@@ -48,9 +83,20 @@ String _side(int side) {
   return 'CENTRO'; // 8 u otros casos
 }
 
+/// Golpe → nombre de animación.
+///
+/// Cascada de reglas sobre (hit, rotation, side). El orden importa: la primera
+/// que coincide gana, y las más específicas (pivot) van después de las
+/// generales solo porque incluyen la condición de lado.
+///
+/// Devuelve 'Tpose' como fallback: si una combinación no está contemplada, el
+/// muñeco se queda en pose neutra en vez de romper la reproducción. Eso también
+/// significa que una combinación sin animación NO se reporta como error — si un
+/// ejercicio se ve raro, es el primer sitio donde mirar.
 // Golpe → nombre de animación
 String? _hitAnim(SequenceStep step) {
-  // Saques
+  // Saques: hay tres animaciones válidas y se elige una al azar para que
+  // repetir el ejercicio no se vea siempre idéntico.
   if (step.hit == 7) {
     final candidates = <String>[
       'Saque Péndulo',
@@ -126,7 +172,12 @@ String? _hitAnim(SequenceStep step) {
   return 'Tpose';
 }
 
-/// Movimiento entre dos golpes consecutivos
+/// Movimiento entre dos golpes consecutivos.
+///
+/// Se inserta entre golpe y golpe para que el muñeco se desplace en vez de
+/// teletransportarse. Solo depende de la zona de salida y de llegada: cuando
+/// coinciden se usa un ajuste corto, y si no, el desplazamiento largo que
+/// corresponda.
 String? _movementBetween(SequenceStep a, SequenceStep b) {
   final sideA = _side(a.side);
   final sideB = _side(b.side);
@@ -151,6 +202,8 @@ String? _movementBetween(SequenceStep a, SequenceStep b) {
 // Inserta intermedios de movimiento cuando haga falta.
 // **Sin** wrap-around (no añade transición ni repite la primera).
 Future<List<GlbStep>> buildGlbStepsForExercise(ExerciseModel ex) async {
+  // El catálogo tiene que estar cargado antes de resolver nombres a URLs.
+  // loadIfNeeded es idempotente: solo la primera llamada pega al servidor.
   await Model3dCatalog.instance.loadIfNeeded();
 
   final out = <GlbStep>[];
