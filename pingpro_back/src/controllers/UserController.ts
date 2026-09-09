@@ -13,15 +13,6 @@ import { HTTP_STATUS } from '@utils/constants';
 const service = new UserService();
 
 export default class UserController {
-  static async getAll(req: Request, res: Response, next: NextFunction) {
-    try {
-      const users = await service.getAll();
-      return success(res, users, HTTP_STATUS.OK);
-    } catch (err) {
-      return error(res, (err as Error).message, HTTP_STATUS.INTERNAL_ERROR);
-    }
-  }
-
   static async getById(req: Request, res: Response, next: NextFunction) {
     try {
       const user = await service.getById(req.params.id);
