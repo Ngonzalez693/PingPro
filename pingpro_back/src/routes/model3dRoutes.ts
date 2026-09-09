@@ -9,8 +9,12 @@
  */
 import { Router } from 'express';
 import Model3DController from '@/controllers/Model3DController';
+import authMiddleware from '@/middlewares/authMiddleware';
 
 const router = Router();
+
+// Las URLs de los .glb no son públicas: toda la ruta exige sesión.
+router.use(authMiddleware);
 
 router.get('/', Model3DController.list);
 router.get('/:id', Model3DController.get);

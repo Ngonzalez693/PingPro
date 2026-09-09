@@ -28,7 +28,7 @@ class ExercisesService {
 
   // GET /api/exercises (sin estado de usuario)
   Future<List<ExerciseModel>> fetchAll() async {
-    final r = await http.get(_u('/api/exercises'), headers: await _jsonHeaders());
+    final r = await http.get(_u('/api/exercises'), headers: await _jsonHeaders(withAuth: true));
     if (r.statusCode != 200) {
       throw Exception('Error al obtener ejercicios: ${r.body}');
     }
