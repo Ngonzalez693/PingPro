@@ -4,9 +4,9 @@
  * exists() se usa antes de escribir estado por usuario: comprobar existencia
  * es más barato que traer el documento completo solo para descartarlo.
  */
-import { ITraining } from '@interfaces/models/ITraining';
-import { ITrainingRepository } from '@interfaces/repositories/ITrainingRepository';
-import { database } from '@config/database';
+import { ITraining } from '../../interfaces/models/ITraining';
+import { ITrainingRepository } from '../../interfaces/repositories/ITrainingRepository';
+import { database } from '../../config/database';
 import { firestore } from 'firebase-admin';
 
 export class FirebaseTrainingRepository implements ITrainingRepository {

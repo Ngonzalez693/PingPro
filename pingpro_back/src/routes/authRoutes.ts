@@ -6,9 +6,9 @@
  * la app directamente contra Firebase Auth, sin tocar el backend.
  */
 import { Router } from 'express';
-import AuthController from '@controllers/AuthController';
-import { validateBody } from '@middlewares/validation';
-import { signUpSchema } from '@utils/auth.validator';
+import AuthController from '../controllers/AuthController';
+import { validateBody } from '../middlewares/validation';
+import { signUpSchema } from '../utils/auth.validator';
 
 const router = Router();
 

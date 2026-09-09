@@ -8,13 +8,13 @@
  */
 // Exercise Routes
 import { Router } from 'express';
-import ExerciseController from '@controllers/ExerciseController';
-import { validateBody } from '@middlewares/validation';
-import { favoriteSchema, completedSchema } from '@/utils/exerciseState.validator';
-import { exerciseSchema } from '@utils/exercise.validator';
-import authMiddleware from '@/middlewares/authMiddleware';
-import { requireRole } from '@/middlewares/roleMiddleware';
-import { USER_ROLES } from '@utils/constants';
+import ExerciseController from '../controllers/ExerciseController';
+import { validateBody } from '../middlewares/validation';
+import { favoriteSchema, completedSchema } from '../utils/exerciseState.validator';
+import { exerciseSchema } from '../utils/exercise.validator';
+import authMiddleware from '../middlewares/authMiddleware';
+import { requireRole } from '../middlewares/roleMiddleware';
+import { USER_ROLES } from '../utils/constants';
 
 const router = Router();
 

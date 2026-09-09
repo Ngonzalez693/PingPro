@@ -4,7 +4,7 @@ import { ExerciseService } from '../../../src/services/ExerciseService';
 import { success } from '../../../src/utils/apiResponse';
 import { HTTP_STATUS } from '../../../src/utils/constants';
 
-jest.mock('@/services/ExerciseService');
+jest.mock('../../../src/services/ExerciseService');
 
 describe('ExerciseController', () => {
   let req: Partial<Request>;

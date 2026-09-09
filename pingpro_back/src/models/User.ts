@@ -3,7 +3,7 @@
  * fechas de creación).
  * SIN USO — ver la nota en models/Exercise.ts.
  */
-import { IUser } from '@interfaces/models/IUser';
+import { IUser } from '../interfaces/models/IUser';
 
 export class User implements IUser {
   id?: string;

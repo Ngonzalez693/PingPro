@@ -9,9 +9,9 @@
  * un usuario cada vez que le cambian el rol.
  */
 import { Request, Response, NextFunction } from 'express';
-import { UserService } from '@services/UserService';
-import { error } from '@utils/apiResponse';
-import { HTTP_STATUS } from '@utils/constants';
+import { UserService } from '../services/UserService';
+import { error } from '../utils/apiResponse';
+import { HTTP_STATUS } from '../utils/constants';
 
 const service = new UserService();
 

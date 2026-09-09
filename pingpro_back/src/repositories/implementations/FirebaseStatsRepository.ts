@@ -5,9 +5,9 @@
  * función de userId: cada usuario tiene su propia subcolección, así que la
  * ruta no se puede resolver hasta saber de quién se trata.
  */
-import { IStatsRepository } from '@interfaces/repositories/IStatsRepository';
-import { IUserStat } from '@interfaces/models/IUserStat';
-import { database } from '@config/database';
+import { IStatsRepository } from '../../interfaces/repositories/IStatsRepository';
+import { IUserStat } from '../../interfaces/models/IUserStat';
+import { database } from '../../config/database';
 
 export class FirebaseStatsRepository implements IStatsRepository {
   private collection = (userId: string) =>

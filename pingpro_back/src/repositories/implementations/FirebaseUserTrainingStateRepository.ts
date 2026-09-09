@@ -7,8 +7,8 @@
  * ruta lo expone: la app deriva el progreso contando ejercicios completados.
  */
 import { firestore } from 'firebase-admin';
-import type { IUserTrainingStateRepository } from '@/interfaces/repositories/IUserTrainingStateRepository';
-import type { IUserTrainingState } from '@/interfaces/models/IUserTrainingState';
+import type { IUserTrainingStateRepository } from '../../interfaces/repositories/IUserTrainingStateRepository';
+import type { IUserTrainingState } from '../../interfaces/models/IUserTrainingState';
 
 export default class FirebaseUserTrainingStateRepository implements IUserTrainingStateRepository {
     private col(userId: string) {

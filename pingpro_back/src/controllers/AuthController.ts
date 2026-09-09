@@ -6,10 +6,10 @@
  * que el perfil y la credencial queden siempre enlazados.
  */
 import { Request, Response, NextFunction } from 'express';
-import { AuthService } from '@services/AuthService';
-import { UserService } from '@services/UserService';
-import { success, error } from '@utils/apiResponse';
-import { HTTP_STATUS } from '@utils/constants';
+import { AuthService } from '../services/AuthService';
+import { UserService } from '../services/UserService';
+import { success, error } from '../utils/apiResponse';
+import { HTTP_STATUS } from '../utils/constants';
 
 const authService = new AuthService();
 const userService = new UserService();

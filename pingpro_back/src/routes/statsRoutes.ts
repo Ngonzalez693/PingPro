@@ -6,10 +6,10 @@
  */
 // Stats Routes
 import { Router } from 'express';
-import StatsController from '@controllers/StatsController';
-import { validateBody } from '@middlewares/validation';
-import { statsSchema } from '@/utils/stats.validator';
-import authMiddleware from '@/middlewares/authMiddleware';
+import StatsController from '../controllers/StatsController';
+import { validateBody } from '../middlewares/validation';
+import { statsSchema } from '../utils/stats.validator';
+import authMiddleware from '../middlewares/authMiddleware';
 
 const router = Router();
 router.use(authMiddleware);   // aplica a todas las rutas de abajo

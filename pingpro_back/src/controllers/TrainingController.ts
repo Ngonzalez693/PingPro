@@ -6,9 +6,9 @@
  * catálogo ya cruzado con el progreso del usuario en una sola llamada.
  */
 import { Request, Response, NextFunction } from 'express';
-import { TrainingService } from '@services/TrainingService';
-import { success, error } from '@utils/apiResponse';
-import { HTTP_STATUS } from '@utils/constants';
+import { TrainingService } from '../services/TrainingService';
+import { success, error } from '../utils/apiResponse';
+import { HTTP_STATUS } from '../utils/constants';
 
 const service = new TrainingService();    // Object type service
 

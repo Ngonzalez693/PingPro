@@ -10,8 +10,8 @@
  * favorito y completado por separado sin borrar el otro campo.
  */
 import { firestore } from 'firebase-admin';
-import type { IUserExerciseStateRepository } from '@/interfaces/repositories/IUserExerciseStateRepository';
-import type { IUserExerciseState } from '@/interfaces/models/IUserExerciseState';
+import type { IUserExerciseStateRepository } from '../../interfaces/repositories/IUserExerciseStateRepository';
+import type { IUserExerciseState } from '../../interfaces/models/IUserExerciseState';
 
 export default class FirebaseUserExerciseStateRepository implements IUserExerciseStateRepository {
   private col(userId: string) {

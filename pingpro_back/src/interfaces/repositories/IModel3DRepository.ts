@@ -5,7 +5,7 @@
  * FirebaseModel3DRepository solo implementa las lecturas y ni siquiera declara
  * `implements`. La subida de .glb se hace por fuera de la API.
  */
-import { IModel3D } from '@/interfaces/models/IModel3D';
+import { IModel3D } from '../models/IModel3D';
 
 export interface IModel3DRepository {
   createFromUrl(data: {

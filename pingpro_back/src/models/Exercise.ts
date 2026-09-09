@@ -7,7 +7,7 @@
  * clases de src/models/. O se adoptan (instanciándolas en los repositorios para
  * garantizar los defaults) o se eliminan.
  */
-import { IExercise } from '@interfaces/models/IExercise';
+import { IExercise } from '../interfaces/models/IExercise';
 
 export class Exercise implements IExercise {
   id?: string;

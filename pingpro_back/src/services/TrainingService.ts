@@ -6,10 +6,10 @@
  * getAllWithUserState es la pieza clave: Firestore no permite join, así que el
  * cruce entre catálogo y progreso se hace aquí en memoria.
  */
-import { ITraining } from '@interfaces/models/ITraining';
-import { FirebaseTrainingRepository } from '@repositories/implementations/FirebaseTrainingRepository';
-import FirebaseUserTrainingStateRepository from '@repositories/implementations/FirebaseUserTrainingStateRepository';
-import type { IUserTrainingState } from '@interfaces/models/IUserTrainingState';
+import { ITraining } from '../interfaces/models/ITraining';
+import { FirebaseTrainingRepository } from '../repositories/implementations/FirebaseTrainingRepository';
+import FirebaseUserTrainingStateRepository from '../repositories/implementations/FirebaseUserTrainingStateRepository';
+import type { IUserTrainingState } from '../interfaces/models/IUserTrainingState';
 
 export class TrainingService {
   private trainingRepo = new FirebaseTrainingRepository();

@@ -5,12 +5,12 @@
  * desde aquí: por eso POST '/' está bloqueado a propósito en el controller.
  */
 import { Router } from 'express';
-import UserController from '@controllers/UserController';
-import { validateBody } from '@middlewares/validation';
-import { userSchema, userUpdateSchema } from '@/utils/user.validator';
-import authMiddleware from '@/middlewares/authMiddleware';
-import { requireSelfOrRole } from '@/middlewares/roleMiddleware';
-import { USER_ROLES } from '@utils/constants';
+import UserController from '../controllers/UserController';
+import { validateBody } from '../middlewares/validation';
+import { userSchema, userUpdateSchema } from '../utils/user.validator';
+import authMiddleware from '../middlewares/authMiddleware';
+import { requireSelfOrRole } from '../middlewares/roleMiddleware';
+import { USER_ROLES } from '../utils/constants';
 
 const router = Router();
 

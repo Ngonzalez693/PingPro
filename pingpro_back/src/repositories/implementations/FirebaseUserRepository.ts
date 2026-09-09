@@ -5,9 +5,9 @@
  * documento al uid de Firebase Auth. create() (id automático) queda como parte
  * del contrato IUserRepository pero no debería usarse para usuarios reales.
  */
-import { IUser } from '@interfaces/models/IUser';
-import { IUserRepository } from '@interfaces/repositories/IUserRepository';
-import { database } from '@config/database';
+import { IUser } from '../../interfaces/models/IUser';
+import { IUserRepository } from '../../interfaces/repositories/IUserRepository';
+import { database } from '../../config/database';
 
 export class FirebaseUserRepository implements IUserRepository {
   private collection = database.firestore.collection('users');

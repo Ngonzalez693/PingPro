@@ -2,7 +2,7 @@
  * Contrato del estado por usuario sobre entrenamientos. Equivalente a
  * IUserExerciseStateRepository, con setProgress en lugar de setFavorite.
  */
-import type { IUserTrainingState } from '@/interfaces/models/IUserTrainingState';
+import type { IUserTrainingState } from '../models/IUserTrainingState';
 
 export interface IUserTrainingStateRepository {
   setCompleted(userId: string, trainingId: string, completed: boolean): Promise<IUserTrainingState>;
