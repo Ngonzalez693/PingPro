@@ -1,3 +1,14 @@
+/// Pestaña 2: catálogo completo de ejercicios con buscador y filtro por
+/// categoría.
+///
+/// El filtrado es en memoria sobre ExercisesState.all, no en el servidor: el
+/// catálogo es pequeño y ya está cargado, así que buscar es instantáneo.
+///
+/// FRÁGIL: las categorías se comparan como texto literal ('Footwork',
+/// 'Técnico', 'Táctico', 'Estrategia') contra el campo `category` de Firestore.
+/// Un cambio de nombre o una tilde distinta deja la pestaña vacía sin avisar.
+/// Además las etiquetas visibles no coinciden con lo que se compara
+/// ('Técnicos' se muestra pero se filtra por 'Técnico').
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';

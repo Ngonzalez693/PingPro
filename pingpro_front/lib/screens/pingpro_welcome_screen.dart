@@ -1,3 +1,8 @@
+/// Onboarding de 3 páginas para quien abre la app sin sesión.
+///
+/// Solo la imagen va en el PageView; el texto y el botón se cambian con un
+/// AnimatedSwitcher aparte, para que el bloque inferior no se deslice junto con
+/// la imagen. Al terminar pasa al splash, que a su vez lleva al login.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';

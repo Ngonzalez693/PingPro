@@ -1,3 +1,12 @@
+/// Pestaña 1: portada con banners, recomendaciones y un resumen de actividad.
+///
+/// Dispara la carga de los dos stores en initState. Como load() es idempotente,
+/// si otra pestaña ya cargó no se repite la petición.
+///
+/// El bloque de estadísticas agrupa por día los `completedAt` de ejercicios y
+/// entrenamientos de los últimos 7 días. Ese mismo cálculo está repetido casi
+/// literalmente en pingpro_profile_screen.dart y, en versión más completa, en
+/// pingpro_stats_screen.dart: es el candidato más claro a extraerse a core/.
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pingpro_front/core/app_colors.dart';
@@ -219,6 +228,9 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
                           .map((t) => t.completedAt!)
                           .toList();
 
+                  // Vacío porque la creación de ejercicios todavía no persiste
+                  // nada (ver pingpro_create_screen.dart). La serie "Creados"
+                  // sale siempre en cero.
                   // Si luego tienes "creados", añade sus fechas aquí
                   final createdDates = <DateTime>[];
 

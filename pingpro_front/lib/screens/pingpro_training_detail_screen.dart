@@ -1,3 +1,14 @@
+/// Detalle de un entrenamiento: progreso, siguiente ejercicio y lista completa.
+///
+/// El entrenamiento solo guarda `exerciseIds`, así que los ejercicios se
+/// resuelven aquí contra ExercisesState.getById(). Efecto secundario útil:
+/// completar un ejercicio desde su detalle actualiza esta barra de progreso al
+/// volver, sin recargar nada.
+///
+/// El entrenamiento se marca como completado solo cuando TODOS sus ejercicios
+/// lo están. Esa comprobación ocurre dentro del build, de ahí las dos guardas:
+/// `_completionPosted` para no enviar la petición más de una vez, y
+/// addPostFrameCallback para no modificar estado en mitad del build.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
@@ -74,6 +85,8 @@ class _PingproTrainingDetailScreenState
             final trState = TrainingsState.instance;
 
             // Ejercicios del training desde el store
+            // whereType descarta los ids que no estén en el store: un ejercicio
+            // borrado no rompe la pantalla, simplemente no aparece en la lista.
             final List<ExerciseModel> exercises = exerciseIds
                 .map((id) => exState.getById(id))
                 .whereType<ExerciseModel>()

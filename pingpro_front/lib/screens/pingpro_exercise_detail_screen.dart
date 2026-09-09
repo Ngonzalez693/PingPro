@@ -1,3 +1,19 @@
+/// Detalle de un ejercicio: visor 3D arriba, descripción y acciones abajo.
+///
+/// Es la pantalla donde converge todo el proyecto:
+///   - buildGlbStepsForExercise() convierte la secuencia en animaciones y
+///     ExerciseGlbSequenceView las reproduce.
+///   - _buildSequenceDescription() traduce los mismos códigos a texto legible.
+///   - El botón "Hecho" es el ÚNICO sitio de la app que marca un ejercicio como
+///     completado, y por tanto el que alimenta todas las estadísticas.
+///
+/// Lee el ejercicio "vivo" del store por id en vez de usar el que llega por
+/// parámetro: así el corazón y el estado de completado siguen siendo correctos
+/// aunque se haya modificado desde otra pantalla.
+///
+/// DEUDA: los mapas _hits/_rotations/_zones/_directions duplican a mano los
+/// enums de pingpro_back/src/utils/enums.ts. Es la tercera copia de esa tabla
+/// (ver también sequence_step_model.dart y exercise_to_glb_steps.dart).
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
@@ -87,6 +103,8 @@ class _PingproExerciseDetailScreenState
       final stepNumber = i + 1;
 
       // Golpe en descripción
+      // Caso especial: un forehand ejecutado desde la zona de pivot tiene
+      // nombre propio en tenis de mesa, no es "Forehand" a secas.
       String hit;
       if (step.hit == 1 && (step.side == 4 || step.side == 5)) {
         hit = 'Forehand Pivot';
