@@ -26,7 +26,7 @@ class TrainingsService {
   // Listado “puro”
   Future<List<TrainingModel>> fetchAll() async {
     final r = await http
-        .get(_u('/api/trainings'), headers: await _jsonHeaders())
+        .get(_u('/api/trainings'), headers: await _jsonHeaders(withAuth: true))
         .timeout(const Duration(seconds: 25));
     if (r.statusCode != 200) {
       throw Exception('Error al obtener trainings: ${r.body}');

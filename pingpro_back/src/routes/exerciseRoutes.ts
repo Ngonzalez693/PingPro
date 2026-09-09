@@ -16,8 +16,11 @@ import authMiddleware from '@/middlewares/authMiddleware';
 
 const router = Router();
 
+// El catálogo no es público: toda la ruta exige sesión.
+router.use(authMiddleware);
+
 // Va antes que '/:id': si no, Express interpretaría "me" como un id de ejercicio.
-router.get('/me/states', authMiddleware, ExerciseController.myStates);
+router.get('/me/states', ExerciseController.myStates);
 
 router.get('/', ExerciseController.getAll);
 router.get('/:id', ExerciseController.getById);
@@ -25,7 +28,7 @@ router.post('/', validateBody(exerciseSchema), ExerciseController.create);
 router.put('/:id', validateBody(exerciseSchema), ExerciseController.update);
 router.delete('/:id', ExerciseController.delete);
 
-router.post('/:id/favorite', authMiddleware, validateBody(favoriteSchema), ExerciseController.favorite);
-router.post('/:id/completed', authMiddleware, validateBody(completedSchema), ExerciseController.completed);
+router.post('/:id/favorite', validateBody(favoriteSchema), ExerciseController.favorite);
+router.post('/:id/completed', validateBody(completedSchema), ExerciseController.completed);
 
 export default router;
