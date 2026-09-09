@@ -1,3 +1,11 @@
+/// Un entrenamiento: una lista ordenada de ids de ejercicios más metadatos.
+///
+/// No guarda los ExerciseModel, solo `exerciseIds`. La pantalla de detalle los
+/// resuelve contra ExercisesState.getById(), así que un ejercicio actualizado
+/// se ve al instante en todos los entrenamientos que lo incluyen.
+///
+/// `completedAt` viene de GET /api/trainings/me/list, que ya entrega el
+/// catálogo cruzado con el progreso del usuario.
 class TrainingModel {
   final String id;
   final String name;

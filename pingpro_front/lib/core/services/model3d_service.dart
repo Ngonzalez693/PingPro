@@ -1,3 +1,8 @@
+/// Cliente HTTP del catálogo de modelos 3D.
+///
+/// SIN USO en el flujo actual: quien pide /api/model3d es Model3dCatalog, que
+/// además cachea e indexa por nombre. Este servicio queda como acceso genérico
+/// (incluye getById, que el catálogo no necesita).
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';

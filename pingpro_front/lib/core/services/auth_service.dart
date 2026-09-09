@@ -1,3 +1,12 @@
+/// Autenticación. El flujo está partido entre Firebase y el backend a propósito:
+///
+///   Registro → POST /api/auth/signup. El backend crea la cuenta en Firebase
+///              Auth Y el documento users/{uid} en una sola operación, así no
+///              queda nunca una credencial sin perfil. Después la app inicia
+///              sesión localmente con esas mismas credenciales.
+///   Login    → 100% Firebase en el cliente, sin pasar por el backend.
+///   Sesión   → el ID token de Firebase se manda como Bearer en cada petición
+///              autenticada; el backend lo valida con verifyIdToken.
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -33,6 +42,8 @@ class AuthService {
     required String password,
   }) async {
     // Cerrar sesión previa para evitar usar token de otro usuario
+    // (si alguien se registra sin haber cerrado la sesión anterior, el token
+    // que quedara en memoria sería del usuario equivocado).
     try { await _auth.signOut(); } catch (_) {}
 
     final resp = await http.post(
@@ -78,6 +89,11 @@ class AuthService {
   }
 
   /// Perfil opcional desde backend (si lo tienes)
+  ///
+  /// NO FUNCIONA hoy: en el backend la ruta GET /me está declarada después de
+  /// GET /:id, así que Express resuelve /api/users/me como getById("me") y esto
+  /// devuelve {} en silencio. Ver el comentario en userRoutes.ts.
+  /// Por eso la pantalla de perfil termina mostrando los datos de Firebase Auth.
   Future<Map<String, dynamic>> fetchUserProfile() async {
     final u = _auth.currentUser;
     if (u == null) return {};

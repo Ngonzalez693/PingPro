@@ -1,3 +1,9 @@
+/// Cliente HTTP de ejercicios. Capa más baja del lado de datos: solo habla con
+/// la API y devuelve modelos. Quien guarda estado es ExercisesState.
+///
+/// El catálogo y el progreso del usuario vienen de endpoints separados
+/// (/api/exercises y /api/exercises/me/states) y se juntan aquí en
+/// fetchAllMergedWithUserState(), que es lo que consume el store.
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -31,7 +37,14 @@ class ExercisesService {
     return list.map<ExerciseModel>((e) => ExerciseModel.fromJson(e)).toList();
   }
 
-  // GET /api/exercises/me/states (auth)
+  /// GET /api/exercises/me/states (auth) → { exerciseId: {isFavorite, completedAt} }
+  ///
+  /// DEUDA TÉCNICA: todo lo que sigue son ~100 líneas defensivas que aceptan
+  /// cinco formas distintas de respuesta (array de objetos, mapa id→bool,
+  /// mapa id→objeto, envoltura {data:...} y {favorites:[], completed:[]}).
+  /// Se escribió así porque el contrato del endpoint nunca se fijó.
+  /// El backend hoy devuelve solo la primera forma; el resto se puede borrar en
+  /// cuanto se congele el contrato.
   Future<Map<String, Map<String, dynamic>>> fetchMyStates() async {
     final r = await http.get(
       _u('/api/exercises/me/states'),
@@ -142,7 +155,11 @@ class ExercisesService {
   }
 
   /// GET ejercicios + GET estados y MERGE a ExerciseModel
+  ///
+  /// Es el único método que usa ExercisesState: entrega los ejercicios ya
+  /// marcados con favorito y completado del usuario actual.
   Future<List<ExerciseModel>> fetchAllMergedWithUserState() async {
+    // Las dos peticiones son independientes → en paralelo, no encadenadas.
     final results = await Future.wait([
       fetchAll(),
       fetchMyStates(),

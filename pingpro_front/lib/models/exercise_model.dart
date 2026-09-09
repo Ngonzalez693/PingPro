@@ -1,5 +1,14 @@
 import 'package:pingpro_front/models/sequence_step_model.dart';
 
+/// Un ejercicio tal como lo consume la app.
+///
+/// Mezcla dos orígenes: los campos del catálogo (`name`, `category`, `sequence`)
+/// vienen de GET /api/exercises y son iguales para todos; `isFavorite` y
+/// `completedAt` son del usuario y llegan de GET /api/exercises/me/states.
+/// ExercisesService.fetchAllMergedWithUserState() los junta.
+///
+/// Por eso esos dos campos son mutables mientras el resto es `final`:
+/// ExercisesState los modifica en memoria para la UI optimista.
 class ExerciseModel {
   final String id;
   final String name;
@@ -27,6 +36,9 @@ class ExerciseModel {
       name: json['name'] as String,
       category: json['category'] as String,
       image: json['image'] as String,
+      // 'userState' es un envoltorio que el endpoint actual no devuelve: en la
+      // práctica esto siempre queda en false y lo sobrescribe el merge de
+      // ExercisesService. Se mantiene por si el backend llega a anidarlo.
       isFavorite: (json['userState']?['isFavorite'] ?? false) as bool,
       description: json['description'] as String? ?? '',
       sequence:
