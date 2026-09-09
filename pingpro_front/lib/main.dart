@@ -1,3 +1,16 @@
+/// Punto de entrada de la app y tabla de rutas.
+///
+/// Aquí viven tres piezas:
+///   - main():          arranque (dotenv + Firebase) antes de pintar nada.
+///   - AuthWrapper:     decide Welcome o Home según haya sesión.
+///   - HomeNavigation:  las 5 pestañas de la barra inferior.
+///
+/// Arquitectura del proyecto:
+///   screens/  → pantallas
+///   widgets/  → piezas reutilizables
+///   core/services/ → stores en memoria (ExercisesState, TrainingsState) y
+///                    clientes HTTP contra pingpro_back
+///   models/   → objetos de datos con fromJson/toJson
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -21,8 +34,10 @@ import 'package:pingpro_front/widgets/custom_bottom_navigation.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 
 void main() async {
+  // ensureInitialized() debe ir primero: dotenv y Firebase necesitan el binding
+  // de plataforma listo antes de que exista el árbol de widgets.
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load();
+  await dotenv.load();          // API_BASE_URL, declarado como asset en pubspec.yaml
   await Firebase.initializeApp();
 
   runApp(const MainApp());
@@ -38,6 +53,8 @@ class MainApp extends StatelessWidget {
       theme: ThemeData(scaffoldBackgroundColor: AppColors.background),
       debugShowCheckedModeBanner: false,
       // Empieza en Welcome, y AuthWrapper decidirá siguiente pantalla
+      // Nota: cuando se define `home`, Flutter lo usa como raíz e ignora
+      // initialRoute. Quien manda al arrancar es AuthWrapper (ver `home` abajo).
       initialRoute: '/welcome',
       routes: {
         '/welcome': (ctx) => const PingproWelcomeScreen(),
@@ -46,6 +63,9 @@ class MainApp extends StatelessWidget {
         '/splash': (ctx) => const PingproSplashScreen(),
         '/home': (ctx) => const HomeNavigation(),
         '/exercises': (ctx) => const PingproExercisesScreen(),
+        // Rutas con argumentos: se pasan por pushNamed(arguments: ...) y se
+        // desempacan aquí. exerciseDetail recibe un Map porque necesita dos
+        // valores (el ejercicio y a qué pantalla volver).
         '/exerciseDetail': (ctx) {
           final args = ModalRoute.of(ctx)!.settings.arguments as Map;
           return PingproExerciseDetailScreen(
@@ -71,6 +91,11 @@ class MainApp extends StatelessWidget {
   }
 }
 
+/// Portero de la app: escucha el estado de sesión de Firebase y muestra Home o
+/// Welcome según corresponda.
+///
+/// Al ser un Stream y no una comprobación puntual, también reacciona al cerrar
+/// sesión: la app vuelve sola a Welcome sin necesidad de navegar a mano.
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
@@ -96,6 +121,11 @@ class AuthWrapper extends StatelessWidget {
   }
 }
 
+/// Contenedor de las 5 pestañas principales.
+///
+/// Usa IndexedStack en vez de cambiar el body: mantiene vivas las cinco
+/// pantallas, así que el scroll y el estado de cada pestaña sobreviven al
+/// cambiar de tab y no se vuelve a llamar initState (ni a recargar datos).
 class HomeNavigation extends StatefulWidget {
   const HomeNavigation({super.key});
   @override
