@@ -7,7 +7,7 @@
 import { Router } from 'express';
 import UserController from '@controllers/UserController';
 import { validateBody } from '@middlewares/validation';
-import { userSchema } from '@/utils/user.validator';
+import { userSchema, userUpdateSchema } from '@/utils/user.validator';
 import authMiddleware from '@/middlewares/authMiddleware';
 import { requireSelfOrRole } from '@/middlewares/roleMiddleware';
 import { USER_ROLES } from '@utils/constants';
@@ -28,7 +28,7 @@ router.get('/me', UserController.getMe);
 // Cada quien solo puede ver, editar o borrar su propia cuenta; el admin, cualquiera.
 router.get('/:id', requireSelfOrRole(USER_ROLES.ADMIN), UserController.getById);
 router.post('/', validateBody(userSchema), UserController.create); // Opcional o bloqueado
-router.put('/:id', requireSelfOrRole(USER_ROLES.ADMIN), validateBody(userSchema), UserController.update);
+router.put('/:id', requireSelfOrRole(USER_ROLES.ADMIN), validateBody(userUpdateSchema), UserController.update);
 router.delete('/:id', requireSelfOrRole(USER_ROLES.ADMIN), UserController.delete);
 
 export default router;
