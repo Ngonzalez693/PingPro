@@ -1,3 +1,7 @@
+/**
+ * Clase de dominio de una estadística.
+ * SIN USO — ver la nota en models/Exercise.ts.
+ */
 import { IUserStat } from '@interfaces/models/IUserStat';
 
 export class UserStat implements IUserStat {

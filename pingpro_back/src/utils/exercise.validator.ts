@@ -1,3 +1,10 @@
+/**
+ * Esquema Joi de un ejercicio, usado por validateBody en exerciseRoutes.
+ *
+ * La secuencia exige al menos un paso y valida los cinco códigos como enteros
+ * >= 1. Ojo: solo comprueba el mínimo, no el máximo de cada enum, así que un
+ * hit: 99 pasaría la validación y luego el mapper 3D caería en el fallback.
+ */
 import Joi from 'joi';
 
 // Info to validate exercises

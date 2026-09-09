@@ -1,3 +1,9 @@
+/**
+ * Contrato de persistencia de estadísticas.
+ *
+ * Todos los métodos reciben userId porque los datos viven en una subcolección
+ * por usuario: sin el uid no se puede construir la ruta del documento.
+ */
 import { IUserStat } from '@interfaces/models/IUserStat';
 
 export interface IStatsRepository {

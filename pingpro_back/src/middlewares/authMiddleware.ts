@@ -1,3 +1,13 @@
+/**
+ * Verifica el ID token de Firebase y deja el uid en req.user.
+ *
+ * Es la única fuente de identidad del backend: todo lo que escribe en
+ * users/{uid}/... toma el uid de aquí, nunca de la URL o el body. Por eso un
+ * usuario no puede tocar los datos de otro aunque adivine su id.
+ *
+ * El token lo genera la app con getIdToken() y viaja como
+ * `Authorization: Bearer <token>`.
+ */
 import { auth } from 'firebase-admin';
 import { Request, Response, NextFunction } from 'express';
 

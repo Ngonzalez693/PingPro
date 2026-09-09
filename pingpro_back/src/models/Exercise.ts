@@ -1,3 +1,12 @@
+/**
+ * Clase de dominio de un ejercicio: aplica los valores por defecto que la
+ * interfaz deja opcionales (isFavorite, description).
+ *
+ * SIN USO. Ningún archivo de src/ importa esta clase — servicios y repositorios
+ * trabajan con la interfaz IExercise directamente. Lo mismo pasa con las otras
+ * clases de src/models/. O se adoptan (instanciándolas en los repositorios para
+ * garantizar los defaults) o se eliminan.
+ */
 import { IExercise } from '@interfaces/models/IExercise';
 
 export class Exercise implements IExercise {

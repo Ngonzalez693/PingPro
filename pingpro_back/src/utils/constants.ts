@@ -1,3 +1,12 @@
+/**
+ * Constantes compartidas: códigos HTTP y roles.
+ *
+ * `as const` congela los valores para que TypeScript los infiera como literales
+ * (200, 'admin') y no como number/string genéricos.
+ *
+ * USER_ROLES se escribe en el perfil al registrarse pero todavía no se
+ * comprueba en ninguna ruta: no hay autorización por rol implementada.
+ */
 // HTTP status constants
 export const HTTP_STATUS = {
   OK: 200,

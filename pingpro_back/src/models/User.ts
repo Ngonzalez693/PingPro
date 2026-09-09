@@ -1,3 +1,8 @@
+/**
+ * Clase de dominio del perfil de usuario (defaults sobre IUser: rol 'user',
+ * fechas de creación).
+ * SIN USO — ver la nota en models/Exercise.ts.
+ */
 import { IUser } from '@interfaces/models/IUser';
 
 export class User implements IUser {

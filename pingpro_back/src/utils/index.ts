@@ -1,3 +1,7 @@
+/**
+ * Barrel de utils. Hoy nadie lo importa: rutas y controllers van directo al
+ * archivo concreto (@utils/constants, @utils/apiResponse, ...).
+ */
 // Utils barrel
 export * from './constants';
 export * from './exercise.validator';
