@@ -2,6 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/core/services/training_services.dart';
 
+/// Store global de entrenamientos. Gemelo de ExercisesState: singleton +
+/// ChangeNotifier, carga idempotente, cache indexada por id y UI optimista con
+/// rollback. Ver ExercisesState para la explicación completa del patrón.
+///
+/// Una diferencia: aquí se usa notifyListeners() directo en vez de un
+/// _safeNotify(). Funciona porque load() se dispara tras el primer await, pero
+/// es más frágil que en ExercisesState; valdría la pena unificar los dos stores.
 class TrainingsState extends ChangeNotifier {
   TrainingsState._();
   static final TrainingsState instance = TrainingsState._();
@@ -41,6 +48,10 @@ class TrainingsState extends ChangeNotifier {
   // Forzar recarga desde servidor (ignora cache en memoria).
   Future<void> refresh() => load(force: true);
 
+  /// Marca el entrenamiento como completado (UI optimista + rollback).
+  ///
+  /// Quien lo llama es la pantalla de detalle, cuando detecta que todos los
+  /// ejercicios del entrenamiento están hechos.
   Future<void> setCompleted(String id, bool completed) async {
     final t = _byId[id]; if (t == null) return;
     final prev = t.completedAt;

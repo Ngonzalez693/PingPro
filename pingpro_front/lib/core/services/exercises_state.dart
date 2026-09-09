@@ -7,6 +7,19 @@ import 'package:pingpro_front/core/services/exercises_service.dart';
 /// - Carga idempotente (no vuelve a cargar si ya lo hizo a menos que uses force).
 /// - UI optimista al cambiar favorito y completado.
 /// - Persistencia: los datos se obtienen del backend ya enriquecidos con `userState`.
+///
+/// Es la fuente de verdad de los ejercicios en toda la app. El proyecto no usa
+/// Provider ni Riverpod: es un singleton (`ExercisesState.instance`) que extiende
+/// ChangeNotifier, y las pantallas se suscriben con
+/// `AnimatedBuilder(animation: ExercisesState.instance, ...)`.
+///
+/// Consecuencia práctica: varias pantallas comparten la misma lista en memoria,
+/// así que marcar un ejercicio como favorito en Home se refleja al instante en
+/// Ejercicios y en Perfil sin volver a pedir nada al servidor.
+///
+/// Trampa a tener presente: al ser singleton, el estado sobrevive al cierre de
+/// sesión. Habría que llamar a un reset en el logout antes de publicar, o el
+/// siguiente usuario vería los datos del anterior hasta el primer refresh.
 class ExercisesState extends ChangeNotifier {
   ExercisesState._();
   static final ExercisesState instance = ExercisesState._();
@@ -17,6 +30,8 @@ class ExercisesState extends ChangeNotifier {
   bool _loadedOnce = false;
   String? _error;
 
+  // Indexado por id, no lista: getById() es O(1) y lo usan mucho la pantalla de
+  // detalle y la de entrenamiento (que resuelve exerciseIds uno por uno).
   final Map<String, ExerciseModel> _byId = {};
 
   bool get isLoading => _isLoading;
@@ -30,6 +45,10 @@ class ExercisesState extends ChangeNotifier {
   ExerciseModel? getById(String id) => _byId[id];
 
   /// Notifica de forma segura: si estamos en mitad de un build, pospone la notificación.
+  ///
+  /// Hace falta porque varias pantallas llaman a load() desde initState, que
+  /// corre durante el build. Un notifyListeners() en ese momento lanza
+  /// "setState() called during build"; aquí se aplaza al siguiente frame.
   void _safeNotify() {
     if (!hasListeners) return;
     final phase = SchedulerBinding.instance.schedulerPhase;
@@ -48,6 +67,9 @@ class ExercisesState extends ChangeNotifier {
 
   /// Carga listado + estados del usuario y los guarda en memoria.
   Future<void> load({bool force = false}) async {
+    // Estas dos guardas son la razón de que casi todas las pantallas puedan
+    // llamar a load() en su initState sin coste: la primera evita peticiones
+    // simultáneas, la segunda evita recargar lo ya cargado.
     if (_isLoading) return;
     if (_loadedOnce && !force) return;
 
@@ -73,6 +95,13 @@ class ExercisesState extends ChangeNotifier {
   Future<void> refresh() => load(force: true);
 
   // Alterna favorito con UI optimista.
+  //
+  // Patrón que se repite también en setCompleted y en TrainingsState:
+  //   1. se guarda el valor anterior,
+  //   2. se cambia en memoria y se notifica → el icono responde al instante,
+  //   3. se lanza la petición,
+  //   4. si falla, rollback al valor anterior y se relanza el error para que la
+  //      pantalla muestre el SnackBar.
   Future<void> toggleFavorite(String id) async {
     final ex = _byId[id];
     if (ex == null) return;
