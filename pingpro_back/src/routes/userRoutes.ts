@@ -12,14 +12,14 @@ import authMiddleware from '@/middlewares/authMiddleware';
 
 const router = Router();
 
+// Debe ir ANTES que '/:id': Express resuelve en orden de declaración y si no,
+// /api/users/me entra por getById con id="me".
+router.get('/me', authMiddleware, UserController.getMe);
+
 router.get('/', UserController.getAll);
 router.get('/:id', UserController.getById);
 router.post('/', validateBody(userSchema), UserController.create); // Opcional o bloqueado
 router.put('/:id', validateBody(userSchema), UserController.update);
 router.delete('/:id', UserController.delete);
-// BUG conocido: al estar declarada DESPUÉS de '/:id', esta ruta nunca se
-// alcanza — Express resuelve /api/users/me como getById con id="me".
-// Debe subirse por encima de '/:id'. Ver AuthService.fetchUserProfile() en la app.
-router.get('/me', authMiddleware, UserController.getMe);
 
 export default router;

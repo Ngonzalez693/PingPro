@@ -9,7 +9,6 @@ import { Request, Response, NextFunction } from 'express';
 import { UserService } from '@services/UserService';
 import { success, error } from '@utils/apiResponse';
 import { HTTP_STATUS } from '@utils/constants';
-import { AuthService } from '@/services/AuthService';
 
 const service = new UserService();
 
@@ -54,19 +53,14 @@ export default class UserController {
     }
   }
 
-  // Verifica el token a mano en vez de apoyarse en authMiddleware. Es
-  // duplicación: la ruta ya pasa por authMiddleware y podría leer req.user.uid.
+  // El uid lo pone authMiddleware, que ya validó el token. getById lanza un
+  // error con status 404 si el perfil no existe.
   static async getMe(req: Request, res: Response, next: NextFunction) {
     try {
-      const authHeader = req.headers.authorization || "";
-      if (!authHeader) throw Object.assign(new Error("No token provided"), { status: 401 });
-      const [, idToken] = authHeader.split(' ');
-      const authService = new AuthService();
-      const uid = await authService.verifyIdToken(idToken);
+      const uid = req.user?.uid;
+      if (!uid) return error(res, "Unauthorized", HTTP_STATUS.UNAUTHORIZED);
 
       const user = await service.getById(uid);
-      if (!user) throw Object.assign(new Error("User not found"), { status: 404 });
-
       return success(res, user, HTTP_STATUS.OK);
     } catch (err) {
       return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
