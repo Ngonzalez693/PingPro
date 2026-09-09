@@ -1,3 +1,10 @@
+/**
+ * Reglas de negocio del perfil de usuario (documento en Firestore).
+ *
+ * create() exige que el id venga dado: es el uid de Firebase Auth. Nunca se
+ * deja que Firestore genere un id automático, porque el uid es la llave que
+ * relaciona credencial, perfil y subcolecciones de progreso.
+ */
 import { IUser } from '@interfaces/models/IUser';
 import { FirebaseUserRepository } from '@repositories/implementations/FirebaseUserRepository';
 

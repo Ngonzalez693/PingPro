@@ -1,3 +1,9 @@
+/**
+ * Acceso a la colección 'trainings' de Firestore.
+ *
+ * exists() se usa antes de escribir estado por usuario: comprobar existencia
+ * es más barato que traer el documento completo solo para descartarlo.
+ */
 import { ITraining } from '@interfaces/models/ITraining';
 import { ITrainingRepository } from '@interfaces/repositories/ITrainingRepository';
 import { database } from '@config/database';

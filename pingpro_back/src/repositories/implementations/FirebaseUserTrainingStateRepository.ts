@@ -1,3 +1,11 @@
+/**
+ * Acceso a users/{uid}/trainingStates. Mismo patrón que el repositorio de
+ * estados de ejercicio: el id del documento es el id del entrenamiento y las
+ * escrituras van con merge.
+ *
+ * setProgress existe en el repositorio y en TrainingService, pero hoy ninguna
+ * ruta lo expone: la app deriva el progreso contando ejercicios completados.
+ */
 import { firestore } from 'firebase-admin';
 import type { IUserTrainingStateRepository } from '@/interfaces/repositories/IUserTrainingStateRepository';
 import type { IUserTrainingState } from '@/interfaces/models/IUserTrainingState';

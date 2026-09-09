@@ -1,3 +1,13 @@
+/**
+ * Acceso a la colección 'exercises' de Firestore.
+ *
+ * Es la única capa que conoce Firestore. Implementa IExerciseRepository, así
+ * que ExerciseService depende de la interfaz y no de esta clase: cambiar de
+ * base de datos significa escribir otra implementación, no tocar el servicio.
+ *
+ * Convención en todo el repositorio: Firestore guarda el id fuera del
+ * documento, por eso cada lectura hace `{ id: doc.id, ...doc.data() }`.
+ */
 import { IExercise } from '@interfaces/models/IExercise';
 import { IExerciseRepository } from '@interfaces/repositories/IExerciseRepository';
 import { database } from '@config/database';

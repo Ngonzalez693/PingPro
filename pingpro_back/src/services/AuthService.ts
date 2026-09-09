@@ -1,3 +1,10 @@
+/**
+ * Envuelve el módulo Auth del Admin SDK.
+ *
+ * Existe para que controllers y middlewares no importen firebase-admin
+ * directamente: si algún día cambia el proveedor de identidad, solo se toca
+ * este archivo.
+ */
 import { getAuth, UserRecord } from 'firebase-admin/auth';
 
 export class AuthService {
