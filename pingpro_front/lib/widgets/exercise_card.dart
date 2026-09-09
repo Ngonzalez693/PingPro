@@ -1,3 +1,15 @@
+// Fila de un ejercicio: imagen, nombre, categoría y botones de favorito y ver.
+// Se reutiliza en Home, Ejercicios, Perfil y detalle de entrenamiento.
+//
+// No toca el store: recibe los callbacks (`onFavoritePressed`, `onViewPressed`)
+// para que cada pantalla decida qué hacer y a dónde navegar. Solo pinta.
+//
+// INCONSISTENCIA: si no le pasan `onViewPressed` navega por su cuenta con
+// _navigateToDetail, que fuerza returnRoute '/exercises' aunque la tarjeta esté
+// en otra pantalla. Lo limpio sería exigir el callback y borrar ese atajo.
+//
+// El parámetro `done` se recibe pero no se usa en el layout: hoy la tarjeta no
+// muestra de ninguna forma que el ejercicio esté completado.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
@@ -56,6 +68,9 @@ class ExerciseCard extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
+                  // AssetImage, no NetworkImage: `image` guarda una ruta de
+                  // asset empaquetada en la app. Si la ruta no existe en
+                  // pubspec.yaml, la tarjeta revienta en tiempo de ejecución.
                   image: DecorationImage(
                     image: AssetImage(exercise.image),
                     fit: BoxFit.cover,

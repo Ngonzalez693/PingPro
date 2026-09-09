@@ -1,3 +1,7 @@
+// Botón circular "+" de la mesa. Solo apariencia: no recibe onTap.
+//
+// En pingpro_create_sequence_screen.dart la interacción se captura con
+// GestureDetector transparentes superpuestos, no aquí.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 

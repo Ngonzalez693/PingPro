@@ -1,3 +1,5 @@
+// Contador circular con icono y número (ejercicios / entrenamientos /
+// creados). Se usa suelto en Perfil y agrupado en SummaryIconRow.
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pingpro_front/core/app_colors.dart';
@@ -19,7 +21,7 @@ class SummaryIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // CÃ­rculo con icono y nÃºmero dentro
+        // Círculo con icono y número dentro
         Container(
           width: 64,
           height: 64,

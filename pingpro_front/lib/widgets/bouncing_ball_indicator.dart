@@ -1,3 +1,9 @@
+// Indicador de carga temático: una pelota que rebota entre tres puntos.
+// Se usa en el splash en lugar de un CircularProgressIndicator.
+//
+// El rebote se dibuja con CustomPaint sobre una parábola calculada a mano
+// (_parabola): la interpolación lineal da el desplazamiento horizontal y el
+// término `4 * height * t * (1 - t)` levanta la pelota en el centro del salto.
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';

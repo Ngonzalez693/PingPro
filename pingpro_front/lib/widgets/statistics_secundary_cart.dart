@@ -1,3 +1,11 @@
+// Gráfica de barras del tipo seleccionado en la pantalla de Estadísticas
+// (ejercicios, entrenamientos o creados).
+//
+// Complementa a StatisticsChart: la de línea muestra el total y esta desglosa
+// una sola serie. Comparte con ella los mismos `labels`.
+//
+// Nota: el nombre del archivo tiene una errata ("secundary_cart" en vez de
+// "secondary_chart"); la clase sí se llama StatisticsSecondaryChart.
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';

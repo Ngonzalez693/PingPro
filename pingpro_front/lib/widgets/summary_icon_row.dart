@@ -1,3 +1,8 @@
+// Los tres contadores de la pantalla de Estadísticas, actuando además como
+// selector: tocar uno cambia qué serie muestra la gráfica de barras.
+//
+// Importa StatType desde la pantalla, lo que crea una dependencia
+// widget → screen al revés de lo habitual. Ese enum debería vivir en core/.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/widgets/summary_icon.dart';
 import '../screens/pingpro_stats_screen.dart';

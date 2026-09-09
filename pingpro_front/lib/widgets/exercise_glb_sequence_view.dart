@@ -1,20 +1,20 @@
-/// Reproductor de la secuencia 3D de un ejercicio.
-///
-/// Recibe la lista de GlbStep que arma exercise_to_glb_steps.dart y los pasa uno
-/// tras otro por un único ModelViewer, con controles de anterior / pausa /
-/// siguiente.
-///
-/// Cómo avanza: NO hay evento de "animación terminada" —model_viewer_plus no lo
-/// expone—, así que se usa un Timer con la duración declarada en cada paso.
-/// De ahí que las duraciones de _durByName tengan que estar bien calibradas.
-///
-/// Cambiar de paso se hace forzando un ModelViewer nuevo con
-/// `key: ValueKey('glb_$_index_$url')`: sin esa key Flutter reutilizaría el
-/// widget y no recargaría el .glb.
-///
-/// COSTE A TENER EN CUENTA: model_viewer_plus renderiza dentro de un WebView.
-/// Cada cambio de paso recarga ese WebView, lo que en gama baja de Android se
-/// nota. Es el punto a medir antes de publicar en tiendas.
+// Reproductor de la secuencia 3D de un ejercicio.
+//
+// Recibe la lista de GlbStep que arma exercise_to_glb_steps.dart y los pasa uno
+// tras otro por un único ModelViewer, con controles de anterior / pausa /
+// siguiente.
+//
+// Cómo avanza: NO hay evento de "animación terminada" —model_viewer_plus no lo
+// expone—, así que se usa un Timer con la duración declarada en cada paso.
+// De ahí que las duraciones de _durByName tengan que estar bien calibradas.
+//
+// Cambiar de paso se hace forzando un ModelViewer nuevo con
+// `key: ValueKey('glb_$_index_$url')`: sin esa key Flutter reutilizaría el
+// widget y no recargaría el .glb.
+//
+// COSTE A TENER EN CUENTA: model_viewer_plus renderiza dentro de un WebView.
+// Cada cambio de paso recarga ese WebView, lo que en gama baja de Android se
+// nota. Es el punto a medir antes de publicar en tiendas.
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
