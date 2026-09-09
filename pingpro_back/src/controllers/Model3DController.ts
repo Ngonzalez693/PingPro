@@ -1,3 +1,11 @@
+/**
+ * Controlador del catálogo de modelos 3D (solo lectura).
+ *
+ * Ojo con la inconsistencia: a diferencia del resto de controllers, este
+ * responde el JSON crudo en lugar de envolverlo con success()/error(), por lo
+ * que el cliente recibe un array pelado y no { success, data }.
+ * Model3dCatalog en la app depende de esa forma.
+ */
 import { Request, Response } from 'express';
 import Model3DService from '@/services/Model3DService';
 

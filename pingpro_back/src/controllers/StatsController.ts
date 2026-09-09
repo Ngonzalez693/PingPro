@@ -1,3 +1,14 @@
+/**
+ * Controlador de estadísticas.
+ *
+ * El uid sale siempre de req.user (token), nunca de la URL: así un usuario no
+ * puede pedir las estadísticas de otro. La ruta entera exige authMiddleware,
+ * de ahí el `req.user!`.
+ *
+ * Nota: hoy la app calcula las gráficas en el cliente a partir de los
+ * completedAt de ejercicios y entrenamientos, así que estos endpoints están
+ * implementados pero sin consumir.
+ */
 import { Request, Response, NextFunction } from 'express';
 import { StatsService } from '@services/StatsService';
 import { success, error } from '@utils/apiResponse';

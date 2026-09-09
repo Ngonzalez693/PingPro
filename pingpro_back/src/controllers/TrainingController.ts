@@ -1,3 +1,10 @@
+/**
+ * Controlador de entrenamientos. Mismo patrón que ExerciseController:
+ * traduce HTTP ↔ TrainingService y no contiene reglas de negocio.
+ *
+ * listWithUserState es el endpoint que realmente usa la app: entrega el
+ * catálogo ya cruzado con el progreso del usuario en una sola llamada.
+ */
 import { Request, Response, NextFunction } from 'express';
 import { TrainingService } from '@services/TrainingService';
 import { success, error } from '@utils/apiResponse';

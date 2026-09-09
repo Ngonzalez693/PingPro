@@ -1,3 +1,10 @@
+/**
+ * Controlador de autenticación.
+ *
+ * signUp es el único punto donde se crea una cuenta: hace dos escrituras
+ * (Firebase Auth + documento en Firestore) usando el mismo uid como clave, para
+ * que el perfil y la credencial queden siempre enlazados.
+ */
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '@services/AuthService';
 import { UserService } from '@services/UserService';
@@ -13,6 +20,8 @@ export default class AuthController {
       const { email, password, displayName } = req.body;
       const userRecord = await authService.signUp(email, password, displayName);
 
+      // El uid que devuelve Firebase Auth se reutiliza como id del documento en
+      // Firestore. Sin esto no habría forma de relacionar credencial y perfil.
       // Crear perfil usuario en Firestore con UID
       await userService.create({
         id: userRecord.uid,
