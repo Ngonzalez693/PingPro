@@ -1,16 +1,16 @@
-/// Estadísticas detalladas: gráfica de línea (total) + gráfica de barras del
-/// tipo seleccionado, con periodo diario, semanal o mensual.
-///
-/// Todo se calcula en el cliente a partir de los `completedAt` que ya están en
-/// los stores. Los endpoints /api/stats del backend existen pero no se usan.
-///
-/// El cálculo va en tres pasos: _dateRange() genera los cubos del periodo,
-/// _belongsToBucket() decide en cuál cae cada fecha y _bucketCounts() los
-/// cuenta. Es la versión completa de lo que Home y Perfil hacen en línea solo
-/// para 7 días.
-///
-/// La serie "Creados" siempre da cero: la creación de ejercicios todavía no
-/// guarda nada (ver pingpro_create_screen.dart).
+// Estadísticas detalladas: gráfica de línea (total) + gráfica de barras del
+// tipo seleccionado, con periodo diario, semanal o mensual.
+//
+// Todo se calcula en el cliente a partir de los `completedAt` que ya están en
+// los stores. Los endpoints /api/stats del backend existen pero no se usan.
+//
+// El cálculo va en tres pasos: _dateRange() genera los cubos del periodo,
+// _belongsToBucket() decide en cuál cae cada fecha y _bucketCounts() los
+// cuenta. Es la versión completa de lo que Home y Perfil hacen en línea solo
+// para 7 días.
+//
+// La serie "Creados" siempre da cero: la creación de ejercicios todavía no
+// guarda nada (ver pingpro_create_screen.dart).
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';

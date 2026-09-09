@@ -1,14 +1,14 @@
-/// Catálogo de animaciones 3D en memoria: resuelve nombre → URL del .glb.
-///
-/// Es la pieza que conecta el mapper (exercise_to_glb_steps.dart, que razona en
-/// nombres) con la colección 'model3d' del backend (que guarda las URLs).
-///
-/// Singleton con carga perezosa: la primera vez que se abre un ejercicio pide
-/// GET /api/model3d y guarda el índice para el resto de la sesión, así no hay
-/// una petición por animación.
-///
-/// El índice usa el nombre en minúsculas y sin espacios sobrantes como clave,
-/// para que una diferencia de mayúsculas en Firestore no rompa la búsqueda.
+// Catálogo de animaciones 3D en memoria: resuelve nombre → URL del .glb.
+//
+// Es la pieza que conecta el mapper (exercise_to_glb_steps.dart, que razona en
+// nombres) con la colección 'model3d' del backend (que guarda las URLs).
+//
+// Singleton con carga perezosa: la primera vez que se abre un ejercicio pide
+// GET /api/model3d y guarda el índice para el resto de la sesión, así no hay
+// una petición por animación.
+//
+// El índice usa el nombre en minúsculas y sin espacios sobrantes como clave,
+// para que una diferencia de mayúsculas en Firestore no rompa la búsqueda.
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';

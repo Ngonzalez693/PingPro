@@ -1,8 +1,8 @@
-/// Una animación 3D del catálogo: nombre → URL del archivo .glb.
-///
-/// DUPLICADO: existe otra clase idéntica dentro de
-/// core/services/model3d_catalog.dart. La del catálogo es la que se usa en el
-/// flujo 3D; esta solo la consume Model3DService. Conviene dejar una sola.
+// Una animación 3D del catálogo: nombre → URL del archivo .glb.
+//
+// DUPLICADO: existe otra clase idéntica dentro de
+// core/services/model3d_catalog.dart. La del catálogo es la que se usa en el
+// flujo 3D; esta solo la consume Model3DService. Conviene dejar una sola.
 class Model3dModel {
   final String id;
   final String name;

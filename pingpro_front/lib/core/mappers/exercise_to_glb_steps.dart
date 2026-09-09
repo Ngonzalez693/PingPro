@@ -1,28 +1,28 @@
-/// Traduce un ejercicio a la lista de animaciones 3D que hay que reproducir.
-/// Es el corazón de la función diferencial de PingPro.
-///
-/// La cadena completa:
-///
-///   ExerciseModel.sequence            List<SequenceStep> (5 enteros por golpe)
-///          ↓  este archivo
-///   _hitAnim(step)                    golpe   → nombre de animación
-///   _movementBetween(a, b)            traslado entre dos golpes → animación
-///   _durByName                        nombre  → duración
-///          ↓
-///   Model3dCatalog.urlByName(nombre)  nombre  → URL del .glb (GET /api/model3d)
-///          ↓
-///   List<GlbStep>                     lo que consume ExerciseGlbSequenceView
-///
-/// El resultado se intercala así:
-///   Posición Inicial → golpe 1 → desplazamiento → golpe 2 → desplazamiento → …
-/// para que la animación se vea como una secuencia continua y no como golpes
-/// sueltos. La posición inicial se omite si el ejercicio empieza con un saque,
-/// porque el saque ya arranca desde su propia postura.
-///
-/// PUNTO FRÁGIL: la unión entre este archivo y la base de datos son cadenas de
-/// texto. Si el `name` de un documento de 'model3d' no coincide exactamente con
-/// el literal que se escribe aquí, urlByName devuelve null y ese paso se salta
-/// en silencio, sin error. Los nombres tienen que mantenerse sincronizados a mano.
+// Traduce un ejercicio a la lista de animaciones 3D que hay que reproducir.
+// Es el corazón de la función diferencial de PingPro.
+//
+// La cadena completa:
+//
+//   ExerciseModel.sequence            List<SequenceStep> (5 enteros por golpe)
+//          ↓  este archivo
+//   _hitAnim(step)                    golpe   → nombre de animación
+//   _movementBetween(a, b)            traslado entre dos golpes → animación
+//   _durByName                        nombre  → duración
+//          ↓
+//   Model3dCatalog.urlByName(nombre)  nombre  → URL del .glb (GET /api/model3d)
+//          ↓
+//   List<GlbStep>                     lo que consume ExerciseGlbSequenceView
+//
+// El resultado se intercala así:
+//   Posición Inicial → golpe 1 → desplazamiento → golpe 2 → desplazamiento → …
+// para que la animación se vea como una secuencia continua y no como golpes
+// sueltos. La posición inicial se omite si el ejercicio empieza con un saque,
+// porque el saque ya arranca desde su propia postura.
+//
+// PUNTO FRÁGIL: la unión entre este archivo y la base de datos son cadenas de
+// texto. Si el `name` de un documento de 'model3d' no coincide exactamente con
+// el literal que se escribe aquí, urlByName devuelve null y ese paso se salta
+// en silencio, sin error. Los nombres tienen que mantenerse sincronizados a mano.
 import 'dart:math';
 
 import 'package:pingpro_front/core/services/model3d_catalog.dart';

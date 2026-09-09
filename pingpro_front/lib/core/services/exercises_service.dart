@@ -1,9 +1,9 @@
-/// Cliente HTTP de ejercicios. Capa más baja del lado de datos: solo habla con
-/// la API y devuelve modelos. Quien guarda estado es ExercisesState.
-///
-/// El catálogo y el progreso del usuario vienen de endpoints separados
-/// (/api/exercises y /api/exercises/me/states) y se juntan aquí en
-/// fetchAllMergedWithUserState(), que es lo que consume el store.
+// Cliente HTTP de ejercicios. Capa más baja del lado de datos: solo habla con
+// la API y devuelve modelos. Quien guarda estado es ExercisesState.
+//
+// El catálogo y el progreso del usuario vienen de endpoints separados
+// (/api/exercises y /api/exercises/me/states) y se juntan aquí en
+// fetchAllMergedWithUserState(), que es lo que consume el store.
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';

@@ -1,16 +1,16 @@
-/// Punto de entrada de la app y tabla de rutas.
-///
-/// Aquí viven tres piezas:
-///   - main():          arranque (dotenv + Firebase) antes de pintar nada.
-///   - AuthWrapper:     decide Welcome o Home según haya sesión.
-///   - HomeNavigation:  las 5 pestañas de la barra inferior.
-///
-/// Arquitectura del proyecto:
-///   screens/  → pantallas
-///   widgets/  → piezas reutilizables
-///   core/services/ → stores en memoria (ExercisesState, TrainingsState) y
-///                    clientes HTTP contra pingpro_back
-///   models/   → objetos de datos con fromJson/toJson
+// Punto de entrada de la app y tabla de rutas.
+//
+// Aquí viven tres piezas:
+//   - main():          arranque (dotenv + Firebase) antes de pintar nada.
+//   - AuthWrapper:     decide Welcome o Home según haya sesión.
+//   - HomeNavigation:  las 5 pestañas de la barra inferior.
+//
+// Arquitectura del proyecto:
+//   screens/  → pantallas
+//   widgets/  → piezas reutilizables
+//   core/services/ → stores en memoria (ExercisesState, TrainingsState) y
+//                    clientes HTTP contra pingpro_back
+//   models/   → objetos de datos con fromJson/toJson
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';

@@ -1,7 +1,7 @@
-/// Paleta única de la app. Ningún widget debe declarar un Color literal:
-/// todo color sale de aquí para poder cambiar el tema en un solo sitio.
-///
-/// El tema es oscuro: fondo negro con amarillo lima (`primary`) como acento.
+// Paleta única de la app. Ningún widget debe declarar un Color literal:
+// todo color sale de aquí para poder cambiar el tema en un solo sitio.
+//
+// El tema es oscuro: fondo negro con amarillo lima (`primary`) como acento.
 import 'dart:ui';
 
 class AppColors {

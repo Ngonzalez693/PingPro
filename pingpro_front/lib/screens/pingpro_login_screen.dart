@@ -1,12 +1,12 @@
-/// Inicio de sesión.
-///
-/// Va directo contra Firebase Auth (AuthService.login), sin pasar por el
-/// backend. Tras autenticar navega a /home; AuthWrapper mantiene la sesión en
-/// los siguientes arranques.
-///
-/// PENDIENTE para publicar: "¿Olvidaste tu contraseña?" no está implementado, y
-/// la validación se limita a comprobar que los campos no estén vacíos (no se
-/// valida el formato del email antes de llamar a Firebase).
+// Inicio de sesión.
+//
+// Va directo contra Firebase Auth (AuthService.login), sin pasar por el
+// backend. Tras autenticar navega a /home; AuthWrapper mantiene la sesión en
+// los siguientes arranques.
+//
+// PENDIENTE para publicar: "¿Olvidaste tu contraseña?" no está implementado, y
+// la validación se limita a comprobar que los campos no estén vacíos (no se
+// valida el formato del email antes de llamar a Firebase).
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';

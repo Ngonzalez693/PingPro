@@ -1,8 +1,8 @@
-/// Cliente HTTP de entrenamientos.
-///
-/// Más simple que ExercisesService porque aquí el cruce con el progreso lo hace
-/// el backend: /api/trainings/me/list ya devuelve el catálogo con completedAt
-/// incluido, así que no hay merge en el cliente.
+// Cliente HTTP de entrenamientos.
+//
+// Más simple que ExercisesService porque aquí el cruce con el progreso lo hace
+// el backend: /api/trainings/me/list ya devuelve el catálogo con completedAt
+// incluido, así que no hay merge en el cliente.
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
