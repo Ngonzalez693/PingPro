@@ -13,6 +13,8 @@ import { validateBody } from '@middlewares/validation';
 import { favoriteSchema, completedSchema } from '@/utils/exerciseState.validator';
 import { exerciseSchema } from '@utils/exercise.validator';
 import authMiddleware from '@/middlewares/authMiddleware';
+import { requireRole } from '@/middlewares/roleMiddleware';
+import { USER_ROLES } from '@utils/constants';
 
 const router = Router();
 
@@ -24,9 +26,12 @@ router.get('/me/states', ExerciseController.myStates);
 
 router.get('/', ExerciseController.getAll);
 router.get('/:id', ExerciseController.getById);
-router.post('/', validateBody(exerciseSchema), ExerciseController.create);
-router.put('/:id', validateBody(exerciseSchema), ExerciseController.update);
-router.delete('/:id', ExerciseController.delete);
+
+// El catálogo es contenido curado: cualquiera con sesión puede leerlo, pero
+// solo un admin puede modificarlo.
+router.post('/', requireRole(USER_ROLES.ADMIN), validateBody(exerciseSchema), ExerciseController.create);
+router.put('/:id', requireRole(USER_ROLES.ADMIN), validateBody(exerciseSchema), ExerciseController.update);
+router.delete('/:id', requireRole(USER_ROLES.ADMIN), ExerciseController.delete);
 
 router.post('/:id/favorite', validateBody(favoriteSchema), ExerciseController.favorite);
 router.post('/:id/completed', validateBody(completedSchema), ExerciseController.completed);
