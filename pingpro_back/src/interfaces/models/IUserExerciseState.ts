@@ -7,11 +7,15 @@
  *
  * completedAt guarda la fecha, no un booleano: sobre esas fechas se construyen
  * las gráficas de estadísticas.
+ *
+ * Las fechas son Date y no el Timestamp de Firestore: así la API las envía como
+ * texto ISO 8601 y el dominio no depende de la base de datos. La conversión se
+ * hace en el repositorio.
  */
 export interface IUserExerciseState {
   userId: string;
   exerciseId: string;
   isFavorite?: boolean;
-  completedAt?: FirebaseFirestore.Timestamp | null;
-  updatedAt: FirebaseFirestore.Timestamp;
+  completedAt?: Date | null;
+  updatedAt: Date;
 }
