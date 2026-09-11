@@ -92,7 +92,7 @@ export class TrainingService {
       const tid = (t as any).id || (t as any).trainingId || t.id;
       const st = byId.get(tid);
 
-      const completedAt = st?.completedAt ? st.completedAt.toDate().toISOString() : null;
+      const completedAt = st?.completedAt ? st.completedAt.toISOString() : null;
       return {
         ...t,
         isCompleted: !!st?.completedAt,
