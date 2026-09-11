@@ -6,10 +6,42 @@
 // fetchAllMergedWithUserState(), que es lo que consume el store.
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:pingpro_front/models/exercise_model.dart';
+
+/// Estado de un ejercicio para el usuario actual.
+typedef ExerciseUserState = ({bool isFavorite, DateTime? completedAt});
+
+/// Convierte la respuesta de GET /api/exercises/me/states en un índice por id
+/// de ejercicio.
+///
+/// Contrato del backend:
+///   { "success": true,
+///     "data": [ { "exerciseId": "...", "isFavorite": true,
+///                 "completedAt": "2026-09-11T17:49:11.698Z" } ] }
+/// `completedAt` es texto ISO 8601 o null; `isFavorite` puede faltar.
+///
+/// Está separada de la petición HTTP para poder probarla sola. La versión
+/// anterior aceptaba cinco formatos que el backend nunca enviaba y descartaba
+/// el único que sí enviaba, así que favoritos y completados no se cargaban.
+Map<String, ExerciseUserState> parseExerciseStates(Object? body) {
+  final data = body is Map ? body['data'] : null;
+  if (data is! List) return {};
+
+  final byId = <String, ExerciseUserState>{};
+  for (final item in data) {
+    if (item is! Map) continue;
+    final id = item['exerciseId'];
+    if (id is! String || id.isEmpty) continue;
+    final completedAt = item['completedAt'];
+    byId[id] = (
+      isFavorite: item['isFavorite'] == true,
+      completedAt: completedAt is String ? DateTime.tryParse(completedAt) : null,
+    );
+  }
+  return byId;
+}
 
 class ExercisesService {
   final String _baseUrl = dotenv.env['API_BASE_URL']!;
@@ -37,15 +69,8 @@ class ExercisesService {
     return list.map<ExerciseModel>((e) => ExerciseModel.fromJson(e)).toList();
   }
 
-  /// GET /api/exercises/me/states (auth) → { exerciseId: {isFavorite, completedAt} }
-  ///
-  /// DEUDA TÉCNICA: todo lo que sigue son ~100 líneas defensivas que aceptan
-  /// cinco formas distintas de respuesta (array de objetos, mapa id→bool,
-  /// mapa id→objeto, envoltura {data:...} y {favorites:[], completed:[]}).
-  /// Se escribió así porque el contrato del endpoint nunca se fijó.
-  /// El backend hoy devuelve solo la primera forma; el resto se puede borrar en
-  /// cuanto se congele el contrato.
-  Future<Map<String, Map<String, dynamic>>> fetchMyStates() async {
+  /// GET /api/exercises/me/states (auth): favoritos y completados del usuario.
+  Future<Map<String, ExerciseUserState>> fetchMyStates() async {
     final r = await http.get(
       _u('/api/exercises/me/states'),
       headers: await _jsonHeaders(withAuth: true),
@@ -53,105 +78,7 @@ class ExercisesService {
     if (r.statusCode != 200) {
       throw Exception('Error al obtener estados del usuario: ${r.body}');
     }
-    final raw = jsonDecode(r.body);
-    final Map<String, Map<String, dynamic>> byId = {};
-
-    void setFav(String id, bool v) {
-      final m = byId[id] ?? <String, dynamic>{};
-      m['isFavorite'] = v;
-      byId[id] = m;
-    }
-
-    void setCompleted(String id, dynamic value) {
-      final m = byId[id] ?? <String, dynamic>{};
-      // value puede ser bool, string ISO o epoch
-      if (value is bool) {
-        m['completedAt'] = value ? DateTime.now().toIso8601String() : null;
-      } else if (value is String) {
-        m['completedAt'] = value;
-      } else if (value is num) {
-        m['completedAt'] = DateTime.fromMillisecondsSinceEpoch(value.toInt())
-            .toIso8601String();
-      } else {
-        m['completedAt'] = null;
-      }
-      byId[id] = m;
-    }
-
-    // ---- 1) Si es array de objetos [{exerciseId, isFavorite, completedAt}] ----
-    if (raw is List) {
-      for (final s in raw) {
-        if (s is Map) {
-          final id = '${s['exerciseId'] ?? s['id'] ?? ''}';
-          if (id.isEmpty) continue;
-          if (s.containsKey('isFavorite')) setFav(id, s['isFavorite'] == true);
-          if (s.containsKey('favorite')) setFav(id, s['favorite'] == true);
-          if (s.containsKey('completedAt')) setCompleted(id, s['completedAt']);
-          if (s.containsKey('completed')) {
-            final v = s['completed'];
-            if (v is bool) {
-              setCompleted(id, v ? DateTime.now().toIso8601String() : null);
-            } else {
-              setCompleted(id, v);
-            }
-          }
-        }
-      }
-      return byId;
-    }
-
-    if (raw is! Map) return byId;
-
-    // Si viene envuelto en { data: ... }
-    final data = (raw['data'] is Map || raw['data'] is List) ? raw['data'] : raw;
-
-    // ---- 2) Mapa de id -> objeto o id -> bool ----
-    if (data is Map) {
-      bool hasComposite = false;
-
-      // a) composite: { favorites: [...]/map, completed: [...]/map }
-      if (data.containsKey('favorites') || data.containsKey('completed')) {
-        hasComposite = true;
-
-        // favorites puede ser lista de ids o mapa id->bool
-        final favs = data['favorites'];
-        if (favs is List) {
-          for (final id in favs) {
-            setFav('$id', true);
-          }
-        } else if (favs is Map) {
-          favs.forEach((k, v) => setFav('$k', v == true));
-        }
-
-        // completed puede ser lista de ids o mapa id->timestamp/bool
-        final comp = data['completed'];
-        if (comp is List) {
-          for (final id in comp) {
-            setCompleted('$id', true);
-          }
-        } else if (comp is Map) {
-          comp.forEach((k, v) => setCompleted('$k', v));
-        }
-      }
-
-      // b) simple: { "<id>": {isFavorite, completedAt} }  ó { "<id>": true|false }
-      if (!hasComposite) {
-        data.forEach((k, v) {
-          final id = '$k';
-          if (v is bool) {
-            // tu caso: true/false => favorito
-            setFav(id, v);
-          } else if (v is Map) {
-            if (v.containsKey('isFavorite')) setFav(id, v['isFavorite'] == true);
-            if (v.containsKey('favorite')) setFav(id, v['favorite'] == true);
-            if (v.containsKey('completedAt')) setCompleted(id, v['completedAt']);
-            if (v.containsKey('completed')) setCompleted(id, v['completed']);
-          }
-        });
-      }
-    }
-
-    return byId;
+    return parseExerciseStates(jsonDecode(r.body));
   }
 
   /// GET ejercicios + GET estados y MERGE a ExerciseModel
@@ -165,28 +92,12 @@ class ExercisesService {
       fetchMyStates(),
     ]);
     final exercises = results[0] as List<ExerciseModel>;
-    final states = results[1] as Map<String, Map<String, dynamic>>;
+    final states = results[1] as Map<String, ExerciseUserState>;
 
     for (final ex in exercises) {
       final st = states[ex.id];
-      if (st != null) {
-        ex.isFavorite = (st['isFavorite'] ?? false) as bool;
-        final completedAt = st['completedAt'];
-        if (completedAt is String) {
-          ex.completedAt = DateTime.tryParse(completedAt);
-        } else if (completedAt is num) {
-          ex.completedAt = DateTime.fromMillisecondsSinceEpoch(completedAt.toInt());
-        } else {
-          ex.completedAt = null;
-        }
-      } else {
-        ex.isFavorite = false;
-        ex.completedAt = null;
-      }
-    }
-    if (kDebugMode) {
-      // debug rápido para ver cuántos estados entraron
-      // print('Merged exercises: ${exercises.length} (states: ${states.length})');
+      ex.isFavorite = st?.isFavorite ?? false;
+      ex.completedAt = st?.completedAt;
     }
     return exercises;
   }
