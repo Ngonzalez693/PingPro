@@ -28,7 +28,7 @@ import 'package:model_viewer_plus/model_viewer_plus.dart';
 /// Un paso de la secuencia: qué .glb mostrar y, opcionalmente, qué clip.
 ///
 /// Con los archivos actuales (una animación por .glb) `clip` va a null y el
-/// visor usa el clip por defecto del archivo. Cuando las 30 animaciones estén
+/// visor elige solo el clip bueno del archivo. Cuando las 30 animaciones estén
 /// en un único .glb, todos los pasos compartirán `url` y cada uno dirá su clip.
 class GlbStep {
   final String url;
@@ -131,12 +131,19 @@ class _ExerciseGlbSequenceViewState extends State<ExerciseGlbSequenceView> {
   let token = 0;
   let awaitingFinish = false;
 
-  // Si no se pide un clip concreto se usa el primero del archivo, que es lo
-  // que hace model-viewer por defecto.
+  // Los .glb actuales traen dos clips: uno horneado con el movimiento real y
+  // otro que quedó quieto en la pose de reposo (se ve como T-pose). Medido en
+  // los 30 archivos, el bueno es siempre 'Animation', o el que empieza por
+  // 'mp_', o en su defecto el que no lleva '%temp'. Regla temporal: cuando las
+  // animaciones estén en un único .glb, cada paso dirá su clip por nombre.
   const pickClip = () => {
     const clips = mv.availableAnimations || [];
     if (wantedClip && clips.includes(wantedClip)) return wantedClip;
-    return clips[0] || null;
+    return clips.find((n) => n === 'Animation')
+      || clips.find((n) => n.startsWith('mp_'))
+      || clips.find((n) => !n.includes('%temp'))
+      || clips[0]
+      || null;
   };
 
   const playCurrent = async () => {
