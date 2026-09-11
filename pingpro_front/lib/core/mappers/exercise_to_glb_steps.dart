@@ -7,7 +7,6 @@
 //          ↓  este archivo
 //   _hitAnim(step)                    golpe   → nombre de animación
 //   _movementBetween(a, b)            traslado entre dos golpes → animación
-//   _durByName                        nombre  → duración
 //          ↓
 //   Model3dCatalog.urlByName(nombre)  nombre  → URL del .glb (GET /api/model3d)
 //          ↓
@@ -19,6 +18,9 @@
 // sueltos. La posición inicial se omite si el ejercicio empieza con un saque,
 // porque el saque ya arranca desde su propia postura.
 //
+// Cuánto dura cada paso ya no se decide aquí: el visor avanza cuando el motor
+// avisa de que el clip terminó.
+//
 // PUNTO FRÁGIL: la unión entre este archivo y la base de datos son cadenas de
 // texto. Si el `name` de un documento de 'model3d' no coincide exactamente con
 // el literal que se escribe aquí, urlByName devuelve null y ese paso se salta
@@ -29,46 +31,6 @@ import 'package:pingpro_front/core/services/model3d_catalog.dart';
 import 'package:pingpro_front/models/sequence_step_model.dart';
 import 'package:pingpro_front/widgets/exercise_glb_sequence_view.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
-
-/// Duraciones por animación
-///
-/// Están a mano porque model_viewer_plus no expone la duración real del clip
-/// .glb: el reproductor avanza por temporizador, no por evento de fin de
-/// animación. Si un clip se reemplaza por otro más largo, hay que ajustar el
-/// número de aquí o la transición se cortará.
-const Map<String, Duration> _durByName = {
-  // GOLPES
-  'Saque Péndulo': Duration(seconds: 5),
-  'Saque Inverso': Duration(seconds: 5),
-  'Saque Backhand': Duration(seconds: 4),
-  'Backhand drive': Duration(seconds: 4),
-  'Forehand Topspin': Duration(seconds: 3),
-  'Backhand Topspin': Duration(seconds: 4),
-  'Pivot Topspin': Duration(seconds: 4),
-  'Forehand Loop': Duration(seconds: 5),
-  'Backhand Loop': Duration(seconds: 4),
-  'LoopPivot': Duration(seconds: 4),
-  'Forehand Corte': Duration(seconds: 4),
-  'Backhand Corte': Duration(seconds: 3),
-  'Backhand Corte Atrás': Duration(seconds: 4),
-  'Forehand Flick': Duration(seconds: 4),
-  'NingDer': Duration(seconds: 5),
-  'NingIzq': Duration(seconds: 4),
-  'Boomerang': Duration(seconds: 4),
-  'Hook': Duration(seconds: 4),
-  'Globo': Duration(seconds: 5),
-  // MOVIMIENTOS
-  'MovCortoDerIzq': Duration(seconds: 3),
-  'MovCortoIzqDer': Duration(seconds: 3),
-  'MovCortoAPivot': Duration(seconds: 3),
-  'MovLargoDerIzq': Duration(seconds: 3),
-  'MovLargoIzqDer': Duration(seconds: 3),
-  'MovLargoPivotDer': Duration(seconds: 3),
-  'MovLargoCruce': Duration(seconds: 4),
-  'MovIzqDer': Duration(seconds: 4),
-  'Posición Inicial': Duration(seconds: 4),
-  'Tpose': Duration(seconds: 1),
-};
 
 /// Reduce SideCode (7 valores) a las 4 zonas que distinguen las animaciones.
 ///
@@ -211,12 +173,7 @@ Future<List<GlbStep>> buildGlbStepsForExercise(ExerciseModel ex) async {
   // Posición inicial: solo si primer paso NO es saque
   if (ex.sequence.isNotEmpty && ex.sequence.first.hit != 7) {
     final posIniUrl = Model3dCatalog.instance.urlByName('Posición Inicial');
-    if (posIniUrl != null) {
-      out.add(GlbStep(
-        url: posIniUrl,
-        duration: _durByName['Posición Inicial']!,
-      ));
-    }
+    if (posIniUrl != null) out.add(GlbStep(url: posIniUrl));
   }
 
   for (var i = 0; i < ex.sequence.length; i++) {
@@ -226,10 +183,7 @@ Future<List<GlbStep>> buildGlbStepsForExercise(ExerciseModel ex) async {
     final hitName = _hitAnim(step);
     if (hitName != null) {
       final hitUrl = Model3dCatalog.instance.urlByName(hitName);
-      if (hitUrl != null) {
-        final dur = _durByName[hitName] ?? const Duration(seconds: 3);
-        out.add(GlbStep(url: hitUrl, duration: dur));
-      }
+      if (hitUrl != null) out.add(GlbStep(url: hitUrl));
     }
 
     // 2) Movimiento hacia el siguiente golpe
@@ -238,10 +192,7 @@ Future<List<GlbStep>> buildGlbStepsForExercise(ExerciseModel ex) async {
       final movName = _movementBetween(step, next);
       if (movName != null) {
         final movUrl = Model3dCatalog.instance.urlByName(movName);
-        if (movUrl != null) {
-          final dur = _durByName[movName] ?? const Duration(seconds: 2);
-          out.add(GlbStep(url: movUrl, duration: dur));
-        }
+        if (movUrl != null) out.add(GlbStep(url: movUrl));
       }
     }
   }
@@ -249,9 +200,7 @@ Future<List<GlbStep>> buildGlbStepsForExercise(ExerciseModel ex) async {
   // Fallback si no hay nada
   if (out.isEmpty) {
     final tp = Model3dCatalog.instance.urlByName('Tpose');
-    if (tp != null) {
-      out.add(GlbStep(url: tp, duration: _durByName['Tpose']!));
-    }
+    if (tp != null) out.add(GlbStep(url: tp));
   }
 
   return out;
