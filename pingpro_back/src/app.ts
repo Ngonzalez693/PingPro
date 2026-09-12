@@ -24,6 +24,12 @@ const app: Application = express();
 // un solo cliente. Ver TRUST_PROXY_HOPS.
 app.set('trust proxy', TRUST_PROXY_HOPS);
 
+// Express 4 interpreta la query string de TODAS las peticiones con `qs`, y la
+// versión que fija (~6.15) tiene avisos de DoS sin parche en esa rama. Ninguna
+// ruta usa req.query, así que basta el parser de Node: parámetros planos, sin
+// objetos ni arrays anidados. Es el valor por defecto de Express 5.
+app.set('query parser', 'simple');
+
 // Security and parsing
 app.use(helmet());         // Protect HTTP headers
 app.use(cors());           // Enable CORS for all routes
