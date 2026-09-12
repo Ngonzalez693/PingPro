@@ -13,10 +13,16 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import routes from './routes/index';
 import { errorHandler } from './middlewares/index';
+import { TRUST_PROXY_HOPS } from './utils/constants';
 
 dotenv.config();           // Look for .env configuration
 
 const app: Application = express();
+
+// Hostinger pone proxies delante de Node. Sin esto req.ip sería la IP del
+// último proxy y el rate limit del registro trataría a todos los usuarios como
+// un solo cliente. Ver TRUST_PROXY_HOPS.
+app.set('trust proxy', TRUST_PROXY_HOPS);
 
 // Security and parsing
 app.use(helmet());         // Protect HTTP headers
