@@ -8,11 +8,15 @@
 import { Router } from 'express';
 import AuthController from '../controllers/AuthController';
 import { validateBody } from '../middlewares/validation';
+import { signupLimiter } from '../middlewares/rateLimit';
 import { signUpSchema } from '../utils/auth.validator';
 
 const router = Router();
 
-router.post('/signup', validateBody(signUpSchema), AuthController.signUp);
+// El límite va antes de validar para que las peticiones inválidas también
+// cuenten: frena el tráfico basura y la enumeración de emails a través del
+// mensaje "already in use".
+router.post('/signup', signupLimiter, validateBody(signUpSchema), AuthController.signUp);
 router.post('/verify', AuthController.verifyToken);
 
 export default router;
