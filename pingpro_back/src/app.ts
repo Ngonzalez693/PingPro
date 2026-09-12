@@ -13,7 +13,6 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import routes from './routes/index';
 import { errorHandler } from './middlewares/index';
-import { success } from './utils/apiResponse';
 
 dotenv.config();           // Look for .env configuration
 
@@ -24,22 +23,6 @@ app.use(helmet());         // Protect HTTP headers
 app.use(cors());           // Enable CORS for all routes
 app.use(express.json());   // JSON automatic parsing
 app.use(morgan('dev'));    // Logging of petitions
-
-// TEMPORAL (chore/proxy-debug-endpoint): muestra qué IP y qué cabeceras de
-// proxy le llegan a Node en Hostinger, para contar los saltos y fijar
-// `trust proxy` en feat/signup-rate-limit, que borra este bloque.
-// `pid` delata si hay varios procesos: el contador del rate limit vive en
-// memoria y no se compartiría entre ellos.
-app.get('/api/debug/ip', (req, res) => {
-  success(res, {
-    ip: req.ip,
-    remoteAddress: req.socket.remoteAddress,
-    xForwardedFor: req.headers['x-forwarded-for'] ?? null,
-    xRealIp: req.headers['x-real-ip'] ?? null,
-    forwarded: req.headers.forwarded ?? null,
-    pid: process.pid,
-  });
-});
 
 // Prefix for all API routes
 // Todo cuelga de /api: /api/exercises, /api/trainings, /api/users, /api/auth,
