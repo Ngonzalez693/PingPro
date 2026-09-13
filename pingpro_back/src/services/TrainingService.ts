@@ -31,8 +31,7 @@ export class TrainingService {
 
   // Create training from repository
   async create(data: ITraining): Promise<string> {
-    const trainingData = { ...data, createdAt: new Date(), updatedAt: new Date() };
-    return this.trainingRepo.create(trainingData);
+    return this.trainingRepo.create(data);
   }
 
   // Update training from repository
