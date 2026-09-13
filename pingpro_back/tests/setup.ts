@@ -7,5 +7,7 @@
 // la nube. Si un test unitario hace por error una llamada real, va a 127.0.0.1
 // y falla en vez de escribir datos de verdad.
 process.env.FIREBASE_PROJECT_ID = 'demo-pingpro';
-process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8080';
+// 8085 y no el 8080 por defecto: en Windows el 8080 lo suele ocupar el sistema
+// (HTTP.sys). Tiene que coincidir con firebase.json.
+process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8085';
 process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
