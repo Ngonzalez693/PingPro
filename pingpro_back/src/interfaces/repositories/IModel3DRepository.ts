@@ -1,21 +1,14 @@
 /**
  * Contrato de persistencia de modelos 3D.
  *
- * Desactualizado: declara createFromUrl y delete, pero
- * FirebaseModel3DRepository solo implementa las lecturas y ni siquiera declara
- * `implements`. La subida de .glb se hace por fuera de la API.
+ * Es de solo lectura: los .glb y sus documentos se suben por fuera de la API,
+ * así que no hay create ni delete.
  */
 import { IModel3D } from '../models/IModel3D';
 
 export interface IModel3DRepository {
-  createFromUrl(data: {
-    name: string;
-    url: string;
-  }): Promise<IModel3D>;
-
-  getAll(): Promise<IModel3D[]>;
+  getAll(): Promise<IModel3D[]>;   // del más nuevo al más antiguo (createdAt)
   getById(id: string): Promise<IModel3D | null>;
-  delete(id: string): Promise<void>;
 }
 
 export default IModel3DRepository;

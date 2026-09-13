@@ -32,7 +32,7 @@ export class FirebaseTrainingRepository implements ITrainingRepository {
 
   // Update trainings from database
   async update(id: string, training: Partial<ITraining>): Promise<void> {
-    await this.collection.doc(id).update({ ...training, updatedAt: new Date() });
+    await this.collection.doc(id).update(training);
   }
 
   // Delete trainings from database
