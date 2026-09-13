@@ -13,6 +13,7 @@
     "prebuild": "npm run clean",
     "test": "jest",
     "test:watch": "jest --watch",
+    "pretest:integration": "node scripts/stop-firestore-emulator.js",
     "test:integration": "firebase emulators:exec --only auth,firestore --project demo-pingpro \"jest --config jest.integration.config.ts\"",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
