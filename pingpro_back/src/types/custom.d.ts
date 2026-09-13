@@ -6,7 +6,7 @@
  */
 declare namespace NodeJS {
   interface ProcessEnv {
-    NODE_ENV: 'development' | 'production';
+    NODE_ENV: 'development' | 'production' | 'test'; // jest pone 'test'
     PORT?: string;
     JWT_SECRET: string;
     FIREBASE_PROJECT_ID: string;
