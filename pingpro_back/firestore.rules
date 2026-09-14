@@ -1,0 +1,13 @@
+rules_version = '2';
+
+// Ningún cliente lee ni escribe Firestore directamente: todo pasa por la API,
+// que usa el Admin SDK y a la que estas reglas no afectan. Desde E1 la app no
+// usa Firestore. Estas reglas desaparecen cuando Firestore se apague tras la
+// migración a Supabase.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
