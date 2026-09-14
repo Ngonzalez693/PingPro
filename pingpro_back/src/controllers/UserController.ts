@@ -12,13 +12,19 @@ import { HTTP_STATUS } from '../utils/constants';
 
 const service = services.users;
 
+// UserService adjunta `status` a sus errores (404 si el perfil no existe);
+// cualquier otro fallo es un 500.
+function statusOf(err: unknown): number {
+  return (err as { status?: number }).status ?? HTTP_STATUS.INTERNAL_ERROR;
+}
+
 export default class UserController {
   static async getById(req: Request, res: Response, next: NextFunction) {
     try {
       const user = await service.getById(req.params.id);
       return success(res, user, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, HTTP_STATUS.INTERNAL_ERROR);
+      return error(res, (err as Error).message, statusOf(err));
     }
   }
 
@@ -31,7 +37,7 @@ export default class UserController {
       await service.update(req.params.id, req.body);
       return success(res, null, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, HTTP_STATUS.INTERNAL_ERROR);
+      return error(res, (err as Error).message, statusOf(err));
     }
   }
 
@@ -40,7 +46,7 @@ export default class UserController {
       await service.delete(req.params.id);
       return success(res, null, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, HTTP_STATUS.INTERNAL_ERROR);
+      return error(res, (err as Error).message, statusOf(err));
     }
   }
 
@@ -54,7 +60,7 @@ export default class UserController {
       const user = await service.getById(uid);
       return success(res, user, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return error(res, (err as Error).message, statusOf(err));
     }
   }
 
