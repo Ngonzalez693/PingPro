@@ -1,9 +1,8 @@
 /**
- * Esquema Joi del perfil de usuario, usado en POST y PUT /api/users.
- *
- * Desalineado con el modelo: exige `uid`, pero IUser usa `id` y el body que
- * envía la app no trae ninguno de los dos. Hoy PUT /api/users/:id rechaza
- * cuerpos válidos por esto.
+ * Esquema Joi de POST /api/users. Esa ruta está bloqueada a propósito
+ * (UserController.create responde 400: los perfiles solo se crean en el
+ * registro), así que este esquema no se usa con datos reales. PUT
+ * /api/users/:id usa userUpdateSchema, más abajo.
  */
 import Joi from 'joi';
 

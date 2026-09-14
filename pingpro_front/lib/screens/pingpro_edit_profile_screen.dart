@@ -1,23 +1,18 @@
-// Edición de perfil: nombre, contraseña, foto y cierre de sesión.
+// Edición de perfil: nombre, contraseña y cierre de sesión.
 //
-// EXCEPCIÓN ARQUITECTÓNICA: es la única pantalla que escribe en Firestore y
-// Firebase Storage directamente, saltándose el backend. El resto de la app
-// pasa siempre por la API. Se hizo así porque cambiar contraseña y subir foto
-// requieren el SDK cliente de Firebase, pero deja la escritura de users/{uid}
-// dependiendo de las reglas de seguridad de Firestore en lugar de la API.
+// El nombre se guarda en el backend (PUT /api/users/{uid}, vía AuthService) y
+// además en Firebase Auth. La contraseña sigue cambiándose con el SDK de
+// Firebase Auth en el cliente: Auth se queda en Firebase en la migración.
 //
-// La escritura se hace con merge:true para no borrar los campos que no se
-// tocan (roles, createdAt) ni las subcolecciones de progreso.
+// Cambiar la foto está desactivado hasta tener Supabase Storage: el bucket de
+// Firebase Storage nunca existió (pide el plan Blaze). El avatar muestra la
+// foto si el perfil ya tiene una.
 //
 // PENDIENTE: cambiar la contraseña puede fallar con 'requires-recent-login' si
 // la sesión es vieja. Hoy solo se muestra un aviso; falta el flujo de
 // reautenticación.
 // ignore_for_file: use_build_context_synchronously
 
-import 'dart:io' show File;
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -45,10 +40,9 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
 
   final TextEditingController _nameEditCtrl = TextEditingController();
   final TextEditingController _passwordEditCtrl = TextEditingController();
-  final ImagePicker _picker = ImagePicker();
 
   bool _loading = true;     // pantalla cargando
-  bool _saving = false;     // guardando cambios / subiendo imagen
+  bool _saving = false;     // guardando cambios
 
   @override
   void initState() {
@@ -90,15 +84,14 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
     setState(() => _saving = true);
 
     final user = FirebaseAuth.instance.currentUser!;
-    final uid = user.uid;
-    final usersRef = FirebaseFirestore.instance.collection('users').doc(uid);
-
     final newName = _nameEditCtrl.text.trim();
     final newPass = _passwordEditCtrl.text.trim();
 
     try {
-      // Actualizar displayName
+      // Nombre: primero el backend (users/{uid}) y después Firebase Auth, para
+      // no dejar Auth con un nombre que el perfil no llegó a guardar.
       if (newName.isNotEmpty && newName != _userName) {
+        await _authService.updateProfile(displayName: newName);
         await user.updateDisplayName(newName);
         _userName = newName;
       }
@@ -130,15 +123,6 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
         }
       }
 
-      // Firestore (merge)
-      final updates = <String, dynamic>{
-        'displayName': _userName,
-        if (_imageUrl != null) 'photoURL': _imageUrl,
-        'email': _userEmail,
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
-      await usersRef.set(updates, SetOptions(merge: true));
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Perfil actualizado')),
@@ -148,51 +132,6 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error al guardar: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
-  Future<void> _pickAndUploadImage() async {
-    if (_saving) return;
-    final img = await _picker.pickImage(source: ImageSource.gallery);
-    if (img == null) return;
-
-    setState(() => _saving = true);
-
-    try {
-      final uid = FirebaseAuth.instance.currentUser!.uid;
-      final ref = FirebaseStorage.instance.ref().child('profiles/$uid.jpg');
-
-      // Carga según plataforma: en web no existe dart:io File, así que la
-      // imagen se sube como bytes en vez de como archivo.
-      if (kIsWeb) {
-        final bytes = await img.readAsBytes();
-        await ref.putData(bytes);
-      } else {
-        final file = File(img.path);
-        await ref.putFile(file);
-      }
-
-      final url = await ref.getDownloadURL();
-
-      // Actualiza Firebase Auth
-      await FirebaseAuth.instance.currentUser!.updatePhotoURL(url);
-
-      // Firestore merge
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .set({'photoURL': url, 'updatedAt': FieldValue.serverTimestamp()},
-              SetOptions(merge: true));
-
-      if (mounted) setState(() => _imageUrl = url);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error subiendo imagen: $e')),
         );
       }
     } finally {
@@ -231,28 +170,15 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
 
                   const SizedBox(height: 12),
 
-                  // Avatar + editar foto
+                  // Avatar (cambiar la foto vuelve con Supabase Storage)
                   Center(
-                    child: Stack(
-                      alignment: Alignment.bottomRight,
-                      children: [
-                        CircleAvatar(
-                          radius: 60,
-                          backgroundColor: AppColors.widgetGrayBackground,
-                          backgroundImage: _imageUrl != null
-                              ? NetworkImage(_imageUrl!)
-                              : const AssetImage('assets/images/avatar_placeholder.png')
-                                  as ImageProvider,
-                        ),
-                        GestureDetector(
-                          onTap: _pickAndUploadImage,
-                          child: const CircleAvatar(
-                            radius: 16,
-                            backgroundColor: AppColors.primary,
-                            child: Icon(Icons.edit, size: 16, color: AppColors.textBlack),
-                          ),
-                        ),
-                      ],
+                    child: CircleAvatar(
+                      radius: 60,
+                      backgroundColor: AppColors.widgetGrayBackground,
+                      backgroundImage: _imageUrl != null
+                          ? NetworkImage(_imageUrl!)
+                          : const AssetImage('assets/images/avatar_placeholder.png')
+                              as ImageProvider,
                     ),
                   ),
 
@@ -452,7 +378,7 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
               ),
             ),
 
-            // Overlay de carga/guardado
+            // Overlay de guardado
             if (_saving)
               Container(
                 color: Colors.black,

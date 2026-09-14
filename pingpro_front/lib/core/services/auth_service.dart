@@ -116,4 +116,41 @@ class AuthService {
     final data = jsonDecode(resp.body);
     return (data is Map && data['data'] is Map) ? Map<String, dynamic>.from(data['data']) : Map<String, dynamic>.from(data);
   }
+
+  /// Guarda el nombre del perfil en el backend (PUT /api/users/{uid}).
+  ///
+  /// El backend solo acepta displayName y photoURL: email y roles los rechaza
+  /// a propósito. Si falla, lanza una excepción con el mensaje del backend.
+  Future<void> updateProfile({required String displayName}) async {
+    final u = _auth.currentUser;
+    if (u == null) throw StateError('No hay sesión iniciada');
+    final token = await u.getIdToken();
+
+    final resp = await http.put(
+      _u('/api/users/${u.uid}'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'displayName': displayName}),
+    );
+
+    if (resp.statusCode == 200) return;
+    throw Exception(_backendMessage(resp, 'No se pudo guardar el perfil'));
+  }
+
+  /// Mensaje de error del backend. Según quién responda viene en `message`
+  /// (controladores) o en `error` (validación y authMiddleware).
+  String _backendMessage(http.Response resp, String fallback) {
+    try {
+      final data = jsonDecode(resp.body);
+      if (data is Map) {
+        final msg = data['message'] ?? data['error'];
+        if (msg != null) return msg.toString();
+      }
+      return fallback;
+    } on FormatException {
+      return fallback;
+    }
+  }
 }
