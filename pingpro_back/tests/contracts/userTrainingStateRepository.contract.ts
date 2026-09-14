@@ -3,7 +3,7 @@
  * (users/{uid}/trainingStates/{trainingId}).
  *
  * Igual que en los ejercicios: un completedAt que nunca se escribió sale como
- * null, y un progress que nunca se escribió no aparece.
+ * null.
  */
 import type { IUserTrainingState } from '../../src/interfaces/models/IUserTrainingState';
 import type { IUserTrainingStateRepository } from '../../src/interfaces/repositories/IUserTrainingStateRepository';
@@ -36,7 +36,6 @@ export function userTrainingStateContract(
       const completed = await repo.setCompleted('u1', 't1', true);
       const after = new Date();
 
-      // Creado solo al completar: progress no aparece.
       expect(completed).toEqual({
         userId: 'u1',
         trainingId: 't1',
@@ -50,41 +49,8 @@ export function userTrainingStateContract(
       expect(reopened.completedAt).toBeNull();
     });
 
-    it('setProgress guarda el progreso', async () => {
-      const before = new Date();
-      const state = await repo.setProgress('u1', 't1', 40);
-      const after = new Date();
-
-      expect(state).toEqual({
-        userId: 'u1',
-        trainingId: 't1',
-        progress: 40,
-        completedAt: null,
-        updatedAt: expect.any(Date),
-      });
-      expectDateBetween(state.updatedAt, before, after);
-    });
-
-    it('marcar completado no borra el progreso', async () => {
-      await repo.setProgress('u1', 't1', 40);
-
-      const state = await repo.setCompleted('u1', 't1', true);
-
-      expect(state.progress).toBe(40);
-      expect(state.completedAt).toBeInstanceOf(Date);
-    });
-
-    it('cambiar el progreso no borra la fecha de completado', async () => {
-      const completed = await repo.setCompleted('u1', 't1', true);
-
-      const state = await repo.setProgress('u1', 't1', 80);
-
-      expect(state.progress).toBe(80);
-      expect(state.completedAt).toEqual(completed.completedAt);
-    });
-
     it('getAllStates devuelve solo los estados del usuario pedido', async () => {
-      await repo.setProgress('u1', 't1', 40);
+      await repo.setCompleted('u1', 't1', true);
       await repo.setCompleted('u1', 't2', true);
       await repo.setCompleted('u2', 't1', true);
 

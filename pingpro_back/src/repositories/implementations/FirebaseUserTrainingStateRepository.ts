@@ -2,9 +2,6 @@
  * Acceso a users/{uid}/trainingStates. Mismo patrón que el repositorio de
  * estados de ejercicio: el id del documento es el id del entrenamiento, las
  * escrituras van con merge y las fechas se convierten a Date al leer.
- *
- * setProgress existe en el repositorio y en TrainingService, pero hoy ninguna
- * ruta lo expone: la app deriva el progreso contando ejercicios completados.
  */
 import { firestore } from 'firebase-admin';
 import type { IUserTrainingStateRepository } from '../../interfaces/repositories/IUserTrainingStateRepository';
@@ -16,7 +13,6 @@ function toState(data: firestore.DocumentData): IUserTrainingState {
         trainingId: data.trainingId,
         completedAt: data.completedAt ? (data.completedAt as firestore.Timestamp).toDate() : null,
         updatedAt: (data.updatedAt as firestore.Timestamp).toDate(),
-        progress: data.progress,
     };
 }
 
@@ -33,16 +29,6 @@ export default class FirebaseUserTrainingStateRepository implements IUserTrainin
         const ref = this.doc(userId, trainingId);
         await ref.set(
             { userId, trainingId, completedAt: completed ? now : null, updatedAt: now },
-            { merge: true }
-        );
-        const snap = await ref.get();
-        return toState(snap.data()!);
-    }
-
-    async setProgress(userId: string, trainingId: string, progress: number): Promise<IUserTrainingState> {
-        const ref = this.doc(userId, trainingId);
-        await ref.set(
-            { userId, trainingId, progress, updatedAt: new Date() },
             { merge: true }
         );
         const snap = await ref.get();
