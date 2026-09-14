@@ -1,9 +1,8 @@
 /**
  * Acceso a la colección 'users' de Firestore.
  *
- * createWithUID es el método que se usa en el registro: fija el id del
- * documento al uid de Firebase Auth. create() (id automático) queda como parte
- * del contrato IUserRepository pero no debería usarse para usuarios reales.
+ * El id del documento es siempre el uid de Firebase Auth: createWithUID lo
+ * fija en el registro.
  *
  * Firestore devuelve las fechas como Timestamp; toUser las convierte a Date al
  * leer para que la API las envíe como texto ISO.
@@ -30,26 +29,9 @@ function toUser(doc: DocumentSnapshot): IUser {
 export class FirebaseUserRepository implements IUserRepository {
   private collection = database.firestore.collection('users');
 
-  async getAll(): Promise<IUser[]> {
-    const snap = await this.collection.get();
-    return snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as IUser) }));
-  }
-
   async getById(id: string): Promise<IUser | null> {
     const doc = await this.collection.doc(id).get();
     return doc.exists ? toUser(doc) : null;
-  }
-
-  async getByEmail(email: string): Promise<IUser | null> {
-    const snap = await this.collection.where('email', '==', email).limit(1).get();
-    if (snap.empty) return null;
-    const doc = snap.docs[0];
-    return { id: doc.id, ...(doc.data() as IUser) };
-  }
-
-  async create(user: IUser): Promise<string> {
-    const ref = await this.collection.add(user);
-    return ref.id;
   }
 
   async createWithUID(uid: string, user: IUser): Promise<void> {
