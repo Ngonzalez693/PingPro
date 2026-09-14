@@ -13,10 +13,7 @@ dependencies:
   flutter_svg: ^2.0.7
   firebase_core: ^4.1.0
   firebase_auth: ^6.0.2
-  cloud_firestore: ^6.0.1
   http: ^1.5.0
-  image_picker: ^1.2.0
-  firebase_storage: ^13.0.2
   fl_chart: ^0.66.2
   model_viewer_plus: ^1.9.3
 
