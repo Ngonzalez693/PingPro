@@ -65,17 +65,6 @@ export class TrainingService {
     return this.userTrainingStateRepo.getAllStates(userId);
   }
 
-  // Progress
-  async setProgressForUser(userId: string, trainingId: string, progress: number): Promise<IUserTrainingState> {
-    const exists = await this.trainingRepo.exists(trainingId);
-    if (!exists) {
-      const err: any = new Error('Training not found');
-      err.status = 404;
-      throw err;
-    }
-    return this.userTrainingStateRepo.setProgress(userId, trainingId, progress);
-  }
-
   async getAllWithUserState(userId: string): Promise<Array<ITraining & {
     isCompleted: boolean;
     completedAt?: string | null; // ISO
