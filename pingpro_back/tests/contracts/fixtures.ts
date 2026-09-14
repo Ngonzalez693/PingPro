@@ -5,6 +5,7 @@
 import type { IExercise } from '../../src/interfaces/models/IExercise';
 import type { ITraining } from '../../src/interfaces/models/ITraining';
 import type { IModel3D } from '../../src/interfaces/models/IModel3D';
+import type { IUser } from '../../src/interfaces/models/IUser';
 import { DirectionCode, HitCode, RotationCode, SideCode, ZoneCode } from '../../src/utils/enums';
 import type { CatalogFixtures } from './catalogRepository.contract';
 
@@ -83,4 +84,17 @@ export const model3dFixtures: Record<'older' | 'newer', IModel3D & { id: string 
     createdAt: new Date('2026-02-03T09:30:00.000Z'),
     updatedAt: new Date('2026-02-03T09:30:00.000Z'),
   },
+};
+
+// Perfil tal como lo crea el registro (AuthController.signUp), sin el id: el
+// id es el uid y lo pone createWithUID.
+export const userFixtures: { user: IUser; patch: Partial<IUser> } = {
+  user: {
+    email: 'ana@test.dev',
+    displayName: 'Ana',
+    roles: ['user'],
+    createdAt: new Date('2026-03-01T12:00:00.000Z'),
+    updatedAt: new Date('2026-03-01T12:00:00.000Z'),
+  },
+  patch: { displayName: 'Ana García', photoURL: 'https://example.com/ana.jpg' },
 };
