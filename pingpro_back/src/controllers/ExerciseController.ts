@@ -10,11 +10,11 @@
  * authMiddleware en req.user.
  */
 import { Request, Response, NextFunction } from 'express';
-import { ExerciseService } from '../services/ExerciseService';
+import { services } from '../container';
 import { success, error } from '../utils/apiResponse';
 import { HTTP_STATUS } from '../utils/constants';
 
-const service = new ExerciseService();    // Object type service
+const service = services.exercises;
 
 export default class ExerciseController {
   // Get all exercises from service

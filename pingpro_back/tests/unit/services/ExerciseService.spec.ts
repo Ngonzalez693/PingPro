@@ -1,13 +1,31 @@
 import { ExerciseService } from '../../../src/services/ExerciseService';
-import { FirebaseExerciseRepository } from '../../../src/repositories/implementations/FirebaseExerciseRepository';
-import FirebaseUserExerciseStateRepository from '../../../src/repositories/implementations/FirebaseUserExerciseStateRepository';
 import type { IExercise } from '../../../src/interfaces/models/IExercise';
 import type { IUserExerciseState } from '../../../src/interfaces/models/IUserExerciseState';
+import type { IExerciseRepository } from '../../../src/interfaces/repositories/IExerciseRepository';
+import type { IUserExerciseStateRepository } from '../../../src/interfaces/repositories/IUserExerciseStateRepository';
 
-// Se simulan los dos repositorios: lo que se prueba son las reglas del
-// servicio (qué es un 404 y qué no se llega a escribir), no Firestore.
-jest.mock('../../../src/repositories/implementations/FirebaseExerciseRepository');
-jest.mock('../../../src/repositories/implementations/FirebaseUserExerciseStateRepository');
+// Repositorios falsos que se pasan por constructor: lo que se prueba son las
+// reglas del servicio (qué es un 404 y qué no se llega a escribir), no la base
+// de datos.
+function fakeExerciseRepo(): jest.Mocked<IExerciseRepository> {
+  return {
+    getAll: jest.fn(),
+    getById: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    exists: jest.fn(),
+  };
+}
+
+function fakeUserStateRepo(): jest.Mocked<IUserExerciseStateRepository> {
+  return {
+    setFavorite: jest.fn(),
+    setCompleted: jest.fn(),
+    getState: jest.fn(),
+    getAllStates: jest.fn(),
+  };
+}
 
 const exercise: IExercise = {
   id: 'e1',
@@ -18,19 +36,14 @@ const exercise: IExercise = {
 };
 
 describe('ExerciseService', () => {
+  let exerciseRepo: jest.Mocked<IExerciseRepository>;
+  let userStateRepo: jest.Mocked<IUserExerciseStateRepository>;
   let service: ExerciseService;
-  let exerciseRepo: jest.Mocked<FirebaseExerciseRepository>;
-  let userStateRepo: jest.Mocked<FirebaseUserExerciseStateRepository>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    service = new ExerciseService();
-    // El servicio crea sus repositorios por dentro (hasta el PR D): se recogen
-    // las instancias simuladas que acaba de construir.
-    exerciseRepo = jest.mocked(FirebaseExerciseRepository).mock
-      .instances[0] as jest.Mocked<FirebaseExerciseRepository>;
-    userStateRepo = jest.mocked(FirebaseUserExerciseStateRepository).mock
-      .instances[0] as jest.Mocked<FirebaseUserExerciseStateRepository>;
+    exerciseRepo = fakeExerciseRepo();
+    userStateRepo = fakeUserStateRepo();
+    service = new ExerciseService(exerciseRepo, userStateRepo);
   });
 
   it('getById responde 404 si el ejercicio no existe', async () => {

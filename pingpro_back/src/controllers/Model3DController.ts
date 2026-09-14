@@ -7,9 +7,9 @@
  * Model3dCatalog en la app depende de esa forma.
  */
 import { Request, Response } from 'express';
-import Model3DService from '../services/Model3DService';
+import { services } from '../container';
 
-const service = Model3DService.instance;
+const service = services.models3d;
 
 export default class Model3DController {
   static async list(_req: Request, res: Response) {

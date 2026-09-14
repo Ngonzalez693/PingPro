@@ -7,9 +7,10 @@ import { requireRole, requireSelfOrRole } from '../../../src/middlewares/roleMid
 // El nombre tiene que empezar por "mock" para que jest permita referenciarlo
 // dentro de la factory, que se hoistea por encima de los imports.
 //
-// La llamada va envuelta en una lambda a propósito: roleMiddleware instancia
-// UserService al importarse, antes de que esta constante exista. Referenciarla
-// directamente daría "Cannot access before initialization".
+// La llamada va envuelta en una lambda a propósito: src/container.ts (que
+// roleMiddleware importa) instancia UserService al importarse, antes de que
+// esta constante exista. Referenciarla directamente daría "Cannot access
+// before initialization".
 const mockGetById = jest.fn();
 jest.mock('../../../src/services/UserService', () => ({
   UserService: jest.fn().mockImplementation(() => ({

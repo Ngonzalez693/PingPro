@@ -6,10 +6,11 @@
  * relaciona credencial, perfil y subcolecciones de progreso.
  */
 import { IUser } from '../interfaces/models/IUser';
-import { FirebaseUserRepository } from '../repositories/implementations/FirebaseUserRepository';
+import type { IUserRepository } from '../interfaces/repositories/IUserRepository';
 
 export class UserService {
-  private repo = new FirebaseUserRepository();
+  // Lo recibe de src/container.ts: el servicio solo conoce la interfaz.
+  constructor(private readonly repo: IUserRepository) {}
 
   async getById(id: string): Promise<IUser> {
     const user = await this.repo.getById(id);
