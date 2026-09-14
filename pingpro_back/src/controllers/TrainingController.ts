@@ -6,11 +6,11 @@
  * catálogo ya cruzado con el progreso del usuario en una sola llamada.
  */
 import { Request, Response, NextFunction } from 'express';
-import { TrainingService } from '../services/TrainingService';
+import { services } from '../container';
 import { success, error } from '../utils/apiResponse';
 import { HTTP_STATUS } from '../utils/constants';
 
-const service = new TrainingService();    // Object type service
+const service = services.trainings;
 
 export default class TrainingController {
   // Get all exercises from service

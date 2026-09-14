@@ -7,13 +7,16 @@
  * Los controllers no hablan nunca con Firestore directamente.
  */
 import { IExercise } from '../interfaces/models/IExercise';
-import { FirebaseExerciseRepository } from '../repositories/implementations/FirebaseExerciseRepository';
-import FirebaseUserExerciseStateRepository from '../repositories/implementations/FirebaseUserExerciseStateRepository';
 import type { IUserExerciseState } from '../interfaces/models/IUserExerciseState';
+import type { IExerciseRepository } from '../interfaces/repositories/IExerciseRepository';
+import type { IUserExerciseStateRepository } from '../interfaces/repositories/IUserExerciseStateRepository';
 
 export class ExerciseService {
-  private exerciseRepo = new FirebaseExerciseRepository();
-  private userStateRepo = new FirebaseUserExerciseStateRepository();
+  // Los recibe de src/container.ts: el servicio solo conoce las interfaces.
+  constructor(
+    private readonly exerciseRepo: IExerciseRepository,
+    private readonly userStateRepo: IUserExerciseStateRepository,
+  ) {}
 
   // LISTADO / DETALLE 
   async getAll(): Promise<IExercise[]> {

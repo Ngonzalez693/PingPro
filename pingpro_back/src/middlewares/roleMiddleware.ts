@@ -9,11 +9,11 @@
  * un usuario cada vez que le cambian el rol.
  */
 import { Request, Response, NextFunction } from 'express';
-import { UserService } from '../services/UserService';
+import { services } from '../container';
 import { error } from '../utils/apiResponse';
 import { HTTP_STATUS } from '../utils/constants';
 
-const service = new UserService();
+const service = services.users;
 
 /** true si el usuario tiene alguno de los roles pedidos. */
 async function hasAnyRole(uid: string, roles: string[]): Promise<boolean> {

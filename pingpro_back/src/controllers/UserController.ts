@@ -6,11 +6,11 @@
  * Firebase Auth y el id del documento coincidan.
  */
 import { Request, Response, NextFunction } from 'express';
-import { UserService } from '../services/UserService';
+import { services } from '../container';
 import { success, error } from '../utils/apiResponse';
 import { HTTP_STATUS } from '../utils/constants';
 
-const service = new UserService();
+const service = services.users;
 
 export default class UserController {
   static async getById(req: Request, res: Response, next: NextFunction) {

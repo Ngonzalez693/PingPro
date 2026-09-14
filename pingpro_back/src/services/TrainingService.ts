@@ -7,13 +7,16 @@
  * cruce entre catálogo y progreso se hace aquí en memoria.
  */
 import { ITraining } from '../interfaces/models/ITraining';
-import { FirebaseTrainingRepository } from '../repositories/implementations/FirebaseTrainingRepository';
-import FirebaseUserTrainingStateRepository from '../repositories/implementations/FirebaseUserTrainingStateRepository';
 import type { IUserTrainingState } from '../interfaces/models/IUserTrainingState';
+import type { ITrainingRepository } from '../interfaces/repositories/ITrainingRepository';
+import type { IUserTrainingStateRepository } from '../interfaces/repositories/IUserTrainingStateRepository';
 
 export class TrainingService {
-  private trainingRepo = new FirebaseTrainingRepository();
-  private userTrainingStateRepo = new FirebaseUserTrainingStateRepository();
+  // Los recibe de src/container.ts: el servicio solo conoce las interfaces.
+  constructor(
+    private readonly trainingRepo: ITrainingRepository,
+    private readonly userTrainingStateRepo: IUserTrainingStateRepository,
+  ) {}
 
   // Get all trainings from repository
   async getAll(): Promise<ITraining[]> {
