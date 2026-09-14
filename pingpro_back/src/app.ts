@@ -37,8 +37,8 @@ app.use(express.json());   // JSON automatic parsing
 app.use(morgan('dev'));    // Logging of petitions
 
 // Prefix for all API routes
-// Todo cuelga de /api: /api/exercises, /api/trainings, /api/users, /api/auth,
-// /api/stats y /api/model3d (ver routes/index.ts).
+// Todo cuelga de /api: /api/exercises, /api/trainings, /api/users, /api/auth
+// y /api/model3d (ver routes/index.ts).
 app.use('/api', routes);
 
 // Error centralized control

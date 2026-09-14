@@ -24,6 +24,11 @@
       "express"
     ]
   },
+  // ts-node no lee "include" por defecto: sin esto, el servidor de desarrollo
+  // no carga src/types (req.user, process.env) y no compila.
+  "ts-node": {
+    "files": true
+  },
   "include": [
     "src/**/*",
     "src/types/**/*"
