@@ -2,8 +2,14 @@ import { db } from '../../../src/config/firebase';
 import { FirebaseExerciseRepository } from '../../../src/repositories/implementations/FirebaseExerciseRepository';
 import { FirebaseTrainingRepository } from '../../../src/repositories/implementations/FirebaseTrainingRepository';
 import FirebaseModel3DRepository from '../../../src/repositories/implementations/FirebaseModel3DRepository';
+import { FirebaseUserRepository } from '../../../src/repositories/implementations/FirebaseUserRepository';
+import FirebaseUserExerciseStateRepository from '../../../src/repositories/implementations/FirebaseUserExerciseStateRepository';
+import FirebaseUserTrainingStateRepository from '../../../src/repositories/implementations/FirebaseUserTrainingStateRepository';
 import { catalogRepositoryContract } from '../../contracts/catalogRepository.contract';
 import { model3dRepositoryContract } from '../../contracts/model3dRepository.contract';
+import { userRepositoryContract } from '../../contracts/userRepository.contract';
+import { userExerciseStateContract } from '../../contracts/userExerciseStateRepository.contract';
+import { userTrainingStateContract } from '../../contracts/userTrainingStateRepository.contract';
 import { exerciseFixtures, trainingFixtures } from '../../contracts/fixtures';
 import { clearFirestore, closeFirebaseApp } from '../helpers/emulators';
 
@@ -32,6 +38,21 @@ model3dRepositoryContract('FirebaseModel3DRepository', {
       models.map(({ id, ...data }) => db.collection('model3d').doc(id).set(data)),
     );
   },
+});
+
+userRepositoryContract('FirebaseUserRepository', {
+  createRepository: () => new FirebaseUserRepository(),
+  reset: clearFirestore,
+});
+
+userExerciseStateContract('FirebaseUserExerciseStateRepository', {
+  createRepository: () => new FirebaseUserExerciseStateRepository(),
+  reset: clearFirestore,
+});
+
+userTrainingStateContract('FirebaseUserTrainingStateRepository', {
+  createRepository: () => new FirebaseUserTrainingStateRepository(),
+  reset: clearFirestore,
 });
 
 afterAll(closeFirebaseApp);
