@@ -51,6 +51,6 @@ export const services = {
   auth: new AuthService(),
   users: new UserService(repositories.users),
   exercises: new ExerciseService(repositories.exercises, repositories.exerciseStates),
-  trainings: new TrainingService(repositories.trainings, repositories.trainingStates),
+  trainings: new TrainingService(repositories.trainings, repositories.trainingStates, repositories.exercises),
   models3d: new Model3DService(repositories.models3d),
 };

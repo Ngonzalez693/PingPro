@@ -5,8 +5,12 @@
  *
  * getAllWithUserState es la pieza clave: Firestore no permite join, así que el
  * cruce entre catálogo y progreso se hace aquí en memoria.
+ *
+ * También recibe el repositorio de ejercicios, solo para comprobar que los
+ * exerciseIds existen antes de guardar un entrenamiento.
  */
 import { ITraining } from '../interfaces/models/ITraining';
+import type { IExerciseRepository } from '../interfaces/repositories/IExerciseRepository';
 import type { IUserTrainingState } from '../interfaces/models/IUserTrainingState';
 import type { ITrainingRepository } from '../interfaces/repositories/ITrainingRepository';
 import type { IUserTrainingStateRepository } from '../interfaces/repositories/IUserTrainingStateRepository';
@@ -16,6 +20,7 @@ export class TrainingService {
   constructor(
     private readonly trainingRepo: ITrainingRepository,
     private readonly userTrainingStateRepo: IUserTrainingStateRepository,
+    private readonly exerciseRepo: IExerciseRepository,
   ) {}
 
   // Get all trainings from repository
@@ -34,13 +39,29 @@ export class TrainingService {
 
   // Create training from repository
   async create(data: ITraining): Promise<string> {
+    await this.assertExercisesExist(data.exerciseIds);
     return this.trainingRepo.create(data);
   }
 
   // Update training from repository
   async update(id: string, data: Partial<ITraining>): Promise<void> {
     await this.getById(id); // validate existance
+    if (data.exerciseIds) {
+      await this.assertExercisesExist(data.exerciseIds);
+    }
     await this.trainingRepo.update(id, data);
+  }
+
+  // Sin esta comprobación, un entrenamiento podría apuntar a ejercicios que no
+  // existen: Firestore lo acepta, pero la clave foránea de Postgres lo
+  // rechazaría con un 500.
+  private async assertExercisesExist(exerciseIds: string[]): Promise<void> {
+    const uniqueIds = [...new Set(exerciseIds)];
+    const found = await Promise.all(uniqueIds.map((id) => this.exerciseRepo.exists(id)));
+    const missing = uniqueIds.filter((_, i) => !found[i]);
+    if (missing.length > 0) {
+      throw Object.assign(new Error(`Unknown exercise ids: ${missing.join(', ')}`), { status: 400 });
+    }
   }
 
   // Delete training from repository
