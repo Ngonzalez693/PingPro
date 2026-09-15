@@ -38,6 +38,7 @@
     "helmet": "^8.1.0",
     "joi": "^18.0.1",
     "morgan": "^1.10.1",
+    "pg": "^8.23.0",
     "winston": "^3.17.0"
   },
   "devDependencies": {
@@ -50,6 +51,7 @@
     "@types/methods": "^1.1.4",
     "@types/morgan": "^1.9.10",
     "@types/node": "^20.19.11",
+    "@types/pg": "^8.23.1",
     "@types/supertest": "^6.0.3",
     "@types/winston": "^2.4.4",
     "@typescript-eslint/eslint-plugin": "^6.19.1",
