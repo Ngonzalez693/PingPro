@@ -1,35 +1,42 @@
 /**
- * Esquema Joi de un ejercicio, usado por validateBody en exerciseRoutes.
+ * Esquema Joi de un ejercicio, usado por validateBody en exerciseRoutes (POST y
+ * PUT).
  *
- * La secuencia exige al menos un paso y valida los cinco códigos como enteros
- * >= 1. Ojo: solo comprueba el mínimo, no el máximo de cada enum, así que un
- * hit: 99 pasaría la validación y luego el mapper 3D caería en el fallback.
+ * Cada código de la secuencia tiene que ser un valor de su enum
+ * (utils/enums.ts): un hit: 99 dejaría al mapper 3D sin animación. La categoría
+ * tiene que ser una de EXERCISE_CATEGORIES.
+ *
+ * No acepta isFavorite ni completedAt: son de cada usuario y se guardan con
+ * /:id/favorite y /:id/completed.
  */
 import Joi from 'joi';
+import { EXERCISE_CATEGORIES } from './constants';
+import { DirectionCode, HitCode, RotationCode, SideCode, ZoneCode } from './enums';
+
+// Un enum numérico de TypeScript guarda también los nombres (reverse mapping):
+// solo interesan los números.
+function numericValues(codes: object): number[] {
+  return Object.values(codes).filter((value): value is number => typeof value === 'number');
+}
+
+const code = (codes: object) => Joi.number().integer().valid(...numericValues(codes)).required();
 
 // Info to validate exercises
 export const exerciseSchema = Joi.object({
   name: Joi.string().required(),
-  category: Joi.string().required(),
+  category: Joi.string().valid(...EXERCISE_CATEGORIES).required(),
   image: Joi.string().required(),
-  isFavorite: Joi.boolean().optional(),
-  completedAt: Joi.date().optional().allow(null),
   description: Joi.string().allow('').optional(),
   sequence: Joi.array()
     .items(
       Joi.object({
-        hit: Joi.number().integer().min(1).required(),
-        rotation: Joi.number().integer().min(1).required(),
-        zone: Joi.number().integer().min(1).required(),
-        direction: Joi.number().integer().min(1).required(),
-        side: Joi.number().integer().min(1).required(),
+        hit: code(HitCode),
+        rotation: code(RotationCode),
+        zone: code(ZoneCode),
+        direction: code(DirectionCode),
+        side: code(SideCode),
       })
     )
     .min(1)
     .required(),
 });
-
-export const updateExerciseSchema = exerciseSchema.keys({
-  name: Joi.string().optional(),
-});
-  

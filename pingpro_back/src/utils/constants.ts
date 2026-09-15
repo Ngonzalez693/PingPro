@@ -1,11 +1,9 @@
 /**
- * Constantes compartidas: códigos HTTP, roles y saltos de proxy.
+ * Constantes compartidas: códigos HTTP, roles, saltos de proxy y categorías
+ * del catálogo.
  *
  * `as const` congela los valores para que TypeScript los infiera como literales
  * (200, 'admin') y no como number/string genéricos.
- *
- * USER_ROLES se escribe en el perfil al registrarse pero todavía no se
- * comprueba en ninguna ruta: no hay autorización por rol implementada.
  */
 // HTTP status constants
 export const HTTP_STATUS = {
@@ -35,3 +33,10 @@ export const USER_ROLES = {
 // IP del proxy y el contador del rate limit. Si Hostinger cambia su
 // infraestructura, hay que volver a medir.
 export const TRUST_PROXY_HOPS = 1;
+
+// Categorías fijas del catálogo. La app filtra comparando estos textos
+// literales (pingpro_exercises_screen.dart y pingpro_trainings_screen.dart),
+// así que cambiar uno rompe sus filtros. El esquema de Postgres los repetirá en
+// un CHECK.
+export const EXERCISE_CATEGORIES = ['Footwork', 'Técnico', 'Táctico', 'Estrategia'] as const;
+export const TRAINING_CATEGORIES = ['Grado', 'Objetivo', 'Momento', 'Estilo', 'Estructura'] as const;
