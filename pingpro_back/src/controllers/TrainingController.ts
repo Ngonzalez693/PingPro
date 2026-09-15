@@ -39,7 +39,8 @@ export default class TrainingController {
       const id = await service.create(req.body);
       return success(res, { id }, HTTP_STATUS.CREATED);
     } catch (err) {
-      return error(res, (err as Error).message, HTTP_STATUS.INTERNAL_ERROR);
+      const status = (err as { status?: number }).status ?? HTTP_STATUS.INTERNAL_ERROR;
+      return error(res, (err as Error).message, status);
     }
   }
 

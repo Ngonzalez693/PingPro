@@ -5,8 +5,8 @@
  * `image` es una ruta de asset de Flutter (p. ej. 'assets/images/exercise_1.jpg'),
  * no una URL — algo a revisar si algún día los usuarios crean ejercicios.
  *
- * isFavorite y completedAt aparecen aquí por compatibilidad, pero el estado real
- * por usuario vive en users/{uid}/exerciseStates, no en este documento.
+ * El favorito y el completado no van aquí: son de cada usuario y viven en
+ * users/{uid}/exerciseStates (IUserExerciseState).
  */
 import { ISequenceStep } from "./ISequenceStep";
 
@@ -16,8 +16,6 @@ export interface IExercise {
   name: string;
   category: string;
   image: string;
-  isFavorite?: boolean;
-  completedAt?: Date | null;
   description?: string;
   sequence: ISequenceStep[];
 }
