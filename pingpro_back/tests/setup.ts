@@ -11,3 +11,9 @@ process.env.FIREBASE_PROJECT_ID = 'demo-pingpro';
 // (HTTP.sys). Tiene que coincidir con firebase.json.
 process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8085';
 process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
+
+// Postgres: la base local de test (db/create-test-database.sql). Igual que con
+// Firebase, se fija antes de que nada cargue el .env; además
+// src/config/postgres.ts rechaza en tests cualquier base que no sea local y
+// *_test.
+process.env.DATABASE_URL = 'postgres://pingpro_test:pingpro_test@127.0.0.1:5433/pingpro_test';

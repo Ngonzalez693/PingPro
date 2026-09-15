@@ -17,7 +17,8 @@
     "test:integration": "firebase emulators:exec --only auth,firestore --project demo-pingpro \"jest --config jest.integration.config.ts\"",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
-    "format": "prettier --write src/**/*.ts"
+    "format": "prettier --write src/**/*.ts",
+    "db:migrate": "ts-node src/db/migrate.ts"
   },
   "keywords": [
     "node",
