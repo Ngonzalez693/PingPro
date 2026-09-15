@@ -28,3 +28,15 @@ export async function resetPostgres(pool: Pool): Promise<void> {
 export async function recreateSchema(pool: Pool): Promise<void> {
   await pool.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
 }
+
+// Ejercicios de catálogo mínimos con ids fijos, para los tests que los
+// referencian (los fixtures de entrenamientos apuntan a e1, e2 y e3, y en
+// Postgres tienen que existir por la clave foránea).
+export async function seedExercises(pool: Pool, ids: string[]): Promise<void> {
+  await pool.query(
+    `INSERT INTO exercises (id, name, category, image)
+     SELECT id, 'Ejercicio ' || id, 'Técnico', 'assets/images/exercise_1.jpg'
+     FROM unnest($1::text[]) AS id`,
+    [ids],
+  );
+}
