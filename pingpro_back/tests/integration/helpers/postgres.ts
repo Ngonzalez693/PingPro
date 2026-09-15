@@ -40,3 +40,13 @@ export async function seedExercises(pool: Pool, ids: string[]): Promise<void> {
     [ids],
   );
 }
+
+// Usuarios mínimos con ids fijos, para los estados que cuelgan de ellos.
+export async function seedUsers(pool: Pool, ids: string[]): Promise<void> {
+  await pool.query(
+    `INSERT INTO users (id, email)
+     SELECT id, id || '@test.dev'
+     FROM unnest($1::text[]) AS id`,
+    [ids],
+  );
+}
