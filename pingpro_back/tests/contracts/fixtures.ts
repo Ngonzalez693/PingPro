@@ -12,7 +12,7 @@ import type { CatalogFixtures } from './catalogRepository.contract';
 export const exerciseFixtures: CatalogFixtures<IExercise> = {
   a: {
     name: 'Topspin cruzado',
-    category: 'Ataque',
+    category: 'Técnico',
     image: 'assets/images/exercise_1.jpg',
     description: 'Topspin de derecha a la esquina izquierda',
     sequence: [
@@ -27,7 +27,7 @@ export const exerciseFixtures: CatalogFixtures<IExercise> = {
   },
   b: {
     name: 'Flick y revés',
-    category: 'Recepción',
+    category: 'Táctico',
     image: 'assets/images/exercise_2.jpg',
     sequence: [
       {
@@ -52,7 +52,7 @@ export const exerciseFixtures: CatalogFixtures<IExercise> = {
 export const trainingFixtures: CatalogFixtures<ITraining> = {
   a: {
     name: 'Calentamiento',
-    category: 'Básico',
+    category: 'Grado',
     image: 'assets/images/training_1.jpg',
     description: 'Rutina corta para empezar',
     exerciseIds: ['e1', 'e2'],
@@ -60,7 +60,7 @@ export const trainingFixtures: CatalogFixtures<ITraining> = {
   },
   b: {
     name: 'Ataque',
-    category: 'Avanzado',
+    category: 'Objetivo',
     image: 'assets/images/training_2.jpg',
     exerciseIds: ['e3'],
     duration: 45,
