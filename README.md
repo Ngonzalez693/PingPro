@@ -2,7 +2,7 @@
 
 **Table-tennis training mobile app with 3D drill visualization.**
 
-Undergraduate thesis in Systems Engineering — Universidad de San Buenaventura Cali (2025).
+Undergraduate thesis in Systems Engineering • Multimedia Engineering — Universidad de San Buenaventura Cali (2025).
 
 PingPro lets coaches and athletes build drills step by step (stroke, spin, table zone, direction and side) and watch them performed by a 3D human model animated from self-captured motion-capture data.
 
