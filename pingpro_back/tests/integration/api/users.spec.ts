@@ -1,12 +1,16 @@
 import request from 'supertest';
+import type { Pool } from 'pg';
 import app from '../../../src/app';
-import { db } from '../../../src/config/firebase';
-import { clearAuth, clearFirestore, closeFirebaseApp, signInWithEmulator } from '../helpers/emulators';
+import { createPool } from '../../../src/config/postgres';
+import { closeDatabase } from '../../../src/container';
+import { migrate } from '../../../src/db/migrate';
+import { clearAuth, closeFirebaseApp, signInWithEmulator } from '../helpers/emulators';
+import { resetPostgres } from '../helpers/postgres';
 
 const PASSWORD = 'Abc12345';
 
-// Registra un usuario por la API (crea la cuenta y users/{uid}) y devuelve su
-// uid y un token real del emulador.
+// Registra un usuario por la API (crea la cuenta y su fila en users) y
+// devuelve su uid y un token real del emulador.
 async function registerUser(email: string): Promise<{ uid: string; token: string }> {
   const res = await request(app)
     .post('/api/auth/signup')
@@ -25,11 +29,19 @@ function updateProfile(uid: string, token: string | null, body: object) {
 
 // Es el endpoint con el que la app guarda el perfil. Hace 7 registros: por
 // debajo del rate limit (20 cada 15 min).
-describe('PUT /api/users/:id (emuladores)', () => {
+describe('PUT /api/users/:id (emulador de Auth + Postgres)', () => {
+  const pool: Pool = createPool();
+
+  beforeAll(() => migrate(pool));
   beforeEach(async () => {
-    await Promise.all([clearAuth(), clearFirestore()]);
+    await clearAuth();
+    await resetPostgres(pool);
   });
-  afterAll(closeFirebaseApp);
+  afterAll(async () => {
+    await pool.end();
+    await closeDatabase();
+    await closeFirebaseApp();
+  });
 
   it('actualiza el nombre del propio perfil', async () => {
     const { uid, token } = await registerUser('ana@test.dev');
@@ -49,8 +61,8 @@ describe('PUT /api/users/:id (emuladores)', () => {
     const res = await updateProfile(uid, token, { roles: ['admin'] });
 
     expect(res.status).toBe(400);
-    const profile = await db.collection('users').doc(uid).get();
-    expect(profile.data()?.roles).toEqual(['user']);
+    const { rows } = await pool.query('SELECT roles FROM users WHERE id = $1', [uid]);
+    expect(rows[0].roles).toEqual(['user']);
   });
 
   it('no deja editar el perfil de otro usuario (403)', async () => {
@@ -80,7 +92,7 @@ describe('PUT /api/users/:id (emuladores)', () => {
 
   it('responde 404 si el perfil no existe', async () => {
     const { uid, token } = await registerUser('gabi@test.dev');
-    await db.collection('users').doc(uid).delete();
+    await pool.query('DELETE FROM users WHERE id = $1', [uid]);
 
     const res = await updateProfile(uid, token, { displayName: 'Gabi' });
 

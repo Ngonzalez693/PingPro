@@ -1,7 +1,11 @@
 import request from 'supertest';
+import type { Pool } from 'pg';
 import app from '../../../src/app';
-import { db } from '../../../src/config/firebase';
-import { clearAuth, clearFirestore, closeFirebaseApp, signInWithEmulator } from '../helpers/emulators';
+import { createPool } from '../../../src/config/postgres';
+import { closeDatabase } from '../../../src/container';
+import { migrate } from '../../../src/db/migrate';
+import { clearAuth, closeFirebaseApp, signInWithEmulator } from '../helpers/emulators';
+import { resetPostgres } from '../helpers/postgres';
 
 const PASSWORD = 'Abc12345';
 
@@ -11,21 +15,29 @@ function signup(email: string) {
     .send({ email, password: PASSWORD, displayName: 'Test User' });
 }
 
-// Registro de punta a punta sobre la app real y los emuladores de Auth y
-// Firestore. Hace 4 registros: muy por debajo del rate limit (20 cada 15 min).
-describe('Auth API (emuladores)', () => {
-  beforeEach(async () => {
-    await Promise.all([clearAuth(), clearFirestore()]);
-  });
-  afterAll(closeFirebaseApp);
+// Registro de punta a punta sobre la app real: Auth sigue siendo Firebase
+// (emulador) y el perfil ya vive en Postgres. Hace 4 registros: muy por debajo
+// del rate limit (20 cada 15 min).
+describe('Auth API (emulador de Auth + Postgres)', () => {
+  const pool: Pool = createPool();
 
-  it('signup crea la cuenta y el perfil users/{uid} con rol user', async () => {
+  beforeAll(() => migrate(pool));
+  beforeEach(async () => {
+    await clearAuth();
+    await resetPostgres(pool);
+  });
+  afterAll(async () => {
+    await pool.end();
+    await closeDatabase();
+    await closeFirebaseApp();
+  });
+
+  it('signup crea la cuenta y el perfil con rol user', async () => {
     const res = await signup('ana@test.dev');
 
     expect(res.status).toBe(201);
-    const profile = await db.collection('users').doc(res.body.data.uid).get();
-    expect(profile.exists).toBe(true);
-    expect(profile.data()?.roles).toEqual(['user']);
+    const { rows } = await pool.query('SELECT roles FROM users WHERE id = $1', [res.body.data.uid]);
+    expect(rows).toEqual([{ roles: ['user'] }]);
   });
 
   it('verify acepta un token real del emulador y devuelve el mismo uid', async () => {
@@ -54,7 +66,7 @@ describe('Auth API (emuladores)', () => {
     const res = await signup('cris@test.dev');
 
     // auth_service.dart busca este texto para intentar el login en vez del
-    // registro. Si cambia (por ejemplo al pasar a Supabase), la app se rompe.
+    // registro. Si cambia, la app se rompe.
     expect(res.status).toBe(400);
     expect(res.body.message).toContain('already in use');
   });
