@@ -1,9 +1,14 @@
 /**
- * Inicializa el Firebase Admin SDK y expone la instancia de Firestore.
+ * Inicializa el Firebase Admin SDK y expone las instancias de Firestore y Auth.
  *
  * Es el único punto del backend que toca credenciales. Se ejecuta una sola vez
  * porque Node cachea los módulos: el primer `import` dispara initializeApp() y
  * el resto reutiliza la misma conexión.
+ *
+ * Quien necesite Auth importa `auth` de aquí y no llama a getAuth() por su
+ * cuenta: así importar el módulo garantiza que la app ya está inicializada.
+ * Antes funcionaba de rebote, porque los repositorios de Firebase arrastraban
+ * este archivo; al pasar el container a Postgres dejó de ser cierto.
  *
  * Las credenciales salen del .env (nunca versionado). Ver .env.example.
  *
@@ -12,6 +17,7 @@
  * Auth solo. En producción esa variable no existe y todo sigue como siempre.
  */
 import { initializeApp, cert, ServiceAccount } from 'firebase-admin/app';
+import { Auth, getAuth } from 'firebase-admin/auth';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import dotenv from 'dotenv';
 
@@ -46,3 +52,6 @@ if (usesEmulator) {
 
 // Get Firestore instance correctly
 export const db: Firestore = getFirestore();
+
+// Auth sigue siendo de Firebase después del corte a Postgres.
+export const auth: Auth = getAuth();
