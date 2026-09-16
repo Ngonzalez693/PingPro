@@ -2,9 +2,9 @@
  * Contrato del estado de cada usuario sobre cada ejercicio
  * (users/{uid}/exerciseStates/{exerciseId}).
  *
- * Fija la forma que la app recibe hoy: un completedAt que nunca se escribió
- * sale como null, y un isFavorite que nunca se escribió no aparece. Supabase
- * tendrá que devolver lo mismo (NULL en la columna → campo ausente).
+ * Fija la forma que la app recibe: un completedAt que nunca se escribió sale
+ * como null, y un isFavorite que nunca se escribió no aparece (en Postgres,
+ * NULL en la columna → campo ausente).
  */
 import type { IUserExerciseState } from '../../src/interfaces/models/IUserExerciseState';
 import type { IUserExerciseStateRepository } from '../../src/interfaces/repositories/IUserExerciseStateRepository';

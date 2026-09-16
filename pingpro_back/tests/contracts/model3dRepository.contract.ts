@@ -2,7 +2,7 @@
  * Contrato del repositorio de modelos 3D (solo lectura).
  *
  * Como el repositorio no tiene create, cada enlace aporta `seed` para meter los
- * datos a su manera: Firebase escribe documentos y Supabase insertará filas.
+ * datos a su manera: el de Postgres inserta filas.
  */
 import type { IModel3D } from '../../src/interfaces/models/IModel3D';
 import type { IModel3DRepository } from '../../src/interfaces/repositories/IModel3DRepository';

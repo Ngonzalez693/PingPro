@@ -1,6 +1,6 @@
 /**
- * Datos de ejemplo de los contratos. Los comparten todos los enlaces (Firebase
- * y, más adelante, Supabase), así que no deben depender de ninguna base de datos.
+ * Datos de ejemplo de los contratos. Los comparte cualquier enlace, así que no
+ * deben depender de ninguna base de datos.
  */
 import type { IExercise } from '../../src/interfaces/models/IExercise';
 import type { ITraining } from '../../src/interfaces/models/ITraining';
