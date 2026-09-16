@@ -4,8 +4,8 @@
  * que recibe los datos de ejemplo de cada tipo.
  *
  * Las comparaciones son estrictas (toEqual): un repositorio no puede devolver
- * campos que no estén en el modelo. Así Firebase y Supabase entregan la misma
- * forma por la API.
+ * campos que no estén en el modelo. Es lo que mantuvo idéntica la respuesta de
+ * la API al pasar de Firestore a Postgres.
  */
 import type { ContractSetup } from './types';
 
