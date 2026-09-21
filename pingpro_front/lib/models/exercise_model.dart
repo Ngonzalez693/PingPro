@@ -11,6 +11,12 @@ import 'package:pingpro_front/models/sequence_step_model.dart';
 /// ExercisesState los modifica en memoria para la UI optimista.
 class ExerciseModel {
   final String id;
+
+  /// Dueño de un ejercicio privado; null en los del catálogo. El backend solo
+  /// devuelve los privados de quien pregunta, así que con valor siempre es un
+  /// ejercicio del usuario actual.
+  final String? ownerId;
+
   final String name;
   final String category;
   final String image;
@@ -21,6 +27,7 @@ class ExerciseModel {
 
   ExerciseModel({
     required this.id,
+    this.ownerId,
     required this.name,
     required this.category,
     required this.image,
@@ -30,9 +37,13 @@ class ExerciseModel {
     this.completedAt,
   });
 
+  /// Si es un ejercicio creado por el usuario actual.
+  bool get isOwn => ownerId != null;
+
   factory ExerciseModel.fromJson(Map<String, dynamic> json) {
     return ExerciseModel(
       id: json['id'] as String,
+      ownerId: json['ownerId'] as String?,
       name: json['name'] as String,
       category: json['category'] as String,
       image: json['image'] as String,
