@@ -52,10 +52,9 @@ class MainApp extends StatelessWidget {
       title: 'PingPro',
       theme: ThemeData(scaffoldBackgroundColor: AppColors.background),
       debugShowCheckedModeBanner: false,
-      // Empieza en Welcome, y AuthWrapper decidirá siguiente pantalla
-      // Nota: cuando se define `home`, Flutter lo usa como raíz e ignora
-      // initialRoute. Quien manda al arrancar es AuthWrapper (ver `home` abajo).
-      initialRoute: '/welcome',
+      // Sin `initialRoute`: con él, Navigator construía la pila ['/', '/welcome']
+      // y el onboarding tapaba a AuthWrapper, así que una sesión abierta
+      // terminaba igualmente en Welcome. Quien decide al arrancar es AuthWrapper.
       routes: {
         '/welcome': (ctx) => const PingproWelcomeScreen(),
         '/login': (ctx) => const PingproLoginScreen(),

@@ -1,8 +1,8 @@
 // Inicio de sesión.
 //
 // Va directo contra Firebase Auth (AuthService.login), sin pasar por el
-// backend. Tras autenticar navega a /home; AuthWrapper mantiene la sesión en
-// los siguientes arranques.
+// backend. Tras autenticar vuelve a la raíz y es AuthWrapper quien decide la
+// pantalla; también mantiene la sesión en los siguientes arranques.
 //
 // PENDIENTE para publicar: "¿Olvidaste tu contraseña?" no está implementado, y
 // la validación se limita a comprobar que los campos no estén vacíos (no se
@@ -39,7 +39,9 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
     try {
       await AuthService().login(email, password);
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed('/home');
+      // A '/' (AuthWrapper) y no a '/home': empujar HomeNavigation dejaría dos
+      // instancias vivas, la del wrapper y la empujada encima.
+      Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
     } catch (e) {
       ScaffoldMessenger.of(
         context,
