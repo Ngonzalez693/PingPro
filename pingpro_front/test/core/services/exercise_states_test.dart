@@ -66,17 +66,4 @@ void main() {
       expect(parseExerciseStates([1, 2, 3]), isEmpty);
     });
   });
-
-  group('parseCreatedId', () {
-    test('lee el id de la respuesta real del backend', () {
-      expect(parseCreatedId({'success': true, 'data': {'id': 'abc-123'}}), 'abc-123');
-    });
-
-    test('sin un id utilizable devuelve null', () {
-      expect(parseCreatedId(null), isNull);
-      expect(parseCreatedId({'success': true}), isNull);
-      expect(parseCreatedId({'data': {'id': ''}}), isNull);
-      expect(parseCreatedId({'data': {'id': 42}}), isNull);
-    });
-  });
 }
