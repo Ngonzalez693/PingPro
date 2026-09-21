@@ -12,6 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:pingpro_front/core/services/api_errors.dart';
 
 class AuthService {
   final _auth = FirebaseAuth.instance;
@@ -136,21 +137,6 @@ class AuthService {
     );
 
     if (resp.statusCode == 200) return;
-    throw Exception(_backendMessage(resp, 'No se pudo guardar el perfil'));
-  }
-
-  /// Mensaje de error del backend. Según quién responda viene en `message`
-  /// (controladores) o en `error` (validación y authMiddleware).
-  String _backendMessage(http.Response resp, String fallback) {
-    try {
-      final data = jsonDecode(resp.body);
-      if (data is Map) {
-        final msg = data['message'] ?? data['error'];
-        if (msg != null) return msg.toString();
-      }
-      return fallback;
-    } on FormatException {
-      return fallback;
-    }
+    throw Exception(backendErrorMessage(resp.body, 'No se pudo guardar el perfil'));
   }
 }
