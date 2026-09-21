@@ -14,6 +14,7 @@ import 'package:pingpro_front/core/form_styles.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/core/training_options.dart';
+import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/training_draft_model.dart';
 import 'package:pingpro_front/widgets/exercise_picker_sheet.dart';
@@ -24,7 +25,10 @@ import 'package:pingpro_front/widgets/image_option_picker.dart';
 typedef _Entry = ({int key, ExerciseModel exercise});
 
 class CreateTrainingForm extends StatefulWidget {
-  const CreateTrainingForm({super.key});
+  /// A dónde va el entrenamiento: lo propio del usuario o el catálogo (admin).
+  final ContentScope scope;
+
+  const CreateTrainingForm({super.key, this.scope = ContentScope.own});
 
   @override
   State<CreateTrainingForm> createState() => _CreateTrainingFormState();
@@ -73,7 +77,7 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
 
   Future<void> _addExercise() async {
     _dropFocus();
-    final exercise = await showExercisePicker(context);
+    final exercise = await showExercisePicker(context, catalogOnly: widget.scope == ContentScope.catalog);
     if (exercise == null || !mounted) return;
     setState(() => _entries = [..._entries, (key: _nextKey++, exercise: exercise)]);
   }
@@ -98,6 +102,7 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
       description: _description.text,
       exerciseIds: [for (final e in _entries) e.exercise.id],
       minutesPerExercise: _minutesPerExercise!,
+      scope: widget.scope,
     );
     _dropFocus();
     setState(() => _saving = true);

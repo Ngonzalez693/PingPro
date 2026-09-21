@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
+import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/widgets/create_training_form.dart';
 
@@ -101,6 +102,24 @@ void main() {
     expect(find.text('Tus ejercicios'), findsOneWidget);
     expect(find.text('Catálogo'), findsOneWidget);
     expect(find.widgetWithText(Chip, 'Propio'), findsOneWidget);
+  });
+
+  testWidgets('en el catálogo, el selector solo ofrece ejercicios del catálogo', (tester) async {
+    // Un entrenamiento del catálogo no puede usar ejercicios privados: para el
+    // resto de usuarios no existirían, y el backend lo rechaza.
+    tester.view.physicalSize = const Size(1080, 2340);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: CreateTrainingForm(scope: ContentScope.catalog))),
+    );
+
+    await tester.tap(find.text('Agregar ejercicio'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mi rutina de revés'), findsNothing);
+    expect(find.text('Tus ejercicios'), findsNothing);
+    expect(find.text('Topspin cruzado'), findsOneWidget);
   });
 
   testWidgets('un ejercicio propio y uno del catálogo se pueden mezclar', (tester) async {

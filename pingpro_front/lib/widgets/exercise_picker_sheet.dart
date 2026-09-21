@@ -1,8 +1,12 @@
 // Hoja inferior para elegir un ejercicio y añadirlo a un entrenamiento.
 //
 // Lista todo lo que el usuario puede ver: sus ejercicios primero, marcados como
-// "Propio", y después los del catálogo. Es la misma regla que aplica el backend al
-// guardar: un entrenamiento propio puede mezclar ambos.
+// "Propio", y después los del catálogo. Es la misma regla que aplica el backend
+// al guardar: un entrenamiento propio puede mezclar ambos.
+//
+// Con `catalogOnly` (un admin creando un entrenamiento del catálogo) solo salen
+// los del catálogo: el backend rechaza que uno del catálogo use ejercicios
+// privados, porque para el resto de usuarios no existirían.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
@@ -10,17 +14,19 @@ import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 
 /// Abre la hoja. Devuelve el ejercicio elegido, o null si se cierra sin elegir.
-Future<ExerciseModel?> showExercisePicker(BuildContext context) {
+Future<ExerciseModel?> showExercisePicker(BuildContext context, {bool catalogOnly = false}) {
   return showModalBottomSheet<ExerciseModel>(
     context: context,
     isScrollControlled: true,
     backgroundColor: AppColors.tab,
-    builder: (_) => const ExercisePickerSheet(),
+    builder: (_) => ExercisePickerSheet(catalogOnly: catalogOnly),
   );
 }
 
 class ExercisePickerSheet extends StatefulWidget {
-  const ExercisePickerSheet({super.key});
+  final bool catalogOnly;
+
+  const ExercisePickerSheet({super.key, this.catalogOnly = false});
 
   @override
   State<ExercisePickerSheet> createState() => _ExercisePickerSheetState();
@@ -49,7 +55,7 @@ class _ExercisePickerSheetState extends State<ExercisePickerSheet> {
     if (all.isEmpty) {
       return const Center(child: Text('No hay ejercicios disponibles', style: TextStyles.paragraph));
     }
-    final own = all.where((e) => e.isOwn).toList();
+    final own = widget.catalogOnly ? <ExerciseModel>[] : all.where((e) => e.isOwn).toList();
     final catalog = all.where((e) => !e.isOwn).toList();
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 16),
