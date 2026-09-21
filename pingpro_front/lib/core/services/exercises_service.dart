@@ -8,6 +8,8 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:pingpro_front/core/services/api_errors.dart';
+import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 
 /// Estado de un ejercicio para el usuario actual.
@@ -41,6 +43,17 @@ Map<String, ExerciseUserState> parseExerciseStates(Object? body) {
     );
   }
   return byId;
+}
+
+/// Id del ejercicio recién creado, a partir de la respuesta de
+/// POST /api/exercises/me: `{ "success": true, "data": { "id": "..." } }`.
+///
+/// Devuelve null si la respuesta no trae un id utilizable. Separada de la
+/// petición, como parseExerciseStates, para poder probarla sola.
+String? parseCreatedId(Object? body) {
+  final data = body is Map ? body['data'] : null;
+  final id = data is Map ? data['id'] : null;
+  return id is String && id.isNotEmpty ? id : null;
 }
 
 class ExercisesService {
@@ -100,6 +113,27 @@ class ExercisesService {
       ex.completedAt = st?.completedAt;
     }
     return exercises;
+  }
+
+  /// POST /api/exercises/me: crea un ejercicio privado del usuario actual y
+  /// devuelve su id. El dueño lo pone el backend a partir del token.
+  ///
+  /// Si falla, la excepción lleva el mensaje del backend (p. ej. el de Joi
+  /// cuando un campo no es válido) para poder enseñarlo tal cual.
+  Future<String> createMine(ExerciseDraft draft) async {
+    final r = await http.post(
+      _u('/api/exercises/me'),
+      headers: await _jsonHeaders(withAuth: true),
+      body: jsonEncode(draft.toCreateJson()),
+    );
+    if (r.statusCode != 201) {
+      throw Exception(backendErrorMessage(r.body, 'No se pudo crear el ejercicio'));
+    }
+    final id = parseCreatedId(jsonDecode(r.body));
+    if (id == null) {
+      throw Exception('El servidor no devolvió el id del ejercicio creado');
+    }
+    return id;
   }
 
   /// POST /api/exercises/:id/favorite

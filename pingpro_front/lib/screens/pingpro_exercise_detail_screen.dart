@@ -1,8 +1,8 @@
 // Detalle de un ejercicio: visor 3D arriba, descripción y acciones abajo.
 //
 // Es la pantalla donde converge todo el proyecto:
-//   - buildGlbStepsForExercise() convierte la secuencia en animaciones y
-//     ExerciseGlbSequenceView las reproduce.
+//   - ExerciseAnimationView convierte la secuencia en animaciones 3D y las
+//     reproduce.
 //   - _buildSequenceDescription() traduce los mismos códigos a texto legible.
 //   - El botón "Hecho" es el ÚNICO sitio de la app que marca un ejercicio como
 //     completado, y por tanto el que alimenta todas las estadísticas.
@@ -22,8 +22,7 @@ import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/widgets/exercise_done.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
-import 'package:pingpro_front/widgets/exercise_glb_sequence_view.dart';
-import 'package:pingpro_front/core/mappers/exercise_to_glb_steps.dart';
+import 'package:pingpro_front/widgets/exercise_animation_view.dart';
 
 class PingproExerciseDetailScreen extends StatefulWidget {
   final ExerciseModel exercise;
@@ -42,14 +41,12 @@ class PingproExerciseDetailScreen extends StatefulWidget {
 
 class _PingproExerciseDetailScreenState
     extends State<PingproExerciseDetailScreen> {
-  Future<List<GlbStep>>? _stepsFuture;
   bool _actionLoading = false;
 
   @override
   void initState() {
     super.initState();
     ExercisesState.instance.load();
-    _stepsFuture = buildGlbStepsForExercise(widget.exercise);
   }
 
   // Contrucción de la descripción
@@ -143,56 +140,12 @@ class _PingproExerciseDetailScreenState
                   ),
                 ),
 
-                // Visualización del widget 3D
+                // Visualización del widget 3D. Con el ejercicio recibido y no el
+                // del store: la animación solo depende de la secuencia, y así no
+                // se reinicia cuando cambia el favorito.
                 Expanded(
                   flex: 2,
-                  child: FutureBuilder<List<GlbStep>>(
-                    future: _stepsFuture,
-                    builder: (context, snap) {
-                      Widget child;
-
-                      if (snap.connectionState == ConnectionState.waiting) {
-                        child = const Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      } else if (snap.hasError ||
-                          !snap.hasData ||
-                          snap.data!.isEmpty) {
-                        child = const Center(
-                          child: Text(
-                            'No hay animaciones 3D disponibles para este ejercicio',
-                            style: TextStyle(color: Colors.white70),
-                            textAlign: TextAlign.center,
-                          ),
-                        );
-                      } else {
-                        child = ExerciseGlbSequenceView(
-                          steps: snap.data!,
-                          onStepChange: (i) {},
-                        );
-                      }
-
-                      // Contenedor con esquinas y fondo, el visor se expande al 100%
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: ColoredBox(
-                            color: AppColors.widgetGrayBackground,
-                            child: LayoutBuilder(
-                              builder: (context, constraints) {
-                                return SizedBox(
-                                  width: constraints.maxWidth,
-                                  height: constraints.maxHeight,
-                                  child: child,
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                  child: ExerciseAnimationView(exercise: widget.exercise),
                 ),
 
                 // Sección inferior con descripción y botones
