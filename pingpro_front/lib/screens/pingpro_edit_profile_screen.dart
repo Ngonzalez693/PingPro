@@ -361,8 +361,11 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
                           try {
                             await _authService.logout();
                             if (!mounted) return;
+                            // Volver a '/' en vez de empujar '/login': '/' es
+                            // AuthWrapper, que al ver la sesión cerrada muestra
+                            // Welcome y vacía los stores del usuario.
                             Navigator.of(context)
-                                .pushNamedAndRemoveUntil('/login', (_) => false);
+                                .pushNamedAndRemoveUntil('/', (_) => false);
                           } catch (e) {
                             if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(

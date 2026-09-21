@@ -4,10 +4,16 @@
 // assets/icons/ (cada pestaña tiene versión seleccionada y sin seleccionar) y
 // elevar el icono activo 8 px.
 //
+// Cada pestaña ocupa un quinto del ancho y todo el alto de la barra, y esa
+// celda entera es el área pulsable.
+//
 // Sin estado propio: `currentIndex` y `onTap` los controla HomeNavigation.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+
+/// Alto de la barra. Es también el alto del área pulsable de cada pestaña.
+const double _barHeight = 70;
 
 class CustomBottomNavigation extends StatelessWidget {
   final int currentIndex;
@@ -23,65 +29,44 @@ class CustomBottomNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
-      child: SizedBox(
-        height: 90,
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.bottomCenter,
-          children: [
-            // Fondo de la tab bar
-            Container(
-              height: 70,
-              decoration: BoxDecoration(
-                color: AppColors.tab,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black,
-                    blurRadius: 8,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
+      child: Container(
+        height: _barHeight,
+        decoration: BoxDecoration(
+          color: AppColors.tab,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black,
+              blurRadius: 8,
+              offset: const Offset(0, -2),
             ),
-
-            // Tabs
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: SizedBox(
-                height: 70,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildNavItem(
-                      'assets/icons/home_unselected.svg',
-                      'assets/icons/home_selected.svg',
-                      0,
-                    ),
-                    _buildNavItem(
-                      'assets/icons/exercise_unselected.svg',
-                      'assets/icons/exercise_selected.svg',
-                      1,
-                    ),
-                    _buildNavItem(
-                      'assets/icons/create_unselected.svg',
-                      'assets/icons/create_selected.svg',
-                      2,
-                    ),
-                    _buildNavItem(
-                      'assets/icons/training_unselected.svg',
-                      'assets/icons/training_selected.svg',
-                      3,
-                    ),
-                    _buildNavItem(
-                      'assets/icons/profile_unselected.svg',
-                      'assets/icons/profile_selected.svg',
-                      4,
-                    ),
-                  ],
-                ),
-              ),
+          ],
+        ),
+        child: Row(
+          children: [
+            _buildNavItem(
+              'assets/icons/home_unselected.svg',
+              'assets/icons/home_selected.svg',
+              0,
+            ),
+            _buildNavItem(
+              'assets/icons/exercise_unselected.svg',
+              'assets/icons/exercise_selected.svg',
+              1,
+            ),
+            _buildNavItem(
+              'assets/icons/create_unselected.svg',
+              'assets/icons/create_selected.svg',
+              2,
+            ),
+            _buildNavItem(
+              'assets/icons/training_unselected.svg',
+              'assets/icons/training_selected.svg',
+              3,
+            ),
+            _buildNavItem(
+              'assets/icons/profile_unselected.svg',
+              'assets/icons/profile_selected.svg',
+              4,
             ),
           ],
         ),
@@ -95,16 +80,25 @@ class CustomBottomNavigation extends StatelessWidget {
     int index,
   ) {
     final isSelected = currentIndex == index;
+    // El área pulsable es la celda entera (alto completo de la barra), no el
+    // icono: con `opaque` el GestureDetector responde también donde no hay
+    // nada pintado. Antes dependía del SVG de 26 px, así que la mayoría de la
+    // celda no reaccionaba.
     return Expanded(
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () => onTap(index),
-        child: Transform.translate(
-          offset: Offset(0, isSelected ? -8 : 0),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            child: SvgPicture.asset(
-              isSelected ? assetSelected : assetUnselected,
-              height: 26,
+        child: SizedBox(
+          height: _barHeight,
+          child: Center(
+            // El desplazamiento del icono activo es solo visual: queda dentro
+            // de la celda, que sigue siendo pulsable de arriba abajo.
+            child: Transform.translate(
+              offset: Offset(0, isSelected ? -8 : 0),
+              child: SvgPicture.asset(
+                isSelected ? assetSelected : assetUnselected,
+                height: 26,
+              ),
             ),
           ),
         ),

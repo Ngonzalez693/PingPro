@@ -17,9 +17,9 @@ import 'package:pingpro_front/core/services/exercises_service.dart';
 /// así que marcar un ejercicio como favorito en Home se refleja al instante en
 /// Ejercicios y en Perfil sin volver a pedir nada al servidor.
 ///
-/// Trampa a tener presente: al ser singleton, el estado sobrevive al cierre de
-/// sesión. Habría que llamar a un reset en el logout antes de publicar, o el
-/// siguiente usuario vería los datos del anterior hasta el primer refresh.
+/// Al ser singleton, el estado sobreviviría al cierre de sesión: por eso
+/// AuthWrapper llama a `reset()` cuando cambia el uid, o el siguiente usuario
+/// vería los datos del anterior.
 class ExercisesState extends ChangeNotifier {
   ExercisesState._();
   static final ExercisesState instance = ExercisesState._();
@@ -93,6 +93,18 @@ class ExercisesState extends ChangeNotifier {
 
   // Forzar recarga desde servidor (ignora cache en memoria).
   Future<void> refresh() => load(force: true);
+
+  /// Vacía la cache y la marca de "ya cargado".
+  ///
+  /// Se llama al cambiar de usuario: sin esto la guarda de `load()` daría por
+  /// cargados los ejercicios del usuario anterior y el siguiente vería sus
+  /// favoritos y completados.
+  void reset() {
+    _byId.clear();
+    _loadedOnce = false;
+    _error = null;
+    _safeNotify();
+  }
 
   // Alterna favorito con UI optimista.
   //
