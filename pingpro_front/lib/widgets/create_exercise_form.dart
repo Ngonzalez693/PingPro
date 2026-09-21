@@ -9,11 +9,13 @@
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/exercise_options.dart';
+import 'package:pingpro_front/core/form_styles.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/models/sequence_step_model.dart';
 import 'package:pingpro_front/screens/pingpro_create_sequence_screen.dart';
 import 'package:pingpro_front/screens/pingpro_exercise_preview_screen.dart';
+import 'package:pingpro_front/widgets/image_option_picker.dart';
 
 class CreateExerciseForm extends StatefulWidget {
   const CreateExerciseForm({super.key});
@@ -45,6 +47,9 @@ class _CreateExerciseFormState extends State<CreateExerciseForm> {
   bool get _canContinue => _name.text.trim().isNotEmpty;
 
   Future<void> _openEditor() async {
+    // Sin esto, al volver del editor Flutter devolvería el foco al último campo
+    // y se abriría el teclado.
+    FocusManager.instance.primaryFocus?.unfocus();
     final created = await Navigator.push<List<SequenceStep>>(
       context,
       MaterialPageRoute(builder: (_) => PingproCreateSequenceScreen(onReview: _review)),
@@ -92,20 +97,14 @@ class _CreateExerciseFormState extends State<CreateExerciseForm> {
         const SizedBox(height: 20),
         const Text('Imagen', style: TextStyles.subTitle),
         const SizedBox(height: 8),
-        _buildImagePicker(),
+        ImageOptionPicker(
+          images: exerciseImages,
+          selected: _image,
+          onSelected: (path) => setState(() => _image = path),
+        ),
         const SizedBox(height: 28),
         _buildContinueButton(),
       ],
-    );
-  }
-
-  InputDecoration _decoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      filled: true,
-      fillColor: AppColors.widgetGrayBackground,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     );
   }
 
@@ -114,14 +113,14 @@ class _CreateExerciseFormState extends State<CreateExerciseForm> {
       controller: controller,
       maxLines: maxLines,
       style: TextStyles.paragraphBlack,
-      decoration: _decoration(hint),
+      decoration: formInputDecoration(hint),
     );
   }
 
   Widget _buildCategory() {
     return DropdownButtonFormField<String>(
       value: _category,
-      decoration: _decoration('Categoría'),
+      decoration: formInputDecoration('Categoría'),
       items: [
         for (final c in exerciseCategories)
           DropdownMenuItem(value: c, child: Text(c, style: TextStyles.paragraphBlack)),
@@ -129,40 +128,6 @@ class _CreateExerciseFormState extends State<CreateExerciseForm> {
       onChanged: (c) {
         if (c != null) setState(() => _category = c);
       },
-    );
-  }
-
-  Widget _buildImagePicker() {
-    return Row(
-      children: [
-        for (var i = 0; i < exerciseImages.length; i++) ...[
-          if (i > 0) const SizedBox(width: 12),
-          Expanded(child: _buildImageOption(exerciseImages[i], i + 1)),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildImageOption(String path, int number) {
-    final selected = path == _image;
-    return Semantics(
-      label: 'Imagen $number',
-      selected: selected,
-      button: true,
-      child: GestureDetector(
-        key: ValueKey(path),
-        onTap: () => setState(() => _image = path),
-        child: AspectRatio(
-          aspectRatio: 1,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: selected ? AppColors.primary : AppColors.tab, width: 3),
-              image: DecorationImage(image: AssetImage(path), fit: BoxFit.cover),
-            ),
-          ),
-        ),
-      ),
     );
   }
 
