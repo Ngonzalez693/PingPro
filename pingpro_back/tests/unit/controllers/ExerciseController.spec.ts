@@ -13,7 +13,13 @@ describe('ExerciseController', () => {
   let jsonMock: jest.Mock;
 
   beforeEach(() => {
-    req = { params: { id: '123' }, body: {} };
+    // El servicio está mockeado a nivel de prototipo y las llamadas se
+    // acumularían entre pruebas.
+    jest.clearAllMocks();
+
+    // El uid lo deja authMiddleware: el listado lo necesita para saber qué
+    // ejercicios privados incluir.
+    req = { params: { id: '123' }, body: {}, user: { uid: 'u1' } };
     jsonMock = jest.fn();
     statusMock = jest.fn(() => ({ json: jsonMock }));
     res = { status: statusMock } as any;
@@ -27,5 +33,22 @@ describe('ExerciseController', () => {
 
     expect(statusMock).toHaveBeenCalledWith(HTTP_STATUS.OK);
     expect(jsonMock).toHaveBeenCalledWith({ success: true, data: fakeData });
+  });
+
+  it('getAll pide el listado con el uid de quien llama', async () => {
+    (ExerciseService.prototype.getAll as jest.Mock).mockResolvedValue([]);
+
+    await ExerciseController.getAll(req as Request, res as Response, jest.fn());
+
+    expect(ExerciseService.prototype.getAll).toHaveBeenCalledWith('u1');
+  });
+
+  it('getAll devuelve 401 sin sesión', async () => {
+    (ExerciseService.prototype.getAll as jest.Mock).mockResolvedValue([]);
+
+    await ExerciseController.getAll({ ...req, user: undefined } as Request, res as Response, jest.fn());
+
+    expect(statusMock).toHaveBeenCalledWith(HTTP_STATUS.UNAUTHORIZED);
+    expect(ExerciseService.prototype.getAll).not.toHaveBeenCalled();
   });
 });

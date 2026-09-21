@@ -49,10 +49,34 @@ describe('ExerciseService', () => {
   it('getById responde 404 si el ejercicio no existe', async () => {
     exerciseRepo.getById.mockResolvedValue(null);
 
-    await expect(service.getById('nope')).rejects.toMatchObject({
+    await expect(service.getById('nope', 'u1')).rejects.toMatchObject({
       status: 404,
       message: 'Exercise not found',
     });
+  });
+
+  it('getById pregunta con el uid de quien mira', async () => {
+    exerciseRepo.getById.mockResolvedValue(exercise);
+
+    await service.getById('e1', 'u1');
+
+    expect(exerciseRepo.getById).toHaveBeenCalledWith('e1', 'u1');
+  });
+
+  it('getAll pregunta con el uid de quien mira', async () => {
+    exerciseRepo.getAll.mockResolvedValue([exercise]);
+
+    await service.getAll('u1');
+
+    expect(exerciseRepo.getAll).toHaveBeenCalledWith('u1');
+  });
+
+  it('un ejercicio privado de otro usuario es 404, no un error de permiso', async () => {
+    // El repositorio ya lo filtra por viewer: para el servicio es indistinguible
+    // de un id que no existe, que es justo lo que se busca.
+    exerciseRepo.getById.mockResolvedValue(null);
+
+    await expect(service.getById('de-otro', 'u1')).rejects.toMatchObject({ status: 404 });
   });
 
   it('update no escribe nada si el ejercicio no existe', async () => {
@@ -67,6 +91,24 @@ describe('ExerciseService', () => {
 
     await expect(service.delete('nope')).rejects.toMatchObject({ status: 404 });
     expect(exerciseRepo.delete).not.toHaveBeenCalled();
+  });
+
+  // update y delete son las operaciones de admin sobre el catálogo: si miraran
+  // con un uid podrían tocar un ejercicio privado por su id.
+  it('update solo mira el catálogo', async () => {
+    exerciseRepo.getById.mockResolvedValue(exercise);
+
+    await service.update('e1', { name: 'Nuevo' });
+
+    expect(exerciseRepo.getById).toHaveBeenCalledWith('e1', null);
+  });
+
+  it('delete solo mira el catálogo', async () => {
+    exerciseRepo.getById.mockResolvedValue(exercise);
+
+    await service.delete('e1');
+
+    expect(exerciseRepo.getById).toHaveBeenCalledWith('e1', null);
   });
 
   it('setFavoriteForUser no crea estados huérfanos para ejercicios inexistentes', async () => {
@@ -88,5 +130,21 @@ describe('ExerciseService', () => {
 
     await expect(service.setFavoriteForUser('u1', 'e1', true)).resolves.toBe(state);
     expect(userStateRepo.setFavorite).toHaveBeenCalledWith('u1', 'e1', true);
+  });
+
+  it('el favorito se puede marcar sobre un ejercicio propio, no solo del catálogo', async () => {
+    exerciseRepo.getById.mockResolvedValue({ ...exercise, ownerId: 'u1' });
+    userStateRepo.setFavorite.mockResolvedValue({
+      userId: 'u1',
+      exerciseId: 'e1',
+      isFavorite: true,
+      updatedAt: new Date('2026-09-12T10:00:00.000Z'),
+    });
+
+    await service.setFavoriteForUser('u1', 'e1', true);
+
+    // Con su propio uid, no con null: si mirara solo el catálogo, un ejercicio
+    // privado no se podría marcar como favorito.
+    expect(exerciseRepo.getById).toHaveBeenCalledWith('e1', 'u1');
   });
 });

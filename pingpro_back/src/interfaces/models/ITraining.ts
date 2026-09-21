@@ -7,10 +7,14 @@
  *
  * `duration` está en minutos y es del entrenamiento completo; la pantalla de
  * detalle la divide entre la cantidad de ejercicios.
+ *
+ * `ownerId` ausente = entrenamiento del catálogo; con valor = privado de ese
+ * usuario. Igual que en IExercise, lo pone el servidor, nunca el cliente.
  */
 // Interface for training model
 export interface ITraining {
   id?: string;
+  ownerId?: string;
   name: string;
   category: string;
   image: string;

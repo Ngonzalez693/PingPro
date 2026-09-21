@@ -6,11 +6,11 @@ import { ITraining } from '../models/ITraining';
 
 // Interface for training repository
 export interface ITrainingRepository {
-  getAll(): Promise<ITraining[]>;
-  getById(id: string): Promise<ITraining | null>;
+  getAll(viewerId: string | null): Promise<ITraining[]>;
+  getById(id: string, viewerId: string | null): Promise<ITraining | null>;
   create(training: ITraining): Promise<string>;
   update(id: string, training: Partial<ITraining>): Promise<void>;
   delete(id: string): Promise<void>;
 
-  exists(id: string): Promise<boolean>;
+  exists(id: string, viewerId: string | null): Promise<boolean>;
 }
