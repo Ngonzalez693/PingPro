@@ -61,7 +61,10 @@ class _PingproCreateScreenState extends State<PingproCreateScreen> {
     } catch (e) {
       _error = e.toString();
     } finally {
-      setState(() => _loading = false);
+      // La pantalla vive dentro del IndexedStack de HomeNavigation, que se
+      // destruye entero al cerrar sesión: la petición puede seguir en vuelo
+      // cuando el State ya no está montado.
+      if (mounted) setState(() => _loading = false);
     }
   }
 
