@@ -65,7 +65,7 @@ describe('TrainingService', () => {
     onlyExisting('e1');
 
     await expect(
-      service.create({ ...training, exerciseIds: ['e1', 'e9', 'e8'] }),
+      service.create({ ...training, exerciseIds: ['e1', 'e9', 'e8'] }, null),
     ).rejects.toMatchObject({ status: 400, message: 'Unknown exercise ids: e9, e8' });
     expect(trainingRepo.create).not.toHaveBeenCalled();
   });
@@ -75,7 +75,7 @@ describe('TrainingService', () => {
     trainingRepo.create.mockResolvedValue('t1');
 
     await expect(
-      service.create({ ...training, exerciseIds: ['e1', 'e2', 'e1'] }),
+      service.create({ ...training, exerciseIds: ['e1', 'e2', 'e1'] }, null),
     ).resolves.toBe('t1');
     expect(exerciseRepo.exists).toHaveBeenCalledTimes(2);
   });
@@ -83,7 +83,7 @@ describe('TrainingService', () => {
   it('update responde 404 antes de mirar los ejercicios si el entrenamiento no existe', async () => {
     trainingRepo.getById.mockResolvedValue(null);
 
-    await expect(service.update('nope', training)).rejects.toMatchObject({ status: 404 });
+    await expect(service.update('nope', training, null)).rejects.toMatchObject({ status: 404 });
     expect(exerciseRepo.exists).not.toHaveBeenCalled();
   });
 
@@ -92,17 +92,45 @@ describe('TrainingService', () => {
     onlyExisting('e1');
 
     await expect(
-      service.update('t1', { exerciseIds: ['e1', 'e9'] }),
+      service.update('t1', { exerciseIds: ['e1', 'e9'] }, null),
     ).rejects.toMatchObject({ status: 400, message: 'Unknown exercise ids: e9' });
+    expect(trainingRepo.update).not.toHaveBeenCalled();
+  });
+
+  // El dueño del entrenamiento es también el viewer con el que se validan sus
+  // ejercicios: de ahí sale la regla de mezcla.
+  it('un entrenamiento propio valida sus ejercicios con los ojos de su dueño', async () => {
+    onlyExisting('e1', 'e2');
+    trainingRepo.create.mockResolvedValue('t1');
+
+    await service.create(training, 'u1');
+
+    expect(exerciseRepo.exists).toHaveBeenCalledWith('e1', 'u1');
+    expect(trainingRepo.create).toHaveBeenCalledWith(training, 'u1');
+  });
+
+  it('uno del catálogo valida sus ejercicios contra el catálogo', async () => {
+    onlyExisting('e1', 'e2');
+    trainingRepo.create.mockResolvedValue('t1');
+
+    await service.create(training, null);
+
+    expect(exerciseRepo.exists).toHaveBeenCalledWith('e1', null);
+  });
+
+  it('un usuario no puede editar un entrenamiento del catálogo por la ruta propia', async () => {
+    trainingRepo.getById.mockResolvedValue(training); // sin ownerId = catálogo
+
+    await expect(service.update('t1', { name: 'Pisado' }, 'u1')).rejects.toMatchObject({ status: 404 });
     expect(trainingRepo.update).not.toHaveBeenCalled();
   });
 
   it('update sin exerciseIds no consulta los ejercicios', async () => {
     trainingRepo.getById.mockResolvedValue(training);
 
-    await service.update('t1', { name: 'Calentamiento largo' });
+    await service.update('t1', { name: 'Calentamiento largo' }, null);
 
     expect(exerciseRepo.exists).not.toHaveBeenCalled();
-    expect(trainingRepo.update).toHaveBeenCalledWith('t1', { name: 'Calentamiento largo' });
+    expect(trainingRepo.update).toHaveBeenCalledWith('t1', { name: 'Calentamiento largo' }, null);
   });
 });

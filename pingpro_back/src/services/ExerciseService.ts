@@ -31,30 +31,46 @@ export class ExerciseService {
     return this.requireVisible(id, viewerId);
   }
 
+  // ESCRITURAS
+  //
+  // `ownerId` dice sobre qué lado se escribe: null es el catálogo (rutas de
+  // admin) y un uid son los ejercicios privados de ese usuario (rutas /me).
+  // Las rutas ya deciden cuál toca; aquí solo se respeta.
+
   // Create exercise from repository
-  async create(data: IExercise): Promise<string> {
-    return this.exerciseRepo.create(data);
+  async create(data: IExercise, ownerId: string | null): Promise<string> {
+    return this.exerciseRepo.create(data, ownerId);
   }
 
   // Update exercise from repository
-  //
-  // Las tres operaciones de escritura de aquí son las de admin sobre el
-  // catálogo: miran con viewer null para no encontrar nunca un ejercicio
-  // privado, ni siquiera uno del propio admin.
-  async update(id: string, data: Partial<IExercise>): Promise<void> {
-    await this.requireVisible(id, null); // validate existance
-    await this.exerciseRepo.update(id, data);
+  async update(id: string, data: Partial<IExercise>, ownerId: string | null): Promise<void> {
+    await this.requireOwned(id, ownerId); // validate existance
+    await this.exerciseRepo.update(id, data, ownerId);
   }
 
   // Delete exercise from repository
-  async delete(id: string): Promise<void> {
-    await this.requireVisible(id, null);
-    await this.exerciseRepo.delete(id);
+  async delete(id: string, ownerId: string | null): Promise<void> {
+    await this.requireOwned(id, ownerId);
+    await this.exerciseRepo.delete(id, ownerId);
   }
 
   private async requireVisible(id: string, viewerId: string | null): Promise<IExercise> {
     const exercise = await this.exerciseRepo.getById(id, viewerId);
     if (!exercise) {
+      throw Object.assign(new Error('Exercise not found'), { status: 404 });
+    }
+    return exercise;
+  }
+
+  /// El ejercicio existe Y es del dueño indicado.
+  ///
+  /// La lectura con viewer trae catálogo + lo del usuario, así que hace falta
+  /// la segunda comprobación: sin ella, un usuario podría editar por /me un
+  /// ejercicio del catálogo. El repositorio tampoco lo dejaría, pero fallaría
+  /// como un error de escritura en vez de como un 404 limpio.
+  private async requireOwned(id: string, ownerId: string | null): Promise<IExercise> {
+    const exercise = await this.requireVisible(id, ownerId);
+    if ((exercise.ownerId ?? null) !== ownerId) {
       throw Object.assign(new Error('Exercise not found'), { status: 404 });
     }
     return exercise;

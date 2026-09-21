@@ -25,8 +25,13 @@ interface ExerciseRow {
   sequence: ISequenceStep[];
 }
 
-// Solo catálogo. Es lo que pueden tocar las escrituras de admin.
-const CATALOG = 'deleted_at IS NULL AND owner_id IS NULL';
+// Filas de un dueño concreto, que va en el último parámetro: null = catálogo,
+// un uid = lo privado de ese usuario.
+//
+// IS NOT DISTINCT FROM y no `=` porque compara bien contra NULL: con null
+// coincide con las filas de catálogo, y con un uid solo con las suyas. Así una
+// escritura nunca alcanza filas de otro dueño.
+const OWNED_BY = 'deleted_at IS NULL AND owner_id IS NOT DISTINCT FROM';
 
 // Catálogo + lo privado de quien mira, que va en $1.
 //
@@ -100,13 +105,14 @@ export class PostgresExerciseRepository implements IExerciseRepository {
     return rows.length > 0 ? toExercise(rows[0]) : null;
   }
 
-  async create(exercise: IExercise): Promise<string> {
+  // ownerId null crea catálogo; con un uid, un ejercicio privado de ese usuario.
+  async create(exercise: IExercise, ownerId: string | null): Promise<string> {
     return withTransaction(this.pool, async (client) => {
       const { rows } = await client.query<{ id: string }>(
-        `INSERT INTO exercises (name, category, image, description)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO exercises (owner_id, name, category, image, description)
+         VALUES ($1, $2, $3, $4, $5)
          RETURNING id`,
-        [exercise.name, exercise.category, exercise.image, exercise.description ?? null],
+        [ownerId, exercise.name, exercise.category, exercise.image, exercise.description ?? null],
       );
       await insertSteps(client, rows[0].id, exercise.sequence);
       return rows[0].id;
@@ -115,7 +121,10 @@ export class PostgresExerciseRepository implements IExerciseRepository {
 
   // COALESCE: lo que no viene en el patch conserva su valor, como update() de
   // Firestore. Si llega sequence, se sustituye entera.
-  async update(id: string, exercise: Partial<IExercise>): Promise<void> {
+  //
+  // El dueño forma parte del WHERE: un id de otro dueño no actualiza ninguna
+  // fila y sale por el mismo camino que un id inexistente.
+  async update(id: string, exercise: Partial<IExercise>, ownerId: string | null): Promise<void> {
     await withTransaction(this.pool, async (client) => {
       const { rowCount } = await client.query(
         `UPDATE exercises
@@ -124,8 +133,15 @@ export class PostgresExerciseRepository implements IExerciseRepository {
              image       = COALESCE($4, image),
              description = COALESCE($5, description),
              updated_at  = now()
-         WHERE id = $1 AND ${CATALOG}`,
-        [id, exercise.name ?? null, exercise.category ?? null, exercise.image ?? null, exercise.description ?? null],
+         WHERE id = $1 AND ${OWNED_BY} $6`,
+        [
+          id,
+          exercise.name ?? null,
+          exercise.category ?? null,
+          exercise.image ?? null,
+          exercise.description ?? null,
+          ownerId,
+        ],
       );
       if (rowCount === 0) {
         throw new Error(`Exercise not found: ${id}`);
@@ -137,8 +153,11 @@ export class PostgresExerciseRepository implements IExerciseRepository {
     });
   }
 
-  async delete(id: string): Promise<void> {
-    await this.pool.query(`UPDATE exercises SET deleted_at = now() WHERE id = $1 AND ${CATALOG}`, [id]);
+  async delete(id: string, ownerId: string | null): Promise<void> {
+    await this.pool.query(
+      `UPDATE exercises SET deleted_at = now() WHERE id = $1 AND ${OWNED_BY} $2`,
+      [id, ownerId],
+    );
   }
 
   async exists(id: string, viewerId: string | null): Promise<boolean> {

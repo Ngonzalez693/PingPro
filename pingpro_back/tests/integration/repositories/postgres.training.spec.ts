@@ -49,15 +49,15 @@ describe('PostgresTrainingRepository (solo Postgres)', () => {
   }
 
   it('conserva el orden y los ejercicios repetidos', async () => {
-    const id = await repo.create({ ...trainingFixtures.a, exerciseIds: ['e2', 'e1', 'e2'] });
+    const id = await repo.create({ ...trainingFixtures.a, exerciseIds: ['e2', 'e1', 'e2'] }, null);
 
     await expect(repo.getById(id, null)).resolves.toMatchObject({ exerciseIds: ['e2', 'e1', 'e2'] });
   });
 
   it('un ejercicio borrado desaparece de sus entrenamientos', async () => {
-    const id = await repo.create({ ...trainingFixtures.a, exerciseIds: ['e1', 'e2', 'e3'] });
+    const id = await repo.create({ ...trainingFixtures.a, exerciseIds: ['e1', 'e2', 'e3'] }, null);
 
-    await new PostgresExerciseRepository(pool).delete('e2');
+    await new PostgresExerciseRepository(pool).delete('e2', null);
 
     await expect(repo.getById(id, null)).resolves.toMatchObject({ exerciseIds: ['e1', 'e3'] });
   });
@@ -91,7 +91,7 @@ describe('PostgresTrainingRepository (solo Postgres)', () => {
   it('el listado del dueño es el catálogo más lo suyo', async () => {
     await insertUser('u1');
     await insertUser('u2');
-    await repo.create(trainingFixtures.a); // catálogo
+    await repo.create(trainingFixtures.a, null); // catálogo
     await insertPrivateTraining('u1', 'De u1');
     await insertPrivateTraining('u2', 'De u2');
 
@@ -104,8 +104,8 @@ describe('PostgresTrainingRepository (solo Postgres)', () => {
     await insertUser('u1');
     const id = await insertPrivateTraining('u1', 'Mío');
 
-    await expect(repo.update(id, { name: 'Pisado' })).rejects.toThrow('Training not found');
-    await repo.delete(id);
+    await expect(repo.update(id, { name: 'Pisado' }, null)).rejects.toThrow('Training not found');
+    await repo.delete(id, null);
 
     await expect(repo.getById(id, 'u1')).resolves.toMatchObject({ name: 'Mío' });
   });

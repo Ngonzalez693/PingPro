@@ -14,9 +14,9 @@ import type { ContractSetup } from './types';
 export interface CatalogRepository<T> {
   getAll(viewerId: string | null): Promise<T[]>;
   getById(id: string, viewerId: string | null): Promise<T | null>;
-  create(item: T): Promise<string>;
-  update(id: string, patch: Partial<T>): Promise<void>;
-  delete(id: string): Promise<void>;
+  create(item: T, ownerId: string | null): Promise<string>;
+  update(id: string, patch: Partial<T>, ownerId: string | null): Promise<void>;
+  delete(id: string, ownerId: string | null): Promise<void>;
   exists(id: string, viewerId: string | null): Promise<boolean>;
 }
 
@@ -52,7 +52,7 @@ export function catalogRepositoryContract<T extends { id?: string }>(
     });
 
     it('create devuelve un id y getById devuelve exactamente lo guardado', async () => {
-      const id = await repo.create(fixtures.a);
+      const id = await repo.create(fixtures.a, CATALOG_VIEWER);
 
       expect(typeof id).toBe('string');
       expect(id).not.toHaveLength(0);
@@ -68,8 +68,8 @@ export function catalogRepositoryContract<T extends { id?: string }>(
     });
 
     it('getAll devuelve todos los elementos con sus ids', async () => {
-      const idA = await repo.create(fixtures.a);
-      const idB = await repo.create(fixtures.b);
+      const idA = await repo.create(fixtures.a, CATALOG_VIEWER);
+      const idB = await repo.create(fixtures.b, CATALOG_VIEWER);
 
       const all = await repo.getAll(CATALOG_VIEWER);
 
@@ -82,35 +82,35 @@ export function catalogRepositoryContract<T extends { id?: string }>(
     });
 
     it('update aplica el cambio parcial y conserva el resto, sin añadir campos', async () => {
-      const id = await repo.create(fixtures.a);
+      const id = await repo.create(fixtures.a, CATALOG_VIEWER);
 
-      await repo.update(id, fixtures.patch);
+      await repo.update(id, fixtures.patch, CATALOG_VIEWER);
 
       await expect(repo.getById(id, CATALOG_VIEWER)).resolves.toEqual({ id, ...fixtures.a, ...fixtures.patch });
     });
 
     it('update rechaza si el id no existe', async () => {
-      await expect(repo.update(MISSING_ID, fixtures.patch)).rejects.toThrow();
+      await expect(repo.update(MISSING_ID, fixtures.patch, CATALOG_VIEWER)).rejects.toThrow();
     });
 
     it('exists distingue un elemento creado de un id inexistente', async () => {
-      const id = await repo.create(fixtures.a);
+      const id = await repo.create(fixtures.a, CATALOG_VIEWER);
 
       await expect(repo.exists(id, CATALOG_VIEWER)).resolves.toBe(true);
       await expect(repo.exists(MISSING_ID, CATALOG_VIEWER)).resolves.toBe(false);
     });
 
     it('delete elimina el elemento', async () => {
-      const id = await repo.create(fixtures.a);
+      const id = await repo.create(fixtures.a, CATALOG_VIEWER);
 
-      await repo.delete(id);
+      await repo.delete(id, CATALOG_VIEWER);
 
       await expect(repo.getById(id, CATALOG_VIEWER)).resolves.toBeNull();
       await expect(repo.exists(id, CATALOG_VIEWER)).resolves.toBe(false);
     });
 
     it('delete de un id inexistente no falla', async () => {
-      await expect(repo.delete(MISSING_ID)).resolves.toBeUndefined();
+      await expect(repo.delete(MISSING_ID, CATALOG_VIEWER)).resolves.toBeUndefined();
     });
   });
 }

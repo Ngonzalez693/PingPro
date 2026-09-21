@@ -10,6 +10,12 @@
  *   - un uid  → catálogo + lo privado de ese usuario
  *   - null    → solo catálogo, que es lo que tocan las operaciones de admin
  * Lo que no se ve no existe: getById devuelve null, no un error de permiso.
+ *
+ * Las escrituras reciben `ownerId`, que dice sobre qué filas actúan:
+ *   - null    → el catálogo (operaciones de admin)
+ *   - un uid  → lo privado de ese usuario
+ * Nunca cruzan esa frontera: escribir con un uid no alcanza el catálogo ni lo
+ * de otro usuario, aunque se acierte el id.
  */
 import { IExercise } from '../models/IExercise';
 
@@ -17,9 +23,9 @@ import { IExercise } from '../models/IExercise';
 export interface IExerciseRepository {
   getAll(viewerId: string | null): Promise<IExercise[]>;
   getById(id: string, viewerId: string | null): Promise<IExercise | null>;
-  create(exercise: IExercise): Promise<string>;
-  update(id: string, exercise: Partial<IExercise>): Promise<void>;
-  delete(id: string): Promise<void>;
+  create(exercise: IExercise, ownerId: string | null): Promise<string>;
+  update(id: string, exercise: Partial<IExercise>, ownerId: string | null): Promise<void>;
+  delete(id: string, ownerId: string | null): Promise<void>;
 
   exists(id: string, viewerId: string | null): Promise<boolean>;
 }

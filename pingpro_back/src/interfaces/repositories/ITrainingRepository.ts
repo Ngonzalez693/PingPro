@@ -8,9 +8,9 @@ import { ITraining } from '../models/ITraining';
 export interface ITrainingRepository {
   getAll(viewerId: string | null): Promise<ITraining[]>;
   getById(id: string, viewerId: string | null): Promise<ITraining | null>;
-  create(training: ITraining): Promise<string>;
-  update(id: string, training: Partial<ITraining>): Promise<void>;
-  delete(id: string): Promise<void>;
+  create(training: ITraining, ownerId: string | null): Promise<string>;
+  update(id: string, training: Partial<ITraining>, ownerId: string | null): Promise<void>;
+  delete(id: string, ownerId: string | null): Promise<void>;
 
   exists(id: string, viewerId: string | null): Promise<boolean>;
 }

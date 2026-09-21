@@ -22,6 +22,13 @@ router.use(authMiddleware);
 // Las rutas '/me/*' van antes que '/:id' para que Express no lea "me" como id.
 router.get('/me/list', TrainingController.listWithUserState);
 router.get('/me/states', TrainingController.myStates);
+
+// Entrenamientos propios: sin requireRole. El dueño sale del token, y sus
+// ejercicios se validan contra lo que ese dueño ve (catálogo + los suyos).
+router.post('/me', validateBody(trainingSchema), TrainingController.createMine);
+router.put('/me/:id', validateBody(trainingSchema), TrainingController.updateMine);
+router.delete('/me/:id', TrainingController.deleteMine);
+
 router.post('/:id/completed', TrainingController.completed);
 
 router.get('/', TrainingController.getAll);
