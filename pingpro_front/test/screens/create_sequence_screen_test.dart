@@ -1,0 +1,170 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:pingpro_front/models/sequence_step_model.dart';
+import 'package:pingpro_front/screens/pingpro_create_sequence_screen.dart';
+import 'package:pingpro_front/widgets/pingpong_table.dart';
+
+// Flujo crítico del editor: arrastrar, elegir el golpe y devolver la secuencia.
+// La pantalla se abre con push para poder leer lo que devuelve con pop, que es
+// como la usará el formulario de creación.
+void main() {
+  List<SequenceStep>? result;
+
+  Future<void> openEditor(WidgetTester tester) async {
+    // Tamaño de un móvil corriente (360 × 780 lógicos).
+    tester.view.physicalSize = const Size(1080, 2340);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+
+    result = null;
+    await tester.pumpWidget(MaterialApp(
+      home: Builder(
+        builder: (context) => ElevatedButton(
+          onPressed: () async {
+            result = await Navigator.push<List<SequenceStep>>(
+              context,
+              MaterialPageRoute(builder: (_) => const PingproCreateSequenceScreen()),
+            );
+          },
+          child: const Text('abrir'),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('abrir'));
+    await tester.pumpAndSettle();
+  }
+
+  // Punto de la mesa en píxeles de pantalla, a partir de coordenadas de mesa.
+  Offset onTable(WidgetTester tester, double x, double y) {
+    final table = tester.getRect(find.byType(PingPongTable));
+    return Offset(table.left + table.width * x, table.top + table.height * y);
+  }
+
+  Future<void> drawStroke(WidgetTester tester, {required int origin, required Offset to}) async {
+    final from = tester.getCenter(find.byKey(ValueKey('origin-$origin')));
+    await tester.dragFrom(from, to - from);
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> choose(WidgetTester tester, String field, String option) async {
+    await tester.tap(find.widgetWithText(DropdownButtonFormField<int>, field));
+    await tester.pumpAndSettle();
+    // .last: con el menú abierto, la opción es la entrada del menú.
+    await tester.tap(find.text(option).last);
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> pickStroke(WidgetTester tester, String hit, String rotation) async {
+    await choose(tester, 'Golpe', hit);
+    await choose(tester, 'Rotación', rotation);
+    await tester.tap(find.text('Añadir'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('un arrastre al campo rival crea el golpe con sus cinco códigos', (tester) async {
+    await openEditor(tester);
+
+    // Desde el "+" de más a la derecha (esquina derecha) a la esquina derecha
+    // del rival, junto a su fondo.
+    await drawStroke(tester, origin: 4, to: onTable(tester, 0.95, 0.05));
+    expect(find.text('Elegir golpe'), findsOneWidget);
+    await pickStroke(tester, 'Forehand', 'Topspin');
+
+    expect(find.text('1. Forehand Topspin Largo a Esquina Derecha'), findsOneWidget);
+
+    await tester.tap(find.text('Subir y ver'));
+    await tester.pumpAndSettle();
+
+    expect(result, hasLength(1));
+    final step = result!.single;
+    expect(step.side, 1);
+    expect(step.direction, 2);
+    expect(step.zone, 3);
+    expect(step.hit, 1);
+    expect(step.rotation, 2);
+  });
+
+  testWidgets('soltar fuera de la banda a media altura marca una lateral', (tester) async {
+    await openEditor(tester);
+
+    await drawStroke(tester, origin: 2, to: onTable(tester, -0.1, 0.245));
+    await pickStroke(tester, 'Backhand', 'Drive');
+
+    expect(find.text('1. Backhand Drive Intermedio a Lateral Izquierda'), findsOneWidget);
+  });
+
+  testWidgets('la flecha se engancha al destino más cercano aunque no se acierte', (tester) async {
+    await openEditor(tester);
+
+    // Cerca, pero no encima, del punto medio de la fila media.
+    await drawStroke(tester, origin: 2, to: onTable(tester, 0.44, 0.29));
+    await pickStroke(tester, 'Backhand', 'Drive');
+
+    expect(find.text('1. Backhand Drive Intermedio a Medio'), findsOneWidget);
+  });
+
+  testWidgets('se puede golpear desde la fila corta', (tester) async {
+    await openEditor(tester);
+
+    // Origen 7: fila corta, columna del centro.
+    await drawStroke(tester, origin: 7, to: onTable(tester, 0.5, 0.42));
+    await pickStroke(tester, 'Backhand', 'Back Spin');
+    await tester.tap(find.text('Subir y ver'));
+    await tester.pumpAndSettle();
+
+    expect(result!.single.side, 3);
+    expect(result!.single.zone, 1);
+  });
+
+  testWidgets('soltar en tu propio campo no abre el diálogo ni crea golpe', (tester) async {
+    await openEditor(tester);
+
+    await drawStroke(tester, origin: 1, to: onTable(tester, 0.3, 0.7));
+
+    expect(find.text('Elegir golpe'), findsNothing);
+    expect(find.textContaining('1.'), findsNothing);
+  });
+
+  testWidgets('cancelar el diálogo descarta el golpe', (tester) async {
+    await openEditor(tester);
+
+    await drawStroke(tester, origin: 3, to: onTable(tester, 0.5, 0.2));
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('1.'), findsNothing);
+  });
+
+  testWidgets('arrastrar desde fuera de un "+" no hace nada', (tester) async {
+    await openEditor(tester);
+
+    final from = onTable(tester, 0.5, 0.75); // campo propio, lejos de los "+"
+    await tester.dragFrom(from, onTable(tester, 0.5, 0.2) - from);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Elegir golpe'), findsNothing);
+  });
+
+  testWidgets('se puede quitar un golpe y la numeración se rehace', (tester) async {
+    await openEditor(tester);
+
+    await drawStroke(tester, origin: 4, to: onTable(tester, 0.95, 0.05));
+    await pickStroke(tester, 'Forehand', 'Topspin');
+    await drawStroke(tester, origin: 2, to: onTable(tester, 0.5, 0.45));
+    await pickStroke(tester, 'Backhand', 'Back Spin');
+
+    await tester.tap(find.byTooltip('Quitar golpe 1'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1. Backhand Back Spin Corto a Medio'), findsOneWidget);
+    expect(find.textContaining('2.'), findsNothing);
+  });
+
+  testWidgets('sin golpes no se puede subir', (tester) async {
+    await openEditor(tester);
+
+    final button = tester.widget<ElevatedButton>(find.widgetWithText(ElevatedButton, 'Subir y ver'));
+
+    expect(button.onPressed, isNull);
+  });
+}
