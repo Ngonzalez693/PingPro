@@ -32,6 +32,8 @@ import 'package:pingpro_front/screens/pingpro_trainings_screen.dart';
 import 'package:pingpro_front/screens/pingpro_profile_screen.dart';
 import 'package:pingpro_front/widgets/custom_bottom_navigation.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/services/exercises_state.dart';
+import 'package:pingpro_front/core/services/trainings_state.dart';
 
 void main() async {
   // ensureInitialized() debe ir primero: dotenv y Firebase necesitan el binding
@@ -95,8 +97,29 @@ class MainApp extends StatelessWidget {
 ///
 /// Al ser un Stream y no una comprobación puntual, también reacciona al cerrar
 /// sesión: la app vuelve sola a Welcome sin necesidad de navegar a mano.
-class AuthWrapper extends StatelessWidget {
+///
+/// Además es el único sitio donde se vacían los stores. Al ser singletons, sus
+/// datos sobreviven al cierre de sesión; vaciarlos aquí cubre todas las salidas
+/// (logout, el signOut previo al registro, un token revocado) en vez de tener
+/// que acordarse en cada una.
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  String? _lastUid;
+
+  // Se llama desde el builder del StreamBuilder, así que no puede tocar el
+  // árbol en caliente: reset() de los stores ya difiere la notificación.
+  void _resetStoresIfUserChanged(String? uid) {
+    if (uid == _lastUid) return;
+    _lastUid = uid;
+    ExercisesState.instance.reset();
+    TrainingsState.instance.reset();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +134,9 @@ class AuthWrapper extends StatelessWidget {
             ),
           );
         }
-        if (snapshot.hasData && snapshot.data != null) {
+        final user = snapshot.data;
+        _resetStoresIfUserChanged(user?.uid);
+        if (user != null) {
           return const HomeNavigation();
         }
         return const PingproWelcomeScreen();

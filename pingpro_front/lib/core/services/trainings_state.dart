@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/core/services/training_services.dart';
 
@@ -47,6 +48,29 @@ class TrainingsState extends ChangeNotifier {
 
   // Forzar recarga desde servidor (ignora cache en memoria).
   Future<void> refresh() => load(force: true);
+
+  /// Vacía la cache y la marca de "ya cargado". Ver ExercisesState.reset().
+  void reset() {
+    _byId.clear();
+    _loadedOnce = false;
+    _error = null;
+    _safeNotify();
+  }
+
+  /// Notifica fuera del build. A diferencia del resto de métodos, reset() lo
+  /// llama AuthWrapper desde su builder, donde un notifyListeners() directo
+  /// rompería con "setState() called during build".
+  void _safeNotify() {
+    if (!hasListeners) return;
+    final phase = SchedulerBinding.instance.schedulerPhase;
+    if (phase == SchedulerPhase.idle || phase == SchedulerPhase.postFrameCallbacks) {
+      notifyListeners();
+      return;
+    }
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (hasListeners) notifyListeners();
+    });
+  }
 
   /// Marca el entrenamiento como completado (UI optimista + rollback).
   ///
