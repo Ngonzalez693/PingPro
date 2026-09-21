@@ -1,19 +1,23 @@
-// Botón circular "+" de la mesa. Solo apariencia: no recibe onTap.
+// Botón circular "+" de la mesa: un punto de golpeo del editor de secuencias.
 //
-// En pingpro_create_sequence_screen.dart la interacción se captura con
-// GestureDetector transparentes superpuestos, no aquí.
+// Solo apariencia: no recibe gestos. El editor escucha los arrastres en todo el
+// lienzo y decide con core/table_geometry.dart (originAt) si empezaron sobre
+// uno de estos botones. Así la flecha puede seguir al dedo fuera del botón.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 
 class PlusButton extends StatelessWidget {
+  /// Diámetro. Lo usa el editor para centrar el botón en su punto de la mesa.
+  static const size = 28.0;
+
   const PlusButton({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 28,
-      height: 28,
-      decoration: BoxDecoration(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(
         color: AppColors.widgetGrayBackground,
         shape: BoxShape.circle,
       ),

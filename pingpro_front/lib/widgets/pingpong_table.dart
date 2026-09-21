@@ -1,54 +1,48 @@
-// Mesa de tenis de mesa vista desde arriba, con los puntos de golpeo.
-// Es el lienzo del flujo de creación de ejercicios.
+// Mesa de tenis de mesa vista desde arriba: bordes, red y línea central.
 //
-// LIMITACIÓN: mide 280x400 px fijos y los botones se colocan con coordenadas
-// absolutas calculadas a ojo (`index * 62.6`). No es responsive: en pantallas
-// pequeñas se desborda y en grandes queda diminuta. Para terminar la pantalla
-// de creación habría que rehacerla con LayoutBuilder y posiciones relativas.
+// Solo dibuja. Ocupa el espacio que le den con las proporciones de una mesa
+// reglamentaria, y todo se pinta en fracciones de ese tamaño, así que se ve
+// igual en cualquier pantalla. Los puntos de golpeo y las flechas los pone el
+// editor de secuencias encima, usando core/table_geometry.dart.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
-import 'package:pingpro_front/widgets/pingpong_top_buttons.dart';
-import 'package:pingpro_front/widgets/pingpong_bottom_buttons.dart';
+import 'package:pingpro_front/core/table_geometry.dart';
 
 class PingPongTable extends StatelessWidget {
   const PingPongTable({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 280,
-      height: 400,
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.textGray, width: 2),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Stack(
-        children: [
-          // Línea central horizontal
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 200,
-            child: Container(
-              height: 2,
-              color: AppColors.textGray,
-            ),
-          ),
-          // Línea central vertical
-          Positioned(
-            top: 0,
-            bottom: 0,
-            left: 140,
-            child: Container(
-              width: 2,
-              color: AppColors.textGray,
-            ),
-          ),
-          // Botones superiores e inferiores
-          const PingPongTopButtons(),
-          const PingPongBottomButtons(),
-        ],
-      ),
+    return AspectRatio(
+      aspectRatio: tableAspectRatio,
+      child: CustomPaint(painter: _TablePainter()),
     );
   }
+}
+
+class _TablePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final line = Paint()
+      ..color = AppColors.textGray
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(8)),
+      line,
+    );
+    // Línea central: separa los lados derecho e izquierdo de cada campo.
+    canvas.drawLine(Offset(size.width / 2, 0), Offset(size.width / 2, size.height), line);
+
+    // La red, más marcada: es la frontera entre tu campo y el del rival.
+    final net = Paint()
+      ..color = AppColors.textWhite
+      ..strokeWidth = 3;
+    final netDy = size.height * netY;
+    canvas.drawLine(Offset(0, netDy), Offset(size.width, netDy), net);
+  }
+
+  @override
+  bool shouldRepaint(_TablePainter oldDelegate) => false;
 }
