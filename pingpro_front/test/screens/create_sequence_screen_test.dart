@@ -160,6 +160,59 @@ void main() {
     expect(find.textContaining('2.'), findsNothing);
   });
 
+  group('con onReview', () {
+    Future<void> openWithReview(WidgetTester tester, Future<bool> Function(List<SequenceStep>) onReview) async {
+      tester.view.physicalSize = const Size(1080, 2340);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      result = null;
+      await tester.pumpWidget(MaterialApp(
+        home: Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () async {
+              result = await Navigator.push<List<SequenceStep>>(
+                context,
+                MaterialPageRoute(builder: (_) => PingproCreateSequenceScreen(onReview: onReview)),
+              );
+            },
+            child: const Text('abrir'),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('si la revisión no se completa, el editor sigue con lo dibujado', (tester) async {
+      List<SequenceStep>? reviewed;
+      await openWithReview(tester, (steps) async {
+        reviewed = steps;
+        return false; // p. ej. "Volver a editar" en la vista previa
+      });
+      await drawStroke(tester, origin: 4, to: onTable(tester, 0.95, 0.05));
+      await pickStroke(tester, 'Forehand', 'Topspin');
+
+      await tester.tap(find.text('Subir y ver'));
+      await tester.pumpAndSettle();
+
+      expect(reviewed, hasLength(1));
+      expect(find.text('1. Forehand Topspin Largo a Esquina Derecha'), findsOneWidget);
+      expect(result, isNull);
+    });
+
+    testWidgets('si la revisión se completa, el editor se cierra devolviendo la secuencia', (tester) async {
+      await openWithReview(tester, (_) async => true);
+      await drawStroke(tester, origin: 4, to: onTable(tester, 0.95, 0.05));
+      await pickStroke(tester, 'Forehand', 'Topspin');
+
+      await tester.tap(find.text('Subir y ver'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Secuencia'), findsNothing);
+      expect(result, hasLength(1));
+    });
+  });
+
   testWidgets('sin golpes no se puede subir', (tester) async {
     await openEditor(tester);
 

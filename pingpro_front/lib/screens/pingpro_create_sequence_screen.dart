@@ -13,6 +13,10 @@
 //
 // Al pulsar "Subir y ver" devuelve la List<SequenceStep> a quien abrió la
 // pantalla con Navigator.pop. No guarda nada por su cuenta.
+//
+// Con `onReview`, "Subir y ver" llama primero a esa función, que abre la vista
+// previa encima del editor. Si al volver el ejercicio no se creó, el editor
+// sigue ahí con las flechas dibujadas, en vez de haberse cerrado y perderlas.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/stroke_codes.dart';
@@ -28,7 +32,11 @@ import 'package:pingpro_front/widgets/stroke_picker_dialog.dart';
 typedef _Stroke = ({SequenceStep step, StrokeArrow arrow});
 
 class PingproCreateSequenceScreen extends StatefulWidget {
-  const PingproCreateSequenceScreen({super.key});
+  /// Revisa la secuencia antes de cerrar el editor. Devuelve true si ya se
+  /// usó (p. ej. se creó el ejercicio) y el editor debe cerrarse.
+  final Future<bool> Function(List<SequenceStep> steps)? onReview;
+
+  const PingproCreateSequenceScreen({super.key, this.onReview});
 
   @override
   State<PingproCreateSequenceScreen> createState() => _PingproCreateSequenceScreenState();
@@ -84,8 +92,14 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
     setState(() => _strokes = [..._strokes]..removeAt(index));
   }
 
-  void _submit() {
-    Navigator.pop<List<SequenceStep>>(context, [for (final s in _strokes) s.step]);
+  Future<void> _submit() async {
+    final steps = [for (final s in _strokes) s.step];
+    final review = widget.onReview;
+    if (review != null) {
+      final done = await review(steps);
+      if (!done || !mounted) return;
+    }
+    Navigator.pop<List<SequenceStep>>(context, steps);
   }
 
   @override
