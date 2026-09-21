@@ -12,6 +12,7 @@
 //                    clientes HTTP contra pingpro_back
 //   models/   → objetos de datos con fromJson/toJson
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -38,6 +39,11 @@ void main() async {
   // ensureInitialized() debe ir primero: dotenv y Firebase necesitan el binding
   // de plataforma listo antes de que exista el árbol de widgets.
   WidgetsFlutterBinding.ensureInitialized();
+  // Solo vertical, aunque el móvil tenga el giro automático activado: la mesa
+  // del editor y el visor 3D están diseñados en vertical. También se fija en
+  // AndroidManifest.xml e Info.plist, que valen desde la pantalla de arranque,
+  // antes de que Flutter llegue a ejecutarse.
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await dotenv.load();          // API_BASE_URL, declarado como asset en pubspec.yaml
   await Firebase.initializeApp();
 
