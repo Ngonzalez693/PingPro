@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:pingpro_front/core/services/api_errors.dart';
+import 'package:pingpro_front/core/services/api_responses.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 
@@ -43,17 +44,6 @@ Map<String, ExerciseUserState> parseExerciseStates(Object? body) {
     );
   }
   return byId;
-}
-
-/// Id del ejercicio recién creado, a partir de la respuesta de
-/// POST /api/exercises/me: `{ "success": true, "data": { "id": "..." } }`.
-///
-/// Devuelve null si la respuesta no trae un id utilizable. Separada de la
-/// petición, como parseExerciseStates, para poder probarla sola.
-String? parseCreatedId(Object? body) {
-  final data = body is Map ? body['data'] : null;
-  final id = data is Map ? data['id'] : null;
-  return id is String && id.isNotEmpty ? id : null;
 }
 
 class ExercisesService {

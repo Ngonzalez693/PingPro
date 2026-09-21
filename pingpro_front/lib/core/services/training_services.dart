@@ -7,6 +7,9 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:pingpro_front/core/services/api_errors.dart';
+import 'package:pingpro_front/core/services/api_responses.dart';
+import 'package:pingpro_front/models/training_draft_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
 
 class TrainingsService {
@@ -50,6 +53,27 @@ class TrainingsService {
     final data = jsonDecode(r.body);
     final List list = data is List ? data : data['data'];
     return list.map((e) => TrainingModel.fromJson(e)).toList();
+  }
+
+  /// POST /api/trainings/me: crea un entrenamiento privado del usuario actual
+  /// y devuelve su id. El backend comprueba que el usuario vea todos los
+  /// ejercicios (los del catálogo y los suyos).
+  Future<String> createMine(TrainingDraft draft) async {
+    final r = await http
+        .post(
+          _u('/api/trainings/me'),
+          headers: await _jsonHeaders(withAuth: true),
+          body: jsonEncode(draft.toCreateJson()),
+        )
+        .timeout(const Duration(seconds: 25));
+    if (r.statusCode != 201) {
+      throw Exception(backendErrorMessage(r.body, 'No se pudo crear el entrenamiento'));
+    }
+    final id = parseCreatedId(jsonDecode(r.body));
+    if (id == null) {
+      throw Exception('El servidor no devolvió el id del entrenamiento creado');
+    }
+    return id;
   }
 
   // Marcar/unmarcar como completado para el usuario
