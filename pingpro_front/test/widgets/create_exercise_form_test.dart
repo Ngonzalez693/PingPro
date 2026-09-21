@@ -49,6 +49,20 @@ void main() {
     expect(find.text('Secuencia'), findsOneWidget);
   });
 
+  testWidgets('al volver del editor no se abre el teclado', (tester) async {
+    await openForm(tester);
+    await tester.enterText(find.widgetWithText(TextField, 'Nombre del ejercicio'), 'Saque corto');
+    await tester.pump();
+    expect(tester.testTextInput.isVisible, isTrue);
+
+    await tester.tap(find.text('Siguiente'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.arrow_back)); // la flecha propia del editor
+    await tester.pumpAndSettle();
+
+    expect(tester.testTextInput.isVisible, isFalse);
+  });
+
   testWidgets('la primera imagen viene elegida y se puede cambiar', (tester) async {
     final handle = tester.ensureSemantics();
     await openForm(tester);

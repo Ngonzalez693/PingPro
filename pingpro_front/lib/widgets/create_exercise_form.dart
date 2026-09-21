@@ -47,6 +47,9 @@ class _CreateExerciseFormState extends State<CreateExerciseForm> {
   bool get _canContinue => _name.text.trim().isNotEmpty;
 
   Future<void> _openEditor() async {
+    // Sin esto, al volver del editor Flutter devolvería el foco al último campo
+    // y se abriría el teclado.
+    FocusManager.instance.primaryFocus?.unfocus();
     final created = await Navigator.push<List<SequenceStep>>(
       context,
       MaterialPageRoute(builder: (_) => PingproCreateSequenceScreen(onReview: _review)),
