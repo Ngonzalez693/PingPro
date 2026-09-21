@@ -11,6 +11,7 @@ import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/exercise_options.dart';
 import 'package:pingpro_front/core/form_styles.dart';
 import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/models/sequence_step_model.dart';
 import 'package:pingpro_front/screens/pingpro_create_sequence_screen.dart';
@@ -18,7 +19,10 @@ import 'package:pingpro_front/screens/pingpro_exercise_preview_screen.dart';
 import 'package:pingpro_front/widgets/image_option_picker.dart';
 
 class CreateExerciseForm extends StatefulWidget {
-  const CreateExerciseForm({super.key});
+  /// A dónde va el ejercicio: lo propio del usuario o el catálogo (admin).
+  final ContentScope scope;
+
+  const CreateExerciseForm({super.key, this.scope = ContentScope.own});
 
   @override
   State<CreateExerciseForm> createState() => _CreateExerciseFormState();
@@ -67,6 +71,7 @@ class _CreateExerciseFormState extends State<CreateExerciseForm> {
       image: _image,
       description: _description.text,
       sequence: steps,
+      scope: widget.scope,
     );
     final created = await Navigator.push<bool>(
       context,

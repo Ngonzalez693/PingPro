@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:pingpro_front/core/services/api_errors.dart';
+import 'package:pingpro_front/core/services/api_paths.dart';
 import 'package:pingpro_front/core/services/api_responses.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
@@ -105,14 +106,15 @@ class ExercisesService {
     return exercises;
   }
 
-  /// POST /api/exercises/me: crea un ejercicio privado del usuario actual y
-  /// devuelve su id. El dueño lo pone el backend a partir del token.
+  /// Crea el ejercicio y devuelve su id. Según `draft.scope` va a
+  /// POST /api/exercises/me (privado del usuario) o a POST /api/exercises
+  /// (catálogo, solo admin). El dueño lo pone el backend a partir del token.
   ///
   /// Si falla, la excepción lleva el mensaje del backend (p. ej. el de Joi
-  /// cuando un campo no es válido) para poder enseñarlo tal cual.
-  Future<String> createMine(ExerciseDraft draft) async {
+  /// cuando un campo no es válido, o el 403 si no es admin) para enseñarlo.
+  Future<String> create(ExerciseDraft draft) async {
     final r = await http.post(
-      _u('/api/exercises/me'),
+      _u(createPathFor('exercises', draft.scope)),
       headers: await _jsonHeaders(withAuth: true),
       body: jsonEncode(draft.toCreateJson()),
     );

@@ -14,6 +14,16 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:pingpro_front/core/services/api_errors.dart';
 
+/// Si el perfil de GET /api/users/me tiene el rol admin.
+///
+/// Ante cualquier duda dice que no: un perfil vacío (fetchUserProfile devuelve
+/// {} si la petición falla), sin `roles` o con un formato raro no es admin. Solo
+/// decide si se enseña un botón; el permiso real lo comprueba el backend.
+bool hasAdminRole(Map<String, dynamic> profile) {
+  final roles = profile['roles'];
+  return roles is List && roles.contains('admin');
+}
+
 class AuthService {
   final _auth = FirebaseAuth.instance;
   final String _baseUrl = dotenv.env['API_BASE_URL']!;

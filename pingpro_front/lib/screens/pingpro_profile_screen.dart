@@ -1,17 +1,22 @@
 // Pestaña 5: perfil con resumen de actividad e historial reciente.
 //
-// Todo lo que muestra sale de los stores en memoria: no hay ninguna petición
-// propia. "Recientes" se calcula ordenando por completedAt descendente.
+// La actividad sale de los stores en memoria. "Recientes" se calcula ordenando
+// por completedAt descendente.
 //
-// Los datos del usuario (nombre, avatar) vienen de FirebaseAuth.currentUser, no
-// del backend: GET /api/users/me no funciona hoy (ver auth_service.dart).
+// El nombre viene de FirebaseAuth.currentUser. La única petición propia es
+// GET /api/users/me, solo para saber si el usuario es admin: a los admins se
+// les enseña el acceso para crear contenido del catálogo.
 //
 // El bloque de la gráfica está copiado casi literalmente de
 // pingpro_home_screen.dart — extraerlo a un widget compartido es el refactor
 // más rentable de esta pantalla.
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/services/auth_service.dart';
+import 'package:pingpro_front/models/content_scope.dart';
+import 'package:pingpro_front/screens/pingpro_create_screen.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/widgets/statistics_chart.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
@@ -30,11 +35,47 @@ class PingproProfileScreen extends StatefulWidget {
 }
 
 class _PingproProfileScreenState extends State<PingproProfileScreen> {
+  bool _isAdmin = false;
+
   @override
   void initState() {
     super.initState();
     ExercisesState.instance.load();
     TrainingsState.instance.load();
+    _loadRole();
+  }
+
+  // Si falla se queda en no-admin: lo peor que pasa es que un admin no vea el
+  // botón hasta la próxima vez. El permiso real lo comprueba el backend.
+  Future<void> _loadRole() async {
+    try {
+      final profile = await AuthService().fetchUserProfile();
+      if (mounted) setState(() => _isAdmin = hasAdminRole(profile));
+    } catch (e) {
+      if (kDebugMode) debugPrint('No se pudo leer el rol del usuario: $e');
+    }
+  }
+
+  void _openCatalogCreate() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PingproCreateScreen(scope: ContentScope.catalog)),
+    );
+  }
+
+  Widget _buildCatalogButton() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.primary)),
+          onPressed: _openCatalogCreate,
+          icon: const Icon(Icons.library_add, color: AppColors.primary),
+          label: const Text('Crear contenido del catálogo', style: TextStyle(color: AppColors.primary)),
+        ),
+      ),
+    );
   }
 
   Future<void> _toggleFavorite(String id) async {
@@ -123,6 +164,8 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                       ],
                     ),
                   ),
+
+                  if (_isAdmin) _buildCatalogButton(),
 
                   // Estadísticas
                   const SizedBox(height: 12),

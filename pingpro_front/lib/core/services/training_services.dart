@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:pingpro_front/core/services/api_errors.dart';
+import 'package:pingpro_front/core/services/api_paths.dart';
 import 'package:pingpro_front/core/services/api_responses.dart';
 import 'package:pingpro_front/models/training_draft_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
@@ -55,13 +56,14 @@ class TrainingsService {
     return list.map((e) => TrainingModel.fromJson(e)).toList();
   }
 
-  /// POST /api/trainings/me: crea un entrenamiento privado del usuario actual
-  /// y devuelve su id. El backend comprueba que el usuario vea todos los
-  /// ejercicios (los del catálogo y los suyos).
-  Future<String> createMine(TrainingDraft draft) async {
+  /// Crea el entrenamiento y devuelve su id. Según `draft.scope` va a
+  /// POST /api/trainings/me (privado) o a POST /api/trainings (catálogo, solo
+  /// admin). El backend comprueba que todos los ejercicios sean visibles para
+  /// ese destino: uno del catálogo solo puede usar ejercicios del catálogo.
+  Future<String> create(TrainingDraft draft) async {
     final r = await http
         .post(
-          _u('/api/trainings/me'),
+          _u(createPathFor('trainings', draft.scope)),
           headers: await _jsonHeaders(withAuth: true),
           body: jsonEncode(draft.toCreateJson()),
         )

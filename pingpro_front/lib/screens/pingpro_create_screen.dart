@@ -1,19 +1,26 @@
-// Pestaña 3: creación de ejercicios y entrenamientos propios.
+// Creación de ejercicios y entrenamientos.
 //
 // Solo elige qué se crea. Cada formulario vive en su widget:
 //   - widgets/create_exercise_form.dart
 //   - widgets/create_training_form.dart
-// Lo creado aquí es privado: solo lo ve quien lo crea.
+//
+// Se usa de dos formas, según `scope`:
+//   - own: la pestaña 3 de la barra inferior. Lo creado es privado.
+//   - catalog: el acceso de admin desde el perfil. Lo creado va al catálogo y
+//     lo ve todo el mundo; se abre encima del perfil, con flecha para volver.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/widgets/create_exercise_form.dart';
 import 'package:pingpro_front/widgets/create_training_form.dart';
 
 enum CreateType { exercises, trainings }
 
 class PingproCreateScreen extends StatefulWidget {
-  const PingproCreateScreen({super.key});
+  final ContentScope scope;
+
+  const PingproCreateScreen({super.key, this.scope = ContentScope.own});
 
   @override
   State<PingproCreateScreen> createState() => _PingproCreateScreenState();
@@ -22,6 +29,8 @@ class PingproCreateScreen extends StatefulWidget {
 class _PingproCreateScreenState extends State<PingproCreateScreen> {
   CreateType _selectedType = CreateType.exercises;
 
+  bool get _isCatalog => widget.scope == ContentScope.catalog;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,7 +38,7 @@ class _PingproCreateScreenState extends State<PingproCreateScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 40),
+            _isCatalog ? _buildCatalogHeader() : const SizedBox(height: 40),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Row(
@@ -45,11 +54,29 @@ class _PingproCreateScreenState extends State<PingproCreateScreen> {
             Expanded(
               child: IndexedStack(
                 index: _selectedType.index,
-                children: const [CreateExerciseForm(), CreateTrainingForm()],
+                children: [
+                  CreateExerciseForm(scope: widget.scope),
+                  CreateTrainingForm(scope: widget.scope),
+                ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCatalogHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 12, 16, 16),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
+            onPressed: () => Navigator.pop(context),
+          ),
+          const Expanded(child: Text('Crear para el catálogo', style: TextStyles.title)),
+        ],
       ),
     );
   }
