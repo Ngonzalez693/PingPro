@@ -1,22 +1,31 @@
-// Segundo paso del flujo de creación: dibujar la secuencia de golpes sobre la
-// mesa.
+// Editor de la secuencia de un ejercicio: se dibujan los golpes sobre la mesa.
 //
-// ESTADO: prototipo. Funciona la mecánica de interfaz (mantener pulsado un
-// botón de la mesa abre un diálogo de destino, dibuja una flecha y pide el
-// golpe), pero no produce datos reales:
-//   - Los golpes son dos literales de prueba ("Top Der", "Top Izq") en vez de
-//     los códigos de SequenceStep.
-//   - Los destinos son coordenadas fijas escritas a mano, no zonas de la mesa.
-//   - Las posiciones de la mesa y los botones son píxeles absolutos: no se
-//     adaptan al tamaño de pantalla y se descuadran en otros dispositivos.
-//   - El botón "Subir y ver" no hace nada.
+// Cómo se crea un golpe:
+//   1. Se pulsa uno de los "+" de tu lado (fila larga, fila corta o bandas) y
+//      se arrastra. El "+" elegido da el lado (side).
+//   2. En el campo del rival la flecha se engancha al punto de destino más
+//      cercano, que se resalta. Al soltar, ese punto da la dirección y la zona.
+//      Soltarla en tu propio campo no crea golpe.
+//   3. Un diálogo pide el golpe y la rotación.
 //
-// Para terminarlo hay que producir List<SequenceStep> con los códigos de
-// pingpro_back/src/utils/enums.ts y enviarlo con POST /api/exercises.
+// Todas las reglas de posición → código viven en core/table_geometry.dart;
+// esta pantalla solo traduce gestos y pinta.
+//
+// Al pulsar "Subir y ver" devuelve la List<SequenceStep> a quien abrió la
+// pantalla con Navigator.pop. No guarda nada por su cuenta.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/stroke_codes.dart';
+import 'package:pingpro_front/core/table_geometry.dart';
+import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/models/sequence_step_model.dart';
 import 'package:pingpro_front/widgets/pingpong_table.dart';
-//import 'package:pingpro_front/models/sequence_step_model.dart';
+import 'package:pingpro_front/widgets/plus_button.dart';
+import 'package:pingpro_front/widgets/stroke_arrows_painter.dart';
+import 'package:pingpro_front/widgets/stroke_picker_dialog.dart';
+
+/// Un golpe ya creado: sus códigos y la flecha con la que se dibujó.
+typedef _Stroke = ({SequenceStep step, StrokeArrow arrow});
 
 class PingproCreateSequenceScreen extends StatefulWidget {
   const PingproCreateSequenceScreen({super.key});
@@ -26,204 +35,170 @@ class PingproCreateSequenceScreen extends StatefulWidget {
 }
 
 class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScreen> {
-  //final List<SequenceStep> _steps = [];
+  /// Distancia, en píxeles, a la que un toque cuenta como sobre un "+".
+  static const _originTouchRadius = 28.0;
 
-  final List<Offset?> _arrows = List<Offset?>.filled(10, null);
+  List<_Stroke> _strokes = const [];
+  StrokeArrow? _dragging;
 
-  // Menú de golpe + rotación para cada flecha
-  final List<String> _selectedHits = List<String>.filled(5, "Top Der");
-  final List<String> _hitsList = ["Top Der", "Top Izq"]; // Completa con tus opciones reales
+  // Rectángulo de la mesa en el lienzo. Lo fija LayoutBuilder en cada build y
+  // lo leen los gestos, que siempre llegan después de un layout.
+  Rect _table = Rect.zero;
 
-  // Demo: puntos "finales" posibles (al otro lado de la mesa, ajusta coordenadas reales)
-  final List<Offset> _targetPoints = [
-    Offset(30, 50),   // Ejemplo: izq
-    Offset(75, 50),   // centro izq
-    Offset(120, 50),  // centro
-    Offset(170, 50),  // centro der
-    Offset(220, 50),  // der
-  ];
-
-  // Devuelve el widget de la flecha, si ya hay
-  Widget _buildArrow(int i, double x, double y) {
-    if (_arrows[i] == null) return const SizedBox();
-    return CustomPaint(
-      painter: _ArrowPainter(
-        start: Offset(x, y),
-        end: _arrows[i]!,
-        color: AppColors.primary,
-      ),
-    );
+  void _onPanStart(DragStartDetails details) {
+    final origin = originAt(details.localPosition, _table, _originTouchRadius);
+    if (origin == null) return;
+    setState(() => _dragging = (originIndex: origin, end: toTable(details.localPosition, _table)));
   }
 
-  // Acción de arrastrar flecha (real y UX demo, deberás mejorarla para arrastre libre si quieres)
-  void _onStartArrow(int i, Offset origin) async {
-    final dst = await showDialog<Offset>(
-      context: context,
-      builder: (context) => _ArrowDestinationDialog(targets: _targetPoints),
+  void _onPanUpdate(DragUpdateDetails details) {
+    final current = _dragging;
+    if (current == null) return;
+    setState(() => _dragging = (originIndex: current.originIndex, end: toTable(details.localPosition, _table)));
+  }
+
+  Future<void> _onPanEnd(DragEndDetails _) async {
+    final released = _dragging;
+    setState(() => _dragging = null);
+    if (released == null) return;
+
+    final target = snapTarget(released.end);
+    if (target == null) return;
+
+    final choice = await showStrokePicker(context);
+    if (choice == null || !mounted) return;
+
+    final step = SequenceStep(
+      hit: choice.hit,
+      rotation: choice.rotation,
+      zone: target.zone,
+      direction: target.direction,
+      side: strokeOrigins[released.originIndex].side,
     );
-    if (dst != null) {
-      setState(() => _arrows[i] = dst);
-      // Al soltar, pide seleccionar golpe+rotación
-      final result = await showDialog<String>(
-        // ignore: use_build_context_synchronously
-        context: context,
-        builder: (context) => SimpleDialog(
-          title: const Text("Elegir golpe"),
-          children: _hitsList.map((h) => SimpleDialogOption(
-            child: Text(h),
-            onPressed: () => Navigator.pop(context, h),
-          )).toList(),
-        ),
-      );
-      if (result != null) setState(() => _selectedHits[i] = result);
-    }
+    // La flecha guardada termina en el destino, no donde se levantó el dedo.
+    final arrow = (originIndex: released.originIndex, end: target.position);
+    setState(() => _strokes = [..._strokes, (step: step, arrow: arrow)]);
+  }
+
+  void _removeStroke(int index) {
+    setState(() => _strokes = [..._strokes]..removeAt(index));
+  }
+
+  void _submit() {
+    Navigator.pop<List<SequenceStep>>(context, [for (final s in _strokes) s.step]);
   }
 
   @override
   Widget build(BuildContext context) {
-    final double tableLeft = 45; // posición en X de la mesa en pantalla
-    final double tableTop = 90;  // posición en Y de la mesa, ajustar según layout final
-    final double buttonY = tableTop + 300; // Y desde donde salen las flechas (posición de plus_buttons abajo)
-    final List<double> buttonX = [
-      tableLeft + 30,
-      tableLeft + 75,
-      tableLeft + 120,
-      tableLeft + 170,
-      tableLeft + 220
-    ];
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            Column(
-              children: [
-                // Flecha volver
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                // Mesa con plus_buttons (no interactivos aquí)
-                Center(child: PingPongTable()),
-                // Lista de pasos agregados
-                if (_arrows.any((e) => e != null)) ...[
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (int j = 0; j < _arrows.length; j++)
-                          if (_arrows[j] != null)
-                            Text("${j+1}. ${_selectedHits[j]}"),
-                      ],
-                    ),
-                  ),
-                ],
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 30),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.textBlack,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
-                    ),
-                    onPressed: () {
-                      // Acción subir y ver
-                    },
-                    child: const Text("Subir y ver"),
-                  ),
-                ),
-              ],
-            ),
-            // Dibuja flechas encima de la mesa según estén agregadas
-            ...List.generate(5, (i) {
-              if (_arrows[i] == null) return const SizedBox.shrink();
-              return Positioned.fill(
-                child: _buildArrow(i, buttonX[i], buttonY),
-              );
-            }),
-            // Overlay: detecta long press en los botones plus para comenzar la flecha
-            ...List.generate(5, (i) => Positioned(
-              left: buttonX[i]-14, top: buttonY-14,
-              child: GestureDetector(
-                onLongPress: () => _onStartArrow(i, Offset(buttonX[i], buttonY)),
-                child: Container(
-                  width: 28, height: 28,
-                  color: Colors.transparent,
-                ),
-              ),
-            )),
+            _buildHeader(),
+            Expanded(flex: 3, child: _buildCanvas()),
+            Expanded(flex: 2, child: _buildStrokeList()),
+            _buildSubmitButton(),
           ],
         ),
       ),
     );
   }
-}
 
-/// Dibuja una flecha desde start hasta end
-class _ArrowPainter extends CustomPainter {
-  final Offset start;
-  final Offset end;
-  final Color color;
-  _ArrowPainter({required this.start, required this.end, this.color = Colors.yellow});
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-    canvas.drawLine(start, end, paint);
-    // Flecha (pico)
-    final angle = (end - start).direction;
-    const arrowSize = 10.0;
-    final p1 = end - Offset.fromDirection(angle - 0.3, arrowSize);
-    final p2 = end - Offset.fromDirection(angle + 0.3, arrowSize);
-    canvas.drawLine(end, p1, paint);
-    canvas.drawLine(end, p2, paint);
+  Widget _buildHeader() {
+    return Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
+          onPressed: () => Navigator.pop(context),
+        ),
+        const Text('Secuencia', style: TextStyles.subTitle),
+      ],
+    );
   }
-  @override
-  bool shouldRepaint(_ArrowPainter old) => start != old.start || end != old.end || color != old.color;
-}
 
-/// Menú modal para elegir el destino final de la flecha (puntos predeterminados)
-class _ArrowDestinationDialog extends StatelessWidget {
-  final List<Offset> targets;
-  const _ArrowDestinationDialog({required this.targets});
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text("Selecciona destino"),
-      content: SizedBox(
-        width: 250,
-        height: 80,
-        child: Row(
-          children: List.generate(targets.length, (i) => 
-            Expanded(
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context, targets[i]),
-                child: Container(
-                  width: 32, height: 32,
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.textGray, width: 1),
-                  ),
-                ),
-              ),
-            ),
+  Widget _buildCanvas() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        _table = tableRectFor(constraints.biggest);
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onPanStart: _onPanStart,
+          onPanUpdate: _onPanUpdate,
+          onPanEnd: _onPanEnd,
+          child: Stack(
+            children: [
+              Positioned.fromRect(rect: _table, child: const PingPongTable()),
+              for (var i = 0; i < strokeOrigins.length; i++) _buildOrigin(i),
+              Positioned.fill(child: CustomPaint(painter: _arrowsPainter())),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  StrokeArrowsPainter _arrowsPainter() {
+    final dragging = _dragging;
+    return StrokeArrowsPainter(
+      table: _table,
+      arrows: [for (final s in _strokes) s.arrow],
+      dragging: dragging,
+      snapped: dragging == null ? null : snapTarget(dragging.end),
+    );
+  }
+
+  Widget _buildOrigin(int index) {
+    const size = PlusButton.size;
+    final center = toCanvas(strokeOrigins[index].position, _table);
+    return Positioned(
+      key: ValueKey('origin-$index'),
+      left: center.dx - size / 2,
+      top: center.dy - size / 2,
+      child: const PlusButton(),
+    );
+  }
+
+  Widget _buildStrokeList() {
+    if (_strokes.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 32),
+          child: Text(
+            'Arrastra desde un + de tu lado hasta un punto del campo del rival',
+            style: TextStyles.paragraph,
+            textAlign: TextAlign.center,
           ),
         ),
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      itemCount: _strokes.length,
+      itemBuilder: (context, i) => ListTile(
+        dense: true,
+        title: Text('${i + 1}. ${describeStep(_strokes[i].step)}', style: TextStyles.paragraph),
+        trailing: IconButton(
+          icon: const Icon(Icons.close, color: AppColors.textGray),
+          tooltip: 'Quitar golpe ${i + 1}',
+          onPressed: () => _removeStroke(i),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.textBlack,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
+        ),
+        onPressed: _strokes.isEmpty ? null : _submit,
+        child: const Text('Subir y ver', style: TextStyles.buttons),
       ),
     );
   }

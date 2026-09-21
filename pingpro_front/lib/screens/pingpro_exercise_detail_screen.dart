@@ -11,13 +11,13 @@
 // parámetro: así el corazón y el estado de completado siguen siendo correctos
 // aunque se haya modificado desde otra pantalla.
 //
-// DEUDA: los mapas _hits/_rotations/_zones/_directions duplican a mano los
-// enums de pingpro_back/src/utils/enums.ts. Es la tercera copia de esa tabla
-// (ver también sequence_step_model.dart y exercise_to_glb_steps.dart).
+// Los nombres de los códigos salen de core/stroke_codes.dart, compartidos con
+// el editor de secuencias.
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/stroke_codes.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/widgets/exercise_done.dart';
@@ -45,47 +45,6 @@ class _PingproExerciseDetailScreenState
   Future<List<GlbStep>>? _stepsFuture;
   bool _actionLoading = false;
 
-  // Maping
-  final Map<int, String> _hits = {
-    1: 'Forehand',
-    2: 'Backhand',
-    3: 'Forehand/Backhand',
-    4: 'Forehand Flick',
-    5: 'Banana Flick',
-    6: 'Strawberry Flick',
-    7: 'Servicio',
-    8: 'Libre',
-    9: 'Hasta que se caiga',
-  };
-
-  final Map<int, String> _rotations = {
-    1: 'Back Spin',
-    2: 'Topspin',
-    3: 'Side Spin Derecha',
-    4: 'Side Spin Izquierda',
-    5: 'Drive',
-    6: 'Liftado',
-    7: 'Libre',
-  };
-
-  final Map<int, String> _zones = {
-    1: 'Corto',
-    2: 'Intermedio',
-    3: 'Largo',
-    4: 'Libre',
-  };
-
-  final Map<int, String> _directions = {
-    1: 'Lateral Derecho',
-    2: 'Esquina Derecha',
-    3: 'Medio Derecha',
-    4: 'Medio',
-    5: 'Medio Izquierdo',
-    6: 'Esquina Izquierda',
-    7: 'Lateral Izquierda',
-    8: 'Libre',
-  };
-
   @override
   void initState() {
     super.initState();
@@ -95,32 +54,9 @@ class _PingproExerciseDetailScreenState
 
   // Contrucción de la descripción
   String _buildSequenceDescription(ExerciseModel ex) {
-    final sequence = ex.sequence;
-    final List<String> steps = [];
-
-    for (int i = 0; i < sequence.length; i++) {
-      final step = sequence[i];
-      final stepNumber = i + 1;
-
-      // Golpe en descripción
-      // Caso especial: un forehand ejecutado desde la zona de pivot tiene
-      // nombre propio en tenis de mesa, no es "Forehand" a secas.
-      String hit;
-      if (step.hit == 1 && (step.side == 4 || step.side == 5)) {
-        hit = 'Forehand Pivot';
-      } else {
-        hit = _hits[step.hit] ?? 'Desconocido';
-      }
-
-      // Rotación, zona, dirección
-      final rotation = _rotations[step.rotation] ?? 'Desconocido';
-      final zone = _zones[step.zone] ?? 'Desconocido';
-      final direction = _directions[step.direction] ?? 'Desconocido';
-
-      steps.add('$stepNumber. $hit $rotation $zone a $direction');
-    }
-
-    return steps.join('\n');
+    return [
+      for (var i = 0; i < ex.sequence.length; i++) '${i + 1}. ${describeStep(ex.sequence[i])}',
+    ].join('\n');
   }
 
   void _onBackPressed() => Navigator.pop(context);
