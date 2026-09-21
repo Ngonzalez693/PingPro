@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart'; // 👈 para SchedulerBinding
+import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/core/services/exercises_service.dart';
 
@@ -93,6 +94,16 @@ class ExercisesState extends ChangeNotifier {
 
   // Forzar recarga desde servidor (ignora cache en memoria).
   Future<void> refresh() => load(force: true);
+
+  /// Crea un ejercicio privado del usuario y recarga la lista para que aparezca
+  /// en todas las pantallas. Sin UI optimista: el id y el dueño los asigna el
+  /// backend, así que no hay nada fiable que enseñar antes de su respuesta.
+  ///
+  /// Si falla, relanza el error con el mensaje del backend para el SnackBar.
+  Future<void> create(ExerciseDraft draft) async {
+    await _service.createMine(draft);
+    await refresh();
+  }
 
   /// Vacía la cache y la marca de "ya cargado".
   ///

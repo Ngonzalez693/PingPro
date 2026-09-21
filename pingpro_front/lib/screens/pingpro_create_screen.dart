@@ -1,30 +1,19 @@
 // Pestaña 3: creación de ejercicios y entrenamientos.
 //
-// ESTADO: es una maqueta, no una función terminada. Toda la interfaz existe
-// (pestañas, mesa, campo de nombre, categoría, duración, lista de ejercicios)
-// pero NADA se guarda: no hay ninguna llamada POST en este archivo ni en
-// pingpro_create_sequence_screen.dart.
+// Ejercicios: funciona de punta a punta, en widgets/create_exercise_form.dart.
 //
-// Lo que falta para cerrarla:
-//   - _pickTrainingImage, _onEditTrainingName y _onAddExerciseToTraining son
-//     stubs vacíos.
-//   - La mesa (PingPongTable) se pinta pero sus botones no capturan la
-//     secuencia; el paso siguiente solo navega a /createSequence.
-//   - No existe POST /api/exercises ni POST /api/trainings desde la app.
-//   - `image` en el modelo es una ruta de asset de Flutter, así que un
-//     ejercicio creado por el usuario no puede tener imagen propia sin
-//     cambiar antes ese campo a URL.
-//
-// Es el hueco funcional más grande de cara a publicar en tiendas: la pantalla
-// de bienvenida promete "crea tus propios ejercicios".
+// Entrenamientos: sigue siendo una maqueta. La interfaz existe (imagen,
+// nombre, categoría, duración, lista de ejercicios) pero no se guarda nada:
+// _pickTrainingImage, _onEditTrainingName y _onAddExerciseToTraining son
+// stubs vacíos y no hay POST /api/trainings/me desde la app.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/services/exercises_service.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
+import 'package:pingpro_front/widgets/create_exercise_form.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
-import 'package:pingpro_front/widgets/pingpong_table.dart';
 
 enum CreateType { exercises, trainings }
 
@@ -120,64 +109,7 @@ class _PingproCreateScreenState extends State<PingproCreateScreen> {
             const SizedBox(height: 40),
 
             if (_selectedType == CreateType.exercises) ...[
-              // Mesa de ping pong con botones
-              Expanded(child: Center(child: const PingPongTable())),
-
-              const SizedBox(height: 40),
-
-              // Campo de nombre
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 100),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.textGray,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: TextField(
-                    controller: _nameController,
-                    style: TextStyles.paragraph,
-                    textAlign: TextAlign.center,
-                    decoration: InputDecoration(
-                      hintText: 'Nombrar ejercicio',
-                      hintStyle: TextStyles.paragraph,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Botón continuar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(context, '/createSequence');
-                    },
-                    child: Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: AppColors.textGray,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.arrow_forward,
-                        color: AppColors.textWhite,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 40),
+              const Expanded(child: CreateExerciseForm()),
             ] else ...[
               // Vista para entrenamientos
               Expanded(
