@@ -36,22 +36,29 @@ export class TrainingService {
     return this.requireVisible(id, viewerId);
   }
 
+  // ESCRITURAS
+  //
+  // `ownerId` null es el catálogo (rutas de admin) y un uid son los
+  // entrenamientos privados de ese usuario (rutas /me).
+  //
+  // Es también el viewer con el que se validan los exerciseIds, y de ahí sale
+  // la regla de mezcla: el entrenamiento privado de un usuario puede usar
+  // ejercicios del catálogo y los suyos, pero no los de otro; y uno del
+  // catálogo solo puede usar ejercicios del catálogo.
+
   // Create training from repository
-  async create(data: ITraining): Promise<string> {
-    await this.assertExercisesVisible(data.exerciseIds, null);
-    return this.trainingRepo.create(data);
+  async create(data: ITraining, ownerId: string | null): Promise<string> {
+    await this.assertExercisesVisible(data.exerciseIds, ownerId);
+    return this.trainingRepo.create(data, ownerId);
   }
 
   // Update training from repository
-  //
-  // Como en ExerciseService, create/update/delete son las de admin sobre el
-  // catálogo y miran con viewer null.
-  async update(id: string, data: Partial<ITraining>): Promise<void> {
-    await this.requireVisible(id, null); // validate existance
+  async update(id: string, data: Partial<ITraining>, ownerId: string | null): Promise<void> {
+    await this.requireOwned(id, ownerId); // validate existance
     if (data.exerciseIds) {
-      await this.assertExercisesVisible(data.exerciseIds, null);
+      await this.assertExercisesVisible(data.exerciseIds, ownerId);
     }
-    await this.trainingRepo.update(id, data);
+    await this.trainingRepo.update(id, data, ownerId);
   }
 
   // Sin esta comprobación, un entrenamiento podría apuntar a ejercicios que no
@@ -72,14 +79,24 @@ export class TrainingService {
   }
 
   // Delete training from repository
-  async delete(id: string): Promise<void> {
-    await this.requireVisible(id, null);
-    await this.trainingRepo.delete(id);
+  async delete(id: string, ownerId: string | null): Promise<void> {
+    await this.requireOwned(id, ownerId);
+    await this.trainingRepo.delete(id, ownerId);
   }
 
   private async requireVisible(id: string, viewerId: string | null): Promise<ITraining> {
     const training = await this.trainingRepo.getById(id, viewerId);
     if (!training) {
+      throw Object.assign(new Error('Training not found'), { status: 404 });
+    }
+    return training;
+  }
+
+  /// El entrenamiento existe Y es del dueño indicado. Ver la explicación en
+  /// ExerciseService.requireOwned.
+  private async requireOwned(id: string, ownerId: string | null): Promise<ITraining> {
+    const training = await this.requireVisible(id, ownerId);
+    if ((training.ownerId ?? null) !== ownerId) {
       throw Object.assign(new Error('Training not found'), { status: 404 });
     }
     return training;

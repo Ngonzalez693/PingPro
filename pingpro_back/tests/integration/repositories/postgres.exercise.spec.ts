@@ -33,9 +33,9 @@ describe('PostgresExerciseRepository (solo Postgres)', () => {
   }
 
   it('update con sequence sustituye todos los pasos', async () => {
-    const id = await repo.create(exerciseFixtures.b); // 2 pasos
+    const id = await repo.create(exerciseFixtures.b, null); // 2 pasos
 
-    await repo.update(id, { sequence: exerciseFixtures.a.sequence }); // 1 paso
+    await repo.update(id, { sequence: exerciseFixtures.a.sequence }, null); // 1 paso
 
     await expect(repo.getById(id, null)).resolves.toMatchObject({ sequence: exerciseFixtures.a.sequence });
     const { rows } = await pool.query('SELECT count(*)::int AS steps FROM exercise_steps WHERE exercise_id = $1', [id]);
@@ -43,11 +43,11 @@ describe('PostgresExerciseRepository (solo Postgres)', () => {
   });
 
   it('delete es lógico: la fila y su historial se quedan', async () => {
-    const id = await repo.create(exerciseFixtures.a);
+    const id = await repo.create(exerciseFixtures.a, null);
     await insertUser('u1');
     await pool.query('INSERT INTO exercise_completions (user_id, exercise_id) VALUES ($1, $2)', ['u1', id]);
 
-    await repo.delete(id);
+    await repo.delete(id, null);
 
     await expect(repo.getAll(null)).resolves.toEqual([]);
     const { rows } = await pool.query(
@@ -60,10 +60,10 @@ describe('PostgresExerciseRepository (solo Postgres)', () => {
   });
 
   it('update rechaza un ejercicio borrado', async () => {
-    const id = await repo.create(exerciseFixtures.a);
-    await repo.delete(id);
+    const id = await repo.create(exerciseFixtures.a, null);
+    await repo.delete(id, null);
 
-    await expect(repo.update(id, { name: 'Otro nombre' })).rejects.toThrow('Exercise not found');
+    await expect(repo.update(id, { name: 'Otro nombre' }, null)).rejects.toThrow('Exercise not found');
   });
 
   // Inserta un ejercicio privado por SQL: todavía no hay forma de crearlo por
@@ -109,7 +109,7 @@ describe('PostgresExerciseRepository (solo Postgres)', () => {
   it('el listado del dueño es el catálogo más lo suyo, y nada de otros', async () => {
     await insertUser('u1');
     await insertUser('u2');
-    await repo.create(exerciseFixtures.a); // catálogo
+    await repo.create(exerciseFixtures.a, null); // catálogo
     await insertPrivateExercise('u1', 'De u1');
     await insertPrivateExercise('u2', 'De u2');
 
@@ -119,7 +119,7 @@ describe('PostgresExerciseRepository (solo Postgres)', () => {
   });
 
   it('un ejercicio del catálogo no lleva ownerId', async () => {
-    const id = await repo.create(exerciseFixtures.a);
+    const id = await repo.create(exerciseFixtures.a, null);
 
     const exercise = await repo.getById(id, 'u1');
 
@@ -130,8 +130,8 @@ describe('PostgresExerciseRepository (solo Postgres)', () => {
     await insertUser('u1');
     const id = await insertPrivateExercise('u1', 'Mío');
 
-    await expect(repo.update(id, { name: 'Pisado' })).rejects.toThrow('Exercise not found');
-    await repo.delete(id);
+    await expect(repo.update(id, { name: 'Pisado' }, null)).rejects.toThrow('Exercise not found');
+    await repo.delete(id, null);
 
     await expect(repo.getById(id, 'u1')).resolves.toMatchObject({ name: 'Mío' });
   });

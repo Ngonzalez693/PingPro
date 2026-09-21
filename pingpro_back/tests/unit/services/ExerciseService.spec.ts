@@ -82,14 +82,14 @@ describe('ExerciseService', () => {
   it('update no escribe nada si el ejercicio no existe', async () => {
     exerciseRepo.getById.mockResolvedValue(null);
 
-    await expect(service.update('nope', { name: 'Nuevo' })).rejects.toMatchObject({ status: 404 });
+    await expect(service.update('nope', { name: 'Nuevo' }, null)).rejects.toMatchObject({ status: 404 });
     expect(exerciseRepo.update).not.toHaveBeenCalled();
   });
 
   it('delete no borra nada si el ejercicio no existe', async () => {
     exerciseRepo.getById.mockResolvedValue(null);
 
-    await expect(service.delete('nope')).rejects.toMatchObject({ status: 404 });
+    await expect(service.delete('nope', null)).rejects.toMatchObject({ status: 404 });
     expect(exerciseRepo.delete).not.toHaveBeenCalled();
   });
 
@@ -98,7 +98,7 @@ describe('ExerciseService', () => {
   it('update solo mira el catálogo', async () => {
     exerciseRepo.getById.mockResolvedValue(exercise);
 
-    await service.update('e1', { name: 'Nuevo' });
+    await service.update('e1', { name: 'Nuevo' }, null);
 
     expect(exerciseRepo.getById).toHaveBeenCalledWith('e1', null);
   });
@@ -106,7 +106,7 @@ describe('ExerciseService', () => {
   it('delete solo mira el catálogo', async () => {
     exerciseRepo.getById.mockResolvedValue(exercise);
 
-    await service.delete('e1');
+    await service.delete('e1', null);
 
     expect(exerciseRepo.getById).toHaveBeenCalledWith('e1', null);
   });
@@ -130,6 +130,45 @@ describe('ExerciseService', () => {
 
     await expect(service.setFavoriteForUser('u1', 'e1', true)).resolves.toBe(state);
     expect(userStateRepo.setFavorite).toHaveBeenCalledWith('u1', 'e1', true);
+  });
+
+  // requireOwned: la lectura con viewer trae catálogo + lo del usuario, así que
+  // sin la segunda comprobación un usuario podría editar el catálogo por /me.
+  it('un usuario no puede editar un ejercicio del catálogo por la ruta propia', async () => {
+    exerciseRepo.getById.mockResolvedValue(exercise); // sin ownerId = catálogo
+
+    await expect(service.update('e1', { name: 'Pisado' }, 'u1')).rejects.toMatchObject({ status: 404 });
+    expect(exerciseRepo.update).not.toHaveBeenCalled();
+  });
+
+  it('un usuario no puede borrar un ejercicio del catálogo por la ruta propia', async () => {
+    exerciseRepo.getById.mockResolvedValue(exercise);
+
+    await expect(service.delete('e1', 'u1')).rejects.toMatchObject({ status: 404 });
+    expect(exerciseRepo.delete).not.toHaveBeenCalled();
+  });
+
+  it('un admin no puede editar un ejercicio privado por la ruta de catálogo', async () => {
+    exerciseRepo.getById.mockResolvedValue({ ...exercise, ownerId: 'u1' });
+
+    await expect(service.update('e1', { name: 'Pisado' }, null)).rejects.toMatchObject({ status: 404 });
+    expect(exerciseRepo.update).not.toHaveBeenCalled();
+  });
+
+  it('el dueño sí edita el suyo', async () => {
+    exerciseRepo.getById.mockResolvedValue({ ...exercise, ownerId: 'u1' });
+
+    await service.update('e1', { name: 'Nuevo' }, 'u1');
+
+    expect(exerciseRepo.update).toHaveBeenCalledWith('e1', { name: 'Nuevo' }, 'u1');
+  });
+
+  it('create pasa el dueño al repositorio', async () => {
+    exerciseRepo.create.mockResolvedValue('e9');
+
+    await service.create(exercise, 'u1');
+
+    expect(exerciseRepo.create).toHaveBeenCalledWith(exercise, 'u1');
   });
 
   it('el favorito se puede marcar sobre un ejercicio propio, no solo del catálogo', async () => {

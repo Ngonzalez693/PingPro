@@ -25,8 +25,9 @@ interface TrainingRow {
   exerciseIds: string[];
 }
 
-// Solo catálogo. Es lo que pueden tocar las escrituras de admin.
-const CATALOG = 'deleted_at IS NULL AND owner_id IS NULL';
+// Filas de un dueño concreto: null = catálogo, un uid = lo suyo. Ver la nota
+// sobre IS NOT DISTINCT FROM en PostgresExerciseRepository.
+const OWNED_BY = 'deleted_at IS NULL AND owner_id IS NOT DISTINCT FROM';
 
 // Catálogo + lo privado de quien mira, que va en $1. Ver la nota sobre
 // `owner_id = NULL` en PostgresExerciseRepository.
@@ -85,13 +86,21 @@ export class PostgresTrainingRepository implements ITrainingRepository {
     return rows.length > 0 ? toTraining(rows[0]) : null;
   }
 
-  async create(training: ITraining): Promise<string> {
+  // ownerId null crea catálogo; con un uid, un entrenamiento privado suyo.
+  async create(training: ITraining, ownerId: string | null): Promise<string> {
     return withTransaction(this.pool, async (client) => {
       const { rows } = await client.query<{ id: string }>(
-        `INSERT INTO trainings (name, category, image, description, duration)
-         VALUES ($1, $2, $3, $4, $5)
+        `INSERT INTO trainings (owner_id, name, category, image, description, duration)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING id`,
-        [training.name, training.category, training.image, training.description ?? null, training.duration ?? null],
+        [
+          ownerId,
+          training.name,
+          training.category,
+          training.image,
+          training.description ?? null,
+          training.duration ?? null,
+        ],
       );
       await insertExerciseIds(client, rows[0].id, training.exerciseIds);
       return rows[0].id;
@@ -100,7 +109,7 @@ export class PostgresTrainingRepository implements ITrainingRepository {
 
   // COALESCE: lo que no viene en el patch conserva su valor, como update() de
   // Firestore. Si llega exerciseIds, se sustituye la lista entera.
-  async update(id: string, training: Partial<ITraining>): Promise<void> {
+  async update(id: string, training: Partial<ITraining>, ownerId: string | null): Promise<void> {
     await withTransaction(this.pool, async (client) => {
       const { rowCount } = await client.query(
         `UPDATE trainings
@@ -110,7 +119,7 @@ export class PostgresTrainingRepository implements ITrainingRepository {
              description = COALESCE($5, description),
              duration    = COALESCE($6, duration),
              updated_at  = now()
-         WHERE id = $1 AND ${CATALOG}`,
+         WHERE id = $1 AND ${OWNED_BY} $7`,
         [
           id,
           training.name ?? null,
@@ -118,6 +127,7 @@ export class PostgresTrainingRepository implements ITrainingRepository {
           training.image ?? null,
           training.description ?? null,
           training.duration ?? null,
+          ownerId,
         ],
       );
       if (rowCount === 0) {
@@ -130,8 +140,11 @@ export class PostgresTrainingRepository implements ITrainingRepository {
     });
   }
 
-  async delete(id: string): Promise<void> {
-    await this.pool.query(`UPDATE trainings SET deleted_at = now() WHERE id = $1 AND ${CATALOG}`, [id]);
+  async delete(id: string, ownerId: string | null): Promise<void> {
+    await this.pool.query(
+      `UPDATE trainings SET deleted_at = now() WHERE id = $1 AND ${OWNED_BY} $2`,
+      [id, ownerId],
+    );
   }
 
   async exists(id: string, viewerId: string | null): Promise<boolean> {
