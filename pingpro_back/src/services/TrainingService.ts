@@ -24,30 +24,32 @@ export class TrainingService {
   ) {}
 
   // Get all trainings from repository
-  async getAll(): Promise<ITraining[]> {
-    return this.trainingRepo.getAll();
+  //
+  // `viewerId` es quién pregunta: catálogo + sus entrenamientos privados. Uno
+  // privado de otro usuario es un 404, igual que en ExerciseService.
+  async getAll(viewerId: string): Promise<ITraining[]> {
+    return this.trainingRepo.getAll(viewerId);
   }
 
   // Get training by id from repository
-  async getById(id: string): Promise<ITraining> {
-    const training = await this.trainingRepo.getById(id);
-    if (!training) {
-      throw Object.assign(new Error('Training not found'), { status: 404 });
-    }
-    return training;
+  async getById(id: string, viewerId: string): Promise<ITraining> {
+    return this.requireVisible(id, viewerId);
   }
 
   // Create training from repository
   async create(data: ITraining): Promise<string> {
-    await this.assertExercisesExist(data.exerciseIds);
+    await this.assertExercisesVisible(data.exerciseIds, null);
     return this.trainingRepo.create(data);
   }
 
   // Update training from repository
+  //
+  // Como en ExerciseService, create/update/delete son las de admin sobre el
+  // catálogo y miran con viewer null.
   async update(id: string, data: Partial<ITraining>): Promise<void> {
-    await this.getById(id); // validate existance
+    await this.requireVisible(id, null); // validate existance
     if (data.exerciseIds) {
-      await this.assertExercisesExist(data.exerciseIds);
+      await this.assertExercisesVisible(data.exerciseIds, null);
     }
     await this.trainingRepo.update(id, data);
   }
@@ -55,9 +57,14 @@ export class TrainingService {
   // Sin esta comprobación, un entrenamiento podría apuntar a ejercicios que no
   // existen: Firestore lo acepta, pero la clave foránea de Postgres lo
   // rechazaría con un 500.
-  private async assertExercisesExist(exerciseIds: string[]): Promise<void> {
+  //
+  // Mirar con `viewerId` hace además que un entrenamiento solo pueda referirse
+  // a ejercicios que su dueño ve. Con null (catálogo) eso impide que un
+  // entrenamiento público apunte al ejercicio privado de alguien, que daría
+  // 404 para todos los demás.
+  private async assertExercisesVisible(exerciseIds: string[], viewerId: string | null): Promise<void> {
     const uniqueIds = [...new Set(exerciseIds)];
-    const found = await Promise.all(uniqueIds.map((id) => this.exerciseRepo.exists(id)));
+    const found = await Promise.all(uniqueIds.map((id) => this.exerciseRepo.exists(id, viewerId)));
     const missing = uniqueIds.filter((_, i) => !found[i]);
     if (missing.length > 0) {
       throw Object.assign(new Error(`Unknown exercise ids: ${missing.join(', ')}`), { status: 400 });
@@ -66,13 +73,22 @@ export class TrainingService {
 
   // Delete training from repository
   async delete(id: string): Promise<void> {
-    await this.getById(id);
+    await this.requireVisible(id, null);
     await this.trainingRepo.delete(id);
+  }
+
+  private async requireVisible(id: string, viewerId: string | null): Promise<ITraining> {
+    const training = await this.trainingRepo.getById(id, viewerId);
+    if (!training) {
+      throw Object.assign(new Error('Training not found'), { status: 404 });
+    }
+    return training;
   }
 
   //  Completar entrenamiento por usuario 
   async setCompletedForUser(userId: string, trainingId: string, completed: boolean): Promise<IUserTrainingState> {
-    const exists = await this.trainingRepo.exists(trainingId);
+    // Con su propio uid: puede completar tanto los del catálogo como los suyos.
+    const exists = await this.trainingRepo.exists(trainingId, userId);
     if (!exists) {
       const err: any = new Error('Training not found');
       err.status = 404;
@@ -92,7 +108,7 @@ export class TrainingService {
   }>> {
     // Las dos lecturas son independientes → en paralelo, no en secuencia.
     const [trainings, states] = await Promise.all([
-      this.getAll(),
+      this.getAll(userId),
       this.userTrainingStateRepo.getAllStates(userId),
     ]);
 

@@ -2,7 +2,10 @@
  * Implementación en Postgres de ITrainingRepository (tablas trainings y
  * training_exercises).
  *
- * Mismas reglas que PostgresExerciseRepository: solo catálogo, borrado lógico.
+ * Mismas reglas que PostgresExerciseRepository: las lecturas son catálogo más
+ * lo privado de quien mira, las escrituras de aquí solo catálogo, y el borrado
+ * es lógico.
+ *
  * exerciseIds se devuelve en orden y sin los ejercicios borrados, que así
  * desaparecen de todos los entrenamientos que los usaban.
  */
@@ -13,6 +16,7 @@ import { withTransaction } from '../../db/transaction';
 
 interface TrainingRow {
   id: string;
+  owner_id: string | null;
   name: string;
   category: string;
   image: string;
@@ -21,12 +25,17 @@ interface TrainingRow {
   exerciseIds: string[];
 }
 
-const VISIBLE = 'deleted_at IS NULL AND owner_id IS NULL';
+// Solo catálogo. Es lo que pueden tocar las escrituras de admin.
+const CATALOG = 'deleted_at IS NULL AND owner_id IS NULL';
+
+// Catálogo + lo privado de quien mira, que va en $1. Ver la nota sobre
+// `owner_id = NULL` en PostgresExerciseRepository.
+const VISIBLE_TO_VIEWER = 'deleted_at IS NULL AND (owner_id IS NULL OR owner_id = $1)';
 
 // El LEFT JOIN a exercises con deleted_at IS NULL deja e.id en NULL para los
 // ejercicios borrados, y el FILTER los saca de la lista.
 const SELECT_TRAININGS = `
-  SELECT t.id, t.name, t.category, t.image, t.description, t.duration,
+  SELECT t.id, t.owner_id, t.name, t.category, t.image, t.description, t.duration,
          COALESCE(
            array_agg(te.exercise_id ORDER BY te.position) FILTER (WHERE e.id IS NOT NULL),
            '{}'
@@ -34,12 +43,13 @@ const SELECT_TRAININGS = `
   FROM trainings t
   LEFT JOIN training_exercises te ON te.training_id = t.id
   LEFT JOIN exercises e ON e.id = te.exercise_id AND e.deleted_at IS NULL
-  WHERE t.deleted_at IS NULL AND t.owner_id IS NULL`;
+  WHERE t.deleted_at IS NULL AND (t.owner_id IS NULL OR t.owner_id = $1)`;
 
 // Los contratos comparan con toEqual: un NULL de la base es un campo ausente.
 function toTraining(row: TrainingRow): ITraining {
   return {
     id: row.id,
+    ...(row.owner_id === null ? {} : { ownerId: row.owner_id }),
     name: row.name,
     category: row.category,
     image: row.image,
@@ -62,13 +72,16 @@ async function insertExerciseIds(client: PoolClient, trainingId: string, exercis
 export class PostgresTrainingRepository implements ITrainingRepository {
   constructor(private readonly pool: Pool) {}
 
-  async getAll(): Promise<ITraining[]> {
-    const { rows } = await this.pool.query<TrainingRow>(`${SELECT_TRAININGS} GROUP BY t.id`);
+  async getAll(viewerId: string | null): Promise<ITraining[]> {
+    const { rows } = await this.pool.query<TrainingRow>(`${SELECT_TRAININGS} GROUP BY t.id`, [viewerId]);
     return rows.map(toTraining);
   }
 
-  async getById(id: string): Promise<ITraining | null> {
-    const { rows } = await this.pool.query<TrainingRow>(`${SELECT_TRAININGS} AND t.id = $1 GROUP BY t.id`, [id]);
+  async getById(id: string, viewerId: string | null): Promise<ITraining | null> {
+    const { rows } = await this.pool.query<TrainingRow>(
+      `${SELECT_TRAININGS} AND t.id = $2 GROUP BY t.id`,
+      [viewerId, id],
+    );
     return rows.length > 0 ? toTraining(rows[0]) : null;
   }
 
@@ -97,7 +110,7 @@ export class PostgresTrainingRepository implements ITrainingRepository {
              description = COALESCE($5, description),
              duration    = COALESCE($6, duration),
              updated_at  = now()
-         WHERE id = $1 AND ${VISIBLE}`,
+         WHERE id = $1 AND ${CATALOG}`,
         [
           id,
           training.name ?? null,
@@ -118,13 +131,13 @@ export class PostgresTrainingRepository implements ITrainingRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.pool.query(`UPDATE trainings SET deleted_at = now() WHERE id = $1 AND ${VISIBLE}`, [id]);
+    await this.pool.query(`UPDATE trainings SET deleted_at = now() WHERE id = $1 AND ${CATALOG}`, [id]);
   }
 
-  async exists(id: string): Promise<boolean> {
+  async exists(id: string, viewerId: string | null): Promise<boolean> {
     const { rows } = await this.pool.query<{ found: boolean }>(
-      `SELECT EXISTS (SELECT 1 FROM trainings WHERE id = $1 AND ${VISIBLE}) AS found`,
-      [id],
+      `SELECT EXISTS (SELECT 1 FROM trainings WHERE id = $2 AND ${VISIBLE_TO_VIEWER}) AS found`,
+      [viewerId, id],
     );
     return rows[0].found;
   }

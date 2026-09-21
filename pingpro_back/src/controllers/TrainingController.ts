@@ -14,9 +14,17 @@ const service = services.trainings;
 
 export default class TrainingController {
   // Get all exercises from service
+  //
+  // Como en ExerciseController: el listado es el catálogo más lo privado de
+  // quien pregunta, así que hace falta el uid del token.
   static async getAll(req: Request, res: Response, next: NextFunction) {
     try {
-      const trainings = await service.getAll();
+      const uid = req.user?.uid;
+      if (!uid) {
+        return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
+      }
+
+      const trainings = await service.getAll(uid);
       return success(res, trainings, HTTP_STATUS.OK);
     } catch (err) {
       return error(res, (err as Error).message, HTTP_STATUS.INTERNAL_ERROR);
@@ -26,7 +34,12 @@ export default class TrainingController {
   // Get exercises by id from service
   static async getById(req: Request, res: Response, next: NextFunction) {
     try {
-      const training = await service.getById(req.params.id);
+      const uid = req.user?.uid;
+      if (!uid) {
+        return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
+      }
+
+      const training = await service.getById(req.params.id, uid);
       return success(res, training, HTTP_STATUS.OK);
     } catch (err) {
       return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);

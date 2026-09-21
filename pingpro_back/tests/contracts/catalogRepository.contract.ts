@@ -12,13 +12,17 @@ import type { ContractSetup } from './types';
 // Forma común de IExerciseRepository e ITrainingRepository. Solo existe en los
 // tests: las dos interfaces encajan en ella por estructura.
 export interface CatalogRepository<T> {
-  getAll(): Promise<T[]>;
-  getById(id: string): Promise<T | null>;
+  getAll(viewerId: string | null): Promise<T[]>;
+  getById(id: string, viewerId: string | null): Promise<T | null>;
   create(item: T): Promise<string>;
   update(id: string, patch: Partial<T>): Promise<void>;
   delete(id: string): Promise<void>;
-  exists(id: string): Promise<boolean>;
+  exists(id: string, viewerId: string | null): Promise<boolean>;
 }
+
+// Este contrato solo habla del catálogo, así que mira siempre con viewer null.
+// Lo privado de cada usuario tiene su propio contrato.
+const CATALOG_VIEWER = null;
 
 // Dos elementos distintos y un cambio parcial para `a`. Sin id: lo asigna el repositorio.
 export interface CatalogFixtures<T> {
@@ -52,22 +56,22 @@ export function catalogRepositoryContract<T extends { id?: string }>(
 
       expect(typeof id).toBe('string');
       expect(id).not.toHaveLength(0);
-      await expect(repo.getById(id)).resolves.toEqual({ id, ...fixtures.a });
+      await expect(repo.getById(id, CATALOG_VIEWER)).resolves.toEqual({ id, ...fixtures.a });
     });
 
     it('getById devuelve null si el id no existe', async () => {
-      await expect(repo.getById(MISSING_ID)).resolves.toBeNull();
+      await expect(repo.getById(MISSING_ID, CATALOG_VIEWER)).resolves.toBeNull();
     });
 
     it('getAll sobre la base vacía devuelve []', async () => {
-      await expect(repo.getAll()).resolves.toEqual([]);
+      await expect(repo.getAll(CATALOG_VIEWER)).resolves.toEqual([]);
     });
 
     it('getAll devuelve todos los elementos con sus ids', async () => {
       const idA = await repo.create(fixtures.a);
       const idB = await repo.create(fixtures.b);
 
-      const all = await repo.getAll();
+      const all = await repo.getAll(CATALOG_VIEWER);
 
       expect(sortById(all)).toEqual(
         sortById([
@@ -82,7 +86,7 @@ export function catalogRepositoryContract<T extends { id?: string }>(
 
       await repo.update(id, fixtures.patch);
 
-      await expect(repo.getById(id)).resolves.toEqual({ id, ...fixtures.a, ...fixtures.patch });
+      await expect(repo.getById(id, CATALOG_VIEWER)).resolves.toEqual({ id, ...fixtures.a, ...fixtures.patch });
     });
 
     it('update rechaza si el id no existe', async () => {
@@ -92,8 +96,8 @@ export function catalogRepositoryContract<T extends { id?: string }>(
     it('exists distingue un elemento creado de un id inexistente', async () => {
       const id = await repo.create(fixtures.a);
 
-      await expect(repo.exists(id)).resolves.toBe(true);
-      await expect(repo.exists(MISSING_ID)).resolves.toBe(false);
+      await expect(repo.exists(id, CATALOG_VIEWER)).resolves.toBe(true);
+      await expect(repo.exists(MISSING_ID, CATALOG_VIEWER)).resolves.toBe(false);
     });
 
     it('delete elimina el elemento', async () => {
@@ -101,8 +105,8 @@ export function catalogRepositoryContract<T extends { id?: string }>(
 
       await repo.delete(id);
 
-      await expect(repo.getById(id)).resolves.toBeNull();
-      await expect(repo.exists(id)).resolves.toBe(false);
+      await expect(repo.getById(id, CATALOG_VIEWER)).resolves.toBeNull();
+      await expect(repo.exists(id, CATALOG_VIEWER)).resolves.toBe(false);
     });
 
     it('delete de un id inexistente no falla', async () => {

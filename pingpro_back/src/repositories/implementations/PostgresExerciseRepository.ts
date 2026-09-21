@@ -2,9 +2,12 @@
  * Implementación en Postgres de IExerciseRepository (tablas exercises y
  * exercise_steps).
  *
- * Solo ve el catálogo (owner_id IS NULL): los ejercicios privados llegan con su
- * propio sub-proyecto. Borrar es lógico (deleted_at): el ejercicio deja de
- * verse, pero su historial y sus estados se conservan.
+ * Qué se ve depende de quién mira: el catálogo (owner_id IS NULL) más los
+ * ejercicios privados del propio usuario. Las escrituras de esta clase siguen
+ * siendo solo de catálogo; las de los ejercicios privados van aparte.
+ *
+ * Borrar es lógico (deleted_at): el ejercicio deja de verse, pero su historial
+ * y sus estados se conservan.
  */
 import type { Pool, PoolClient } from 'pg';
 import type { IExercise } from '../../interfaces/models/IExercise';
@@ -14,6 +17,7 @@ import { withTransaction } from '../../db/transaction';
 
 interface ExerciseRow {
   id: string;
+  owner_id: string | null;
   name: string;
   category: string;
   image: string;
@@ -21,11 +25,19 @@ interface ExerciseRow {
   sequence: ISequenceStep[];
 }
 
-const VISIBLE = 'deleted_at IS NULL AND owner_id IS NULL';
+// Solo catálogo. Es lo que pueden tocar las escrituras de admin.
+const CATALOG = 'deleted_at IS NULL AND owner_id IS NULL';
+
+// Catálogo + lo privado de quien mira, que va en $1.
+//
+// Con $1 = NULL no hace falta un caso aparte: en SQL `owner_id = NULL` nunca
+// es cierto (da NULL), así que la condición se queda en `owner_id IS NULL` y
+// la consulta devuelve solo el catálogo.
+const VISIBLE_TO_VIEWER = 'deleted_at IS NULL AND (owner_id IS NULL OR owner_id = $1)';
 
 // La secuencia llega en la misma consulta, ya ordenada por position.
 const SELECT_EXERCISES = `
-  SELECT e.id, e.name, e.category, e.image, e.description,
+  SELECT e.id, e.owner_id, e.name, e.category, e.image, e.description,
          COALESCE(
            json_agg(
              json_build_object(
@@ -37,12 +49,15 @@ const SELECT_EXERCISES = `
          ) AS sequence
   FROM exercises e
   LEFT JOIN exercise_steps s ON s.exercise_id = e.id
-  WHERE e.deleted_at IS NULL AND e.owner_id IS NULL`;
+  WHERE e.deleted_at IS NULL AND (e.owner_id IS NULL OR e.owner_id = $1)`;
 
 // Los contratos comparan con toEqual: un NULL de la base es un campo ausente.
+// Por eso un ejercicio del catálogo sale sin ownerId, igual que antes de que
+// existieran los privados.
 function toExercise(row: ExerciseRow): IExercise {
   return {
     id: row.id,
+    ...(row.owner_id === null ? {} : { ownerId: row.owner_id }),
     name: row.name,
     category: row.category,
     image: row.image,
@@ -72,13 +87,16 @@ async function insertSteps(client: PoolClient, exerciseId: string, steps: ISeque
 export class PostgresExerciseRepository implements IExerciseRepository {
   constructor(private readonly pool: Pool) {}
 
-  async getAll(): Promise<IExercise[]> {
-    const { rows } = await this.pool.query<ExerciseRow>(`${SELECT_EXERCISES} GROUP BY e.id`);
+  async getAll(viewerId: string | null): Promise<IExercise[]> {
+    const { rows } = await this.pool.query<ExerciseRow>(`${SELECT_EXERCISES} GROUP BY e.id`, [viewerId]);
     return rows.map(toExercise);
   }
 
-  async getById(id: string): Promise<IExercise | null> {
-    const { rows } = await this.pool.query<ExerciseRow>(`${SELECT_EXERCISES} AND e.id = $1 GROUP BY e.id`, [id]);
+  async getById(id: string, viewerId: string | null): Promise<IExercise | null> {
+    const { rows } = await this.pool.query<ExerciseRow>(
+      `${SELECT_EXERCISES} AND e.id = $2 GROUP BY e.id`,
+      [viewerId, id],
+    );
     return rows.length > 0 ? toExercise(rows[0]) : null;
   }
 
@@ -106,7 +124,7 @@ export class PostgresExerciseRepository implements IExerciseRepository {
              image       = COALESCE($4, image),
              description = COALESCE($5, description),
              updated_at  = now()
-         WHERE id = $1 AND ${VISIBLE}`,
+         WHERE id = $1 AND ${CATALOG}`,
         [id, exercise.name ?? null, exercise.category ?? null, exercise.image ?? null, exercise.description ?? null],
       );
       if (rowCount === 0) {
@@ -120,13 +138,13 @@ export class PostgresExerciseRepository implements IExerciseRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.pool.query(`UPDATE exercises SET deleted_at = now() WHERE id = $1 AND ${VISIBLE}`, [id]);
+    await this.pool.query(`UPDATE exercises SET deleted_at = now() WHERE id = $1 AND ${CATALOG}`, [id]);
   }
 
-  async exists(id: string): Promise<boolean> {
+  async exists(id: string, viewerId: string | null): Promise<boolean> {
     const { rows } = await this.pool.query<{ found: boolean }>(
-      `SELECT EXISTS (SELECT 1 FROM exercises WHERE id = $1 AND ${VISIBLE}) AS found`,
-      [id],
+      `SELECT EXISTS (SELECT 1 FROM exercises WHERE id = $2 AND ${VISIBLE_TO_VIEWER}) AS found`,
+      [viewerId, id],
     );
     return rows[0].found;
   }

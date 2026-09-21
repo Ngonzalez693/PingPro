@@ -18,17 +18,17 @@ export class ExerciseService {
     private readonly userStateRepo: IUserExerciseStateRepository,
   ) {}
 
-  // LISTADO / DETALLE 
-  async getAll(): Promise<IExercise[]> {
-    return this.exerciseRepo.getAll();
+  // LISTADO / DETALLE
+  //
+  // `viewerId` es quién pregunta: ve el catálogo y además sus ejercicios
+  // privados. Un ejercicio privado de otro usuario es un 404, no un 403: que
+  // no se pueda averiguar que existe.
+  async getAll(viewerId: string): Promise<IExercise[]> {
+    return this.exerciseRepo.getAll(viewerId);
   }
 
-  async getById(id: string): Promise<IExercise> {
-    const exercise = await this.exerciseRepo.getById(id);
-    if (!exercise) {
-      throw Object.assign(new Error('Exercise not found'), { status: 404 });
-    }
-    return exercise;
+  async getById(id: string, viewerId: string): Promise<IExercise> {
+    return this.requireVisible(id, viewerId);
   }
 
   // Create exercise from repository
@@ -37,15 +37,27 @@ export class ExerciseService {
   }
 
   // Update exercise from repository
+  //
+  // Las tres operaciones de escritura de aquí son las de admin sobre el
+  // catálogo: miran con viewer null para no encontrar nunca un ejercicio
+  // privado, ni siquiera uno del propio admin.
   async update(id: string, data: Partial<IExercise>): Promise<void> {
-    await this.getById(id); // validate existance
+    await this.requireVisible(id, null); // validate existance
     await this.exerciseRepo.update(id, data);
   }
 
   // Delete exercise from repository
   async delete(id: string): Promise<void> {
-    await this.getById(id);
+    await this.requireVisible(id, null);
     await this.exerciseRepo.delete(id);
+  }
+
+  private async requireVisible(id: string, viewerId: string | null): Promise<IExercise> {
+    const exercise = await this.exerciseRepo.getById(id, viewerId);
+    if (!exercise) {
+      throw Object.assign(new Error('Exercise not found'), { status: 404 });
+    }
+    return exercise;
   }
 
   // Favorito por USUARIO
@@ -57,7 +69,10 @@ export class ExerciseService {
     // valida que exista el ejercicio (evita estados huérfanos)
     // Sin esta comprobación se podrían crear documentos en
     // users/{uid}/exerciseStates apuntando a ejercicios inexistentes.
-    await this.getById(exerciseId);
+    //
+    // Mira con el uid del propio usuario: puede marcar como favorito tanto un
+    // ejercicio del catálogo como uno suyo privado.
+    await this.requireVisible(exerciseId, userId);
     return this.userStateRepo.setFavorite(userId, exerciseId, isFavorite);
   }
 
@@ -67,7 +82,7 @@ export class ExerciseService {
     exerciseId: string,
     completed: boolean
   ): Promise<IUserExerciseState> {
-    await this.getById(exerciseId);
+    await this.requireVisible(exerciseId, userId);
     return this.userStateRepo.setCompleted(userId, exerciseId, completed);
   }
 
