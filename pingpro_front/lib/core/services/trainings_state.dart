@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:pingpro_front/models/training_draft_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/core/services/training_services.dart';
 
@@ -48,6 +49,14 @@ class TrainingsState extends ChangeNotifier {
 
   // Forzar recarga desde servidor (ignora cache en memoria).
   Future<void> refresh() => load(force: true);
+
+  /// Crea un entrenamiento privado del usuario y recarga la lista para que
+  /// aparezca en todas las pantallas. Sin UI optimista, como en
+  /// ExercisesState.create: el id y el dueño los asigna el backend.
+  Future<void> create(TrainingDraft draft) async {
+    await _service.createMine(draft);
+    await refresh();
+  }
 
   /// Vacía la cache y la marca de "ya cargado". Ver ExercisesState.reset().
   void reset() {
