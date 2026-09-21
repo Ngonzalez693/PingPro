@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/training_draft_model.dart';
 
 TrainingDraft _draft({
@@ -37,6 +38,20 @@ void main() {
         _draft(description: 'Para empezar').toCreateJson().keys,
         unorderedEquals(['name', 'category', 'image', 'description', 'exerciseIds', 'duration']),
       );
+    });
+
+    test('el destino no viaja en el cuerpo y por defecto es lo propio', () {
+      final catalog = TrainingDraft(
+        name: 'Base',
+        category: 'Grado',
+        image: 'assets/images/training_1.jpg',
+        exerciseIds: const ['e1'],
+        minutesPerExercise: 5,
+        scope: ContentScope.catalog,
+      );
+
+      expect(catalog.toCreateJson(), isNot(contains('scope')));
+      expect(_draft().scope, ContentScope.own);
     });
 
     test('manda la duración total, no la de cada ejercicio', () {

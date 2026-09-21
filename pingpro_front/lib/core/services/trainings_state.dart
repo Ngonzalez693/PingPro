@@ -50,11 +50,12 @@ class TrainingsState extends ChangeNotifier {
   // Forzar recarga desde servidor (ignora cache en memoria).
   Future<void> refresh() => load(force: true);
 
-  /// Crea un entrenamiento privado del usuario, recarga la lista para que
-  /// aparezca en todas las pantallas y devuelve su id. Sin UI optimista, como
-  /// en ExercisesState.create: el id y el dueño los asigna el backend.
+  /// Crea un entrenamiento (propio o de catálogo, según draft.scope), recarga la
+  /// lista para que aparezca en todas las pantallas y devuelve su id. Sin UI
+  /// optimista, como en ExercisesState.create: el id y el dueño los asigna el
+  /// backend.
   Future<String> create(TrainingDraft draft) async {
-    final id = await _service.createMine(draft);
+    final id = await _service.create(draft);
     await refresh();
     return id;
   }

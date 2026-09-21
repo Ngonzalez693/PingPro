@@ -2,7 +2,9 @@
 // backend. Mismo motivo que ExerciseDraft: el esquema del backend rechaza los
 // campos que no conoce, así que el cuerpo de creación se construye aparte.
 //
-// El dueño no va aquí: lo pone el backend a partir del token (POST /me).
+// El dueño no va aquí: lo pone el backend a partir del token. `scope` decide a
+// qué ruta se envía, como en ExerciseDraft, y no viaja en el cuerpo.
+import 'package:pingpro_front/models/content_scope.dart';
 
 class TrainingDraft {
   final String name;
@@ -16,6 +18,8 @@ class TrainingDraft {
   /// Minutos que se dedican a cada ejercicio.
   final int minutesPerExercise;
 
+  final ContentScope scope;
+
   const TrainingDraft({
     required this.name,
     required this.category,
@@ -23,6 +27,7 @@ class TrainingDraft {
     required this.exerciseIds,
     required this.minutesPerExercise,
     this.description = '',
+    this.scope = ContentScope.own,
   });
 
   /// Duración total en minutos, que es lo que guarda el backend. La pantalla de

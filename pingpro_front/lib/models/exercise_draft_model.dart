@@ -6,7 +6,10 @@
 //   - Un borrador no tiene id ni estado de usuario: modelarlo aparte deja claro
 //     qué se puede mandar al crear.
 //
-// El dueño no va aquí: lo pone el backend a partir del token (POST /me).
+// El dueño no va aquí: lo pone el backend a partir del token. Lo que sí lleva
+// es `scope`, a dónde va: decide a qué ruta se envía, pero nunca viaja en el
+// cuerpo de la petición.
+import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/sequence_step_model.dart';
 
@@ -16,6 +19,7 @@ class ExerciseDraft {
   final String image;
   final String description;
   final List<SequenceStep> sequence;
+  final ContentScope scope;
 
   const ExerciseDraft({
     required this.name,
@@ -23,6 +27,7 @@ class ExerciseDraft {
     required this.image,
     required this.sequence,
     this.description = '',
+    this.scope = ContentScope.own,
   });
 
   /// Cuerpo de POST /api/exercises/me: exactamente los campos que acepta el

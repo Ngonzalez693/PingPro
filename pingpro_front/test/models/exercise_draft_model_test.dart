@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/models/sequence_step_model.dart';
 
@@ -21,6 +22,22 @@ void main() {
         _draft(description: 'Cruzado desde el revés').toCreateJson().keys,
         unorderedEquals(['name', 'category', 'image', 'description', 'sequence']),
       );
+    });
+
+    test('el destino no viaja en el cuerpo: decide la ruta, no un campo', () {
+      final draft = ExerciseDraft(
+        name: 'Saque',
+        category: 'Técnico',
+        image: 'assets/images/exercise_1.jpg',
+        sequence: [_step],
+        scope: ContentScope.catalog,
+      );
+
+      expect(draft.toCreateJson(), isNot(contains('scope')));
+    });
+
+    test('sin decir nada, el destino es lo propio del usuario', () {
+      expect(_draft().scope, ContentScope.own);
     });
 
     test('sin descripción, el campo no se manda', () {
