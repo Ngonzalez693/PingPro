@@ -9,6 +9,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/chart_axis.dart';
 
 class StatisticsSecondaryChart extends StatelessWidget {
   final String title;
@@ -24,8 +25,7 @@ class StatisticsSecondaryChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxY = (values.isEmpty ? 1 : values.reduce((a, b) => a > b ? a : b)).toDouble();
-    final maxYAdj = (maxY == 0 ? 1 : maxY);
+    final axis = ChartAxis.forValues(values);
 
     return Container(
       decoration: BoxDecoration(
@@ -43,8 +43,8 @@ class StatisticsSecondaryChart extends StatelessWidget {
             child: BarChart(
               BarChartData(
                 minY: 0,
-                maxY: maxYAdj.toDouble(),
-                gridData: FlGridData(show: true, horizontalInterval: (maxYAdj / 4).clamp(1, double.infinity)),
+                maxY: axis.max,
+                gridData: FlGridData(show: true, horizontalInterval: axis.interval),
                 borderData: FlBorderData(show: false),
                 barGroups: [
                   for (int i = 0; i < values.length; i++)
@@ -61,8 +61,16 @@ class StatisticsSecondaryChart extends StatelessWidget {
                     ),
                 ],
                 titlesData: FlTitlesData(
-                  leftTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: true, reservedSize: 28, interval: 1),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 28,
+                      interval: axis.interval,
+                      getTitlesWidget: (v, meta) => Text(
+                        axis.label(v),
+                        style: const TextStyle(fontSize: 11, color: Colors.black),
+                      ),
+                    ),
                   ),
                   rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),

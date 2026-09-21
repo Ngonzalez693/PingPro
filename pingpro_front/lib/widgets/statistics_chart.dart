@@ -6,6 +6,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/chart_axis.dart';
 
 class StatisticsChart extends StatelessWidget {
   final List<int> values;       // valores por punto (orden cronológico)
@@ -19,10 +20,7 @@ class StatisticsChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Sin actividad todos los valores son 0; forzar maxY a 1 evita que fl_chart
-    // reciba un rango vacío y la gráfica quede en blanco.
-    final maxY = (values.isEmpty ? 1 : values.reduce((a, b) => a > b ? a : b)).toDouble();
-    final maxYAdj = (maxY == 0 ? 1 : maxY);
+    final axis = ChartAxis.forValues(values);
 
     final spots = <FlSpot>[
       for (int i = 0; i < values.length; i++) FlSpot(i.toDouble(), values[i].toDouble()),
@@ -40,13 +38,19 @@ class StatisticsChart extends StatelessWidget {
           minX: 0,
           maxX: (values.isEmpty ? 0 : values.length - 1).toDouble(),
           minY: 0,
-          maxY: maxYAdj.toDouble(),
-          gridData: FlGridData(show: true, horizontalInterval: (maxYAdj / 4).clamp(1, double.infinity)),
+          maxY: axis.max,
+          // Red de seguridad: nada se pinta fuera de los ejes.
+          clipData: const FlClipData.all(),
+          gridData: FlGridData(show: true, horizontalInterval: axis.interval),
           borderData: FlBorderData(show: false),
           lineBarsData: [
             LineChartBarData(
               spots: spots,
               isCurved: true,
+              // La curva es un spline que pasa por los puntos, y entre una
+              // racha de ceros y un pico se pasa de largo: bajaba de 0 y subía
+              // del máximo, que es la curva saliéndose de los ejes.
+              preventCurveOverShooting: true,
               barWidth: 3,
               color: AppColors.primary,
               dotData: const FlDotData(show: true),
@@ -57,8 +61,16 @@ class StatisticsChart extends StatelessWidget {
             ),
           ],
           titlesData: FlTitlesData(
-            leftTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: true, reservedSize: 28, interval: 1),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 28,
+                interval: axis.interval,
+                getTitlesWidget: (v, meta) => Text(
+                  axis.label(v),
+                  style: const TextStyle(fontSize: 11, color: Colors.white),
+                ),
+              ),
             ),
             rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
             topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
