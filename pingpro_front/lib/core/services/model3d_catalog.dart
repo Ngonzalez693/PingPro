@@ -1,90 +1,55 @@
-// Catálogo de animaciones 3D en memoria: resuelve nombre → URL del .glb.
+// Dónde está el .glb con todas las animaciones.
 //
-// Es la pieza que conecta el mapper (exercise_to_glb_steps.dart, que razona en
-// nombres) con la colección 'model3d' del backend (que guarda las URLs).
+// La URL vive en la fila 'PingPro Animations' de models_3d y no en la app, así
+// que resubir el archivo (p. ej. al rehacer un clip) no obliga a publicar otra
+// versión.
 //
 // Singleton con carga perezosa: la primera vez que se abre un ejercicio pide
-// GET /api/model3d y guarda el índice para el resto de la sesión, así no hay
-// una petición por animación.
-//
-// El índice usa el nombre en minúsculas y sin espacios sobrantes como clave,
-// para que una diferencia de mayúsculas en Firestore no rompa la búsqueda.
+// GET /api/model3d y guarda la URL para el resto de la sesión. Si la fila no
+// existe o la petición falla no se guarda nada y la siguiente llamada vuelve
+// a intentarlo.
 import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 final String _baseUrl = dotenv.env['API_BASE_URL']!;
 
-/// DUPLICADO de models/model3d_model.dart. Esta es la copia que se usa de
-/// verdad en el flujo 3D; conviene quedarse con una sola.
-class Model3dModel {
-  final String id;
-  final String name;
-  final String url;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  Model3dModel({
-    required this.id,
-    required this.name,
-    required this.url,
-    required this.createdAt,
-    required this.updatedAt,
-  });
-  factory Model3dModel.fromJson(Map<String, dynamic> j) => Model3dModel(
-    id: j['id'] as String,
-    name: j['name'] as String,
-    url: j['url'] as String,
-    createdAt: DateTime.parse(j['createdAt']),
-    updatedAt: DateTime.parse(j['updatedAt']),
-  );
-}
-
 class Model3dCatalog {
   Model3dCatalog._();
   static final Model3dCatalog instance = Model3dCatalog._();
 
-  bool _loaded = false;
-  String? _error;
-  final Map<String, Model3dModel> _byName = {}; // name -> model
+  static const _animationsName = 'PingPro Animations';
 
-  bool get loaded => _loaded;
-  String? get error => _error;
+  String? _url;
 
-  Future<void> loadIfNeeded() async {
-    if (_loaded) return;
-    try {
-      final u = FirebaseAuth.instance.currentUser;
-      final token = await u?.getIdToken();
-      final r = await http.get(
-        Uri.parse('$_baseUrl/api/model3d'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-      );
-      if (r.statusCode != 200) {
-        throw Exception('Model3D list failed: ${r.statusCode} ${r.body}');
-      }
-      // Se espera un array pelado, no { success, data }: Model3DController es
-      // el único controller del backend que no envuelve la respuesta.
-      final list = (jsonDecode(r.body) as List).cast<Map<String, dynamic>>();
-      _byName
-        ..clear()
-        ..addEntries(list.map((e) {
-          final m = Model3dModel.fromJson(e);
-          return MapEntry(m.name.trim().toLowerCase(), m);
-        }));
-      _loaded = true;
-    } catch (e) {
-      _error = e.toString();
-      rethrow;
-    }
+  /// URL del .glb con todas las animaciones, o null si la fila no existe.
+  Future<String?> animationsUrl() async {
+    if (_url != null) return _url;
+    // No se cachea un resultado null: así una fila que todavía no existe (o
+    // un error de red) se reintenta en la siguiente llamada.
+    final url = await _fetchAnimationsUrl();
+    if (url != null) _url = url;
+    return url;
   }
 
-  /// Devuelve URL por nombre (case-insensitive)
-  String? urlByName(String modelName) {
-    final key = modelName.trim().toLowerCase();
-    return _byName[key]?.url;
+  Future<String?> _fetchAnimationsUrl() async {
+    final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+    final response = await http.get(
+      Uri.parse('$_baseUrl/api/model3d'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Model3D list failed: ${response.statusCode} ${response.body}');
+    }
+    // Model3DController es el único controller del backend que responde un
+    // array pelado, sin el envoltorio { success, data }.
+    final rows = (jsonDecode(response.body) as List).cast<Map<String, dynamic>>();
+    final match = rows.where((row) => row['name'] == _animationsName);
+    return match.isEmpty ? null : match.first['url'] as String;
   }
 }

@@ -2,11 +2,12 @@
 //
 // Traduce la secuencia a animaciones (buildGlbStepsForExercise) y las
 // reproduce con ExerciseGlbSequenceView. Mientras carga enseña un indicador, y
-// si la secuencia no tiene ninguna animación disponible, un aviso.
+// si el archivo de animaciones no se encuentra o falla al cargar, un aviso.
 //
 // La usan el detalle de un ejercicio y la vista previa al crearlo. Solo mira la
 // secuencia, así que sirve igual para un ejercicio que todavía no existe en el
 // backend.
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/mappers/exercise_to_glb_steps.dart';
@@ -48,6 +49,9 @@ class _ExerciseAnimationViewState extends State<ExerciseAnimationView> {
       return const Center(child: CircularProgressIndicator());
     }
     final steps = snap.data;
+    if (snap.hasError) {
+      if (kDebugMode) debugPrint('PingPro 3D: ${snap.error}');
+    }
     if (snap.hasError || steps == null || steps.isEmpty) {
       return const Center(
         child: Text(
