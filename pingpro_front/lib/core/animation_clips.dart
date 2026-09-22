@@ -5,8 +5,8 @@
 // Blender. Este archivo es el único sitio donde se escriben: si uno no existe
 // en el .glb, el visor lo avisa en consola y se salta ese paso.
 //
-// El archivo trae además Hook, Globo, Smash, CorteAtras y DesIzqDer, que
-// ninguna regla usa todavía.
+// El archivo trae además DesIzqDer, que ninguna regla usa (el usuario lo
+// descartó como desplazamiento).
 abstract final class AnimationClip {
   static const posInicial = 'PosInicial';
 
@@ -24,11 +24,16 @@ abstract final class AnimationClip {
   static const inicioReves = 'InicioReves';
   static const corteReves = 'CorteReves';
   static const reves = 'Reves';
+  static const corteAtras = 'CorteAtras';
 
   static const flip = 'Flip';
   static const ning = 'Ning';
   static const ningDer = 'NingDer';
   static const boomerang = 'Boomerang';
+
+  static const hook = 'Hook';
+  static const globo = 'Globo';
+  static const smash = 'Smash';
 
   static const movCortoDerIzq = 'MovCortoDerIzq';
   static const movCortoIzqDer = 'MovCortoIzqDer';

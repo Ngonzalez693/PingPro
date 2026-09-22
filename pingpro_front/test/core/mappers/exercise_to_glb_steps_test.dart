@@ -17,8 +17,13 @@ class _FirstOption implements Random {
   double nextDouble() => 0;
 }
 
-SequenceStep _step({int hit = HitCode.forehand, int rotation = 2, int side = 1}) =>
-    SequenceStep(hit: hit, rotation: rotation, zone: 3, direction: 4, side: side);
+SequenceStep _step({
+  int hit = HitCode.forehand,
+  int rotation = 2,
+  int side = 1,
+  int ownZone = ZoneCode.free,
+}) =>
+    SequenceStep(hit: hit, rotation: rotation, zone: 3, direction: 4, side: side, ownZone: ownZone);
 
 List<String> _clips(List<SequenceStep> steps) =>
     clipsForSequence(steps, random: _FirstOption());
@@ -94,6 +99,22 @@ void main() {
         expect(_strokeOf(backhand(rotation)), 'Topspin_Backhand_000');
       }
     });
+
+    test('back spin desde el fondo es el corte defensivo', () {
+      expect(
+        _strokeOf(_step(hit: HitCode.backhand, rotation: 1, side: 5, ownZone: ZoneCode.long)),
+        'CorteAtras',
+      );
+    });
+
+    test('back spin desde otra profundidad es el corte normal', () {
+      for (final ownZone in [ZoneCode.short, ZoneCode.middle, ZoneCode.free]) {
+        expect(
+          _strokeOf(_step(hit: HitCode.backhand, rotation: 1, side: 5, ownZone: ownZone)),
+          'CorteReves',
+        );
+      }
+    });
   });
 
   group('forehand o backhand', () {
@@ -104,6 +125,12 @@ void main() {
     test('desde la derecha o el centro usa las de forehand', () {
       expect(_strokeOf(_step(hit: HitCode.forehandOrBackhand, rotation: 1, side: 1)), 'CorteDer');
       expect(_strokeOf(_step(hit: HitCode.forehandOrBackhand, rotation: 6, side: 3)), 'LoopDerecha');
+    });
+
+    test('desde la izquierda y el fondo, con back spin, es el corte defensivo', () {
+      final step = _step(hit: HitCode.forehandOrBackhand, rotation: 1, side: 5, ownZone: ZoneCode.long);
+
+      expect(_strokeOf(step), 'CorteAtras');
     });
   });
 
@@ -121,6 +148,20 @@ void main() {
 
     test('strawberry flick', () {
       expect(_strokeOf(_step(hit: HitCode.strawberryFlick)), 'Boomerang');
+    });
+  });
+
+  group('golpes nuevos', () {
+    test('cada uno tiene su clip', () {
+      expect(_strokeOf(_step(hit: HitCode.hook, rotation: 1, side: 5)), 'Hook');
+      expect(_strokeOf(_step(hit: HitCode.globo, side: 5, ownZone: ZoneCode.long)), 'Globo');
+      expect(_strokeOf(_step(hit: HitCode.smash, side: 1, ownZone: ZoneCode.long)), 'Smash');
+    });
+
+    test('un smash desde la izquierda no es pivot', () {
+      final steps = [_step(side: 1), _step(hit: HitCode.smash, side: 5, ownZone: ZoneCode.long)];
+
+      expect(_clips(steps), ['PosInicial', 'TopspinForehand', 'MovLargoDerIzq', 'Smash']);
     });
   });
 
@@ -210,10 +251,11 @@ void main() {
 
     test('solo pide clips que existen en el archivo', () {
       final all = [
-        for (var hit = 1; hit <= 9; hit++)
+        for (var hit = 1; hit <= 12; hit++)
           for (var rotation = 1; rotation <= 7; rotation++)
             for (var side = 1; side <= 5; side++)
-              _step(hit: hit, rotation: rotation, side: side),
+              for (var ownZone = 1; ownZone <= 4; ownZone++)
+                _step(hit: hit, rotation: rotation, side: side, ownZone: ownZone),
       ];
       final withoutFree = all.where((s) => s.hit != HitCode.free).toList();
       final used = {

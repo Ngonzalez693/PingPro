@@ -71,15 +71,18 @@ List<String> clipsForSequence(List<SequenceStep> steps, {Random? random}) {
 String _strokeClip(SequenceStep step, Random random) => switch (step.hit) {
   HitCode.serve => _pickOne(_serveClips, random),
   HitCode.forehand => _forehandClip(step),
-  HitCode.backhand => _backhandClip(step.rotation),
+  HitCode.backhand => _backhandClip(step),
   HitCode.forehandOrBackhand => tableSideOf(step.side) == TableSide.left
-      ? _backhandClip(step.rotation)
+      ? _backhandClip(step)
       : _forehandClip(step),
   HitCode.forehandFlick => AnimationClip.flip,
   HitCode.bananaFlick => tableSideOf(step.side) == TableSide.right
       ? AnimationClip.ningDer
       : AnimationClip.ning,
   HitCode.strawberryFlick => AnimationClip.boomerang,
+  HitCode.hook => AnimationClip.hook,
+  HitCode.globo => AnimationClip.globo,
+  HitCode.smash => AnimationClip.smash,
   _ => AnimationClip.posInicial,
 };
 
@@ -92,8 +95,12 @@ String _forehandClip(SequenceStep step) {
   };
 }
 
-String _backhandClip(int rotation) => switch (rotation) {
-  RotationCode.backSpin => AnimationClip.corteReves,
+// El back spin de revés desde el fondo del propio campo es el corte defensivo
+// (el de los jugadores de defensa); desde más cerca, el corte normal.
+String _backhandClip(SequenceStep step) => switch (step.rotation) {
+  RotationCode.backSpin => step.ownZone == ZoneCode.long
+      ? AnimationClip.corteAtras
+      : AnimationClip.corteReves,
   RotationCode.liftado => AnimationClip.inicioReves,
   RotationCode.drive => AnimationClip.reves,
   _ => AnimationClip.topspinBackhand,
