@@ -29,7 +29,7 @@ Flutter · Node.js · TypeScript · Express · PostgreSQL · Firebase Auth · Cl
 
 - **Drill library.** Each drill is an ordered sequence of steps, and each step is defined by five parameters: stroke (`hit`), spin (`rotation`), table zone (`zone`), direction (`direction`) and side (`side`).
 - **Session builder.** Trainings group drills into structured practice sessions, with category, duration and cover image.
-- **3D visualization.** Every step in a sequence is translated into one or more `.glb` animations of a human model rigged in Blender and animated from motion-capture data. The mapping from drill parameters to animations lives in `exercise_to_glb_steps.dart`, and the models are served from Cloudinary through a client-side cached catalogue.
+- **3D visualization.** Every step in a sequence is translated into one or more animation clips of a human model rigged in Blender and animated from motion-capture data. All clips live in a single `.glb` served from Cloudinary; the mapping from drill parameters to clips lives in `exercise_to_glb_steps.dart`.
 - **Authentication and roles.** Firebase Auth with token verification on the backend. Per-user state (favorites, completed drills and trainings) is stored separately from the shared content.
 - **Statistics.** Completed drills and trainings charted over daily, weekly and monthly periods with `fl_chart`. Everything is computed client-side from the `completedAt` timestamps already held in the app's stores — the backend exposes no statistics endpoints.
 
@@ -86,7 +86,7 @@ PingPro/
 └── pingpro_front/           Flutter application
     ├── lib/
     │   ├── core/            Theme, HTTP services, state, 3D mappers
-    │   ├── models/          Exercise, Training, SequenceStep, Model3D
+    │   ├── models/          Exercise, Training, SequenceStep
     │   ├── screens/         14 screens (login, home, drills, …)
     │   └── widgets/         Reusable components and 3D viewer
     └── assets/              Images and icons

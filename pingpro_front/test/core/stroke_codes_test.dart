@@ -35,4 +35,29 @@ void main() {
       expect(sideLabels.keys, List.generate(5, (i) => i + 1));
     });
   });
+
+  group('tableSideOf', () {
+    test('agrupa los cinco lados en derecha, centro e izquierda', () {
+      expect([1, 2, 3, 4, 5].map(tableSideOf), [
+        TableSide.right,
+        TableSide.right,
+        TableSide.center,
+        TableSide.left,
+        TableSide.left,
+      ]);
+    });
+  });
+
+  group('isPivot', () {
+    test('es un forehand desde el lado izquierdo', () {
+      expect(isPivot(_step(hit: HitCode.forehand, side: 4)), isTrue);
+      expect(isPivot(_step(hit: HitCode.forehand, side: 5)), isTrue);
+    });
+
+    test('no lo es desde el centro ni con otro golpe', () {
+      expect(isPivot(_step(hit: HitCode.forehand, side: 3)), isFalse);
+      expect(isPivot(_step(hit: HitCode.backhand, side: 5)), isFalse);
+      expect(isPivot(_step(hit: HitCode.forehandOrBackhand, side: 5)), isFalse);
+    });
+  });
 }

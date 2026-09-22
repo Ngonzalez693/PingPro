@@ -1,9 +1,9 @@
 /**
  * Rutas del catálogo de modelos 3D (montadas en /api/model3d).
  *
- * Cada documento es un par nombre → URL de un archivo .glb. La app los pide una
- * sola vez al abrir un ejercicio (Model3dCatalog) y luego resuelve por nombre
- * las animaciones que produce el mapper exercise_to_glb_steps.dart.
+ * La app lee la fila 'PingPro Animations' para obtener la URL del único .glb
+ * con todas las animaciones (Model3dCatalog), y dentro de ese archivo elige
+ * los clips por nombre según lo que produce el mapper exercise_to_glb_steps.dart.
  *
  * Solo lectura: los .glb se suben por fuera de la API.
  */

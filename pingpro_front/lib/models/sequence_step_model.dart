@@ -6,12 +6,9 @@
 //   rotation  RotationCode   1 Back spin, 2 Topspin, 5 Drive, 6 Liftado…
 //   zone      ZoneCode       1 Corto, 2 Intermedio, 3 Largo, 4 Libre
 //   direction DirectionCode  1 Lateral derecho … 7 Lateral izquierdo, 8 Libre
-//   side      SideCode       1-3 derecha, 4-5 pivot, 6-7 izquierda
+//   side      SideCode       1-2 derecha, 3 medio, 4-5 izquierda
 //
-// DEUDA TÉCNICA: aquí son `int` pelados y la tabla de significados está
-// duplicada a mano en pingpro_exercise_detail_screen.dart y en
-// core/mappers/exercise_to_glb_steps.dart. Si el backend cambia un código, hay
-// tres sitios que actualizar. Convendría un enum compartido en core/.
+// Los nombres de cada código y su agrupación están en core/stroke_codes.dart.
 class SequenceStep {
   final int hit;
   final int rotation;
