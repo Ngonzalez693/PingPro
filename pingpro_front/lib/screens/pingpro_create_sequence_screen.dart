@@ -2,11 +2,13 @@
 //
 // Cómo se crea un golpe:
 //   1. Se pulsa uno de los "+" de tu lado (fila larga, fila corta o bandas) y
-//      se arrastra. El "+" elegido da el lado (side).
+//      se arrastra. El "+" elegido da el lado (side) y la profundidad propia
+//      (ownZone): fila larga, fila corta o banda.
 //   2. En el campo del rival la flecha se engancha al punto de destino más
 //      cercano, que se resalta. Al soltar, ese punto da la dirección y la zona.
 //      Soltarla en tu propio campo no crea golpe.
-//   3. Un diálogo pide el golpe y la rotación.
+//   3. Un diálogo pide el golpe y la rotación, con las opciones posibles
+//      desde esa profundidad.
 //
 // Todas las reglas de posición → código viven en core/table_geometry.dart;
 // esta pantalla solo traduce gestos y pinta.
@@ -73,7 +75,8 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
     final target = snapTarget(released.end);
     if (target == null) return;
 
-    final choice = await showStrokePicker(context);
+    final origin = strokeOrigins[released.originIndex];
+    final choice = await showStrokePicker(context, ownZone: origin.ownZone);
     if (choice == null || !mounted) return;
 
     final step = SequenceStep(
@@ -81,7 +84,8 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
       rotation: choice.rotation,
       zone: target.zone,
       direction: target.direction,
-      side: strokeOrigins[released.originIndex].side,
+      side: origin.side,
+      ownZone: origin.ownZone,
     );
     // La flecha guardada termina en el destino, no donde se levantó el dedo.
     final arrow = (originIndex: released.originIndex, end: target.position);

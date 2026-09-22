@@ -61,7 +61,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('un arrastre al campo rival crea el golpe con sus cinco códigos', (tester) async {
+  testWidgets('un arrastre al campo rival crea el golpe con sus códigos', (tester) async {
     await openEditor(tester);
 
     // Desde el "+" de más a la derecha (esquina derecha) a la esquina derecha
@@ -70,7 +70,7 @@ void main() {
     expect(find.text('Elegir golpe'), findsOneWidget);
     await pickStroke(tester, 'Forehand', 'Topspin');
 
-    expect(find.text('1. Forehand Topspin Largo a Esquina Derecha'), findsOneWidget);
+    expect(find.text('1. Forehand Topspin desde Largo, Largo a Esquina Derecha'), findsOneWidget);
 
     await tester.tap(find.text('Subir y ver'));
     await tester.pumpAndSettle();
@@ -82,6 +82,7 @@ void main() {
     expect(step.zone, 3);
     expect(step.hit, 1);
     expect(step.rotation, 2);
+    expect(step.ownZone, 3);
   });
 
   testWidgets('soltar fuera de la banda a media altura marca una lateral', (tester) async {
@@ -90,7 +91,7 @@ void main() {
     await drawStroke(tester, origin: 2, to: onTable(tester, -0.1, 0.245));
     await pickStroke(tester, 'Backhand', 'Drive');
 
-    expect(find.text('1. Backhand Drive Intermedio a Lateral Izquierda'), findsOneWidget);
+    expect(find.text('1. Backhand Drive desde Largo, Intermedio a Lateral Izquierda'), findsOneWidget);
   });
 
   testWidgets('la flecha se engancha al destino más cercano aunque no se acierte', (tester) async {
@@ -100,7 +101,7 @@ void main() {
     await drawStroke(tester, origin: 2, to: onTable(tester, 0.44, 0.29));
     await pickStroke(tester, 'Backhand', 'Drive');
 
-    expect(find.text('1. Backhand Drive Intermedio a Medio'), findsOneWidget);
+    expect(find.text('1. Backhand Drive desde Largo, Intermedio a Medio'), findsOneWidget);
   });
 
   testWidgets('se puede golpear desde la fila corta', (tester) async {
@@ -114,6 +115,19 @@ void main() {
 
     expect(result!.single.side, 3);
     expect(result!.single.zone, 1);
+    expect(result!.single.ownZone, 1);
+  });
+
+  testWidgets('desde una banda el golpe queda a profundidad intermedia', (tester) async {
+    await openEditor(tester);
+
+    // Origen 11: banda derecha.
+    await drawStroke(tester, origin: 11, to: onTable(tester, 0.9, 0.06));
+    await pickStroke(tester, 'Forehand', 'Topspin');
+    await tester.tap(find.text('Subir y ver'));
+    await tester.pumpAndSettle();
+
+    expect(result!.single.ownZone, 2);
   });
 
   testWidgets('soltar en tu propio campo no abre el diálogo ni crea golpe', (tester) async {
@@ -156,7 +170,7 @@ void main() {
     await tester.tap(find.byTooltip('Quitar golpe 1'));
     await tester.pumpAndSettle();
 
-    expect(find.text('1. Backhand Back Spin Corto a Medio'), findsOneWidget);
+    expect(find.text('1. Backhand Back Spin desde Largo, Corto a Medio'), findsOneWidget);
     expect(find.textContaining('2.'), findsNothing);
   });
 
@@ -196,7 +210,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(reviewed, hasLength(1));
-      expect(find.text('1. Forehand Topspin Largo a Esquina Derecha'), findsOneWidget);
+      expect(find.text('1. Forehand Topspin desde Largo, Largo a Esquina Derecha'), findsOneWidget);
       expect(result, isNull);
     });
 

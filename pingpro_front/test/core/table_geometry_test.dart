@@ -35,6 +35,15 @@ void main() {
       expect(strokeOrigins[11].position.dx, 1);
       expect(strokeOrigins[11].side, 1);
     });
+
+    test('la profundidad propia sale de la fila: larga, corta o banda', () {
+      for (var column = 0; column < 5; column++) {
+        expect(strokeOrigins[column].ownZone, 3); // fila larga = Largo
+        expect(strokeOrigins[5 + column].ownZone, 1); // fila corta = Corto
+      }
+      expect(strokeOrigins[10].ownZone, 2); // bandas = Intermedio
+      expect(strokeOrigins[11].ownZone, 2);
+    });
   });
 
   group('strokeTargets', () {
