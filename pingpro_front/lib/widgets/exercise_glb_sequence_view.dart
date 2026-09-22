@@ -25,16 +25,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
-/// Un paso de la secuencia: qué .glb mostrar y, opcionalmente, qué clip.
+/// Un paso de la secuencia: qué .glb mostrar y qué clip de ese archivo.
 ///
-/// Con los archivos actuales (una animación por .glb) `clip` va a null y el
-/// visor elige solo el clip bueno del archivo. Cuando las 30 animaciones estén
-/// en un único .glb, todos los pasos compartirán `url` y cada uno dirá su clip.
+/// Hoy todos los pasos comparten `url` (un único .glb con todas las
+/// animaciones), así que el visor solo descarga el archivo una vez y cambia de
+/// clip.
 class GlbStep {
   final String url;
-  final String? clip;
+  final String clip;
 
-  const GlbStep({required this.url, this.clip});
+  const GlbStep({required this.url, required this.clip});
 
   @override
   bool operator ==(Object other) =>
@@ -85,6 +85,9 @@ class _ExerciseGlbSequenceViewState extends State<ExerciseGlbSequenceView> {
   String? _error;
   Duration _clipDuration = Duration.zero;
   Timer? _fallback;
+  // Pasos seguidos cuyo clip no está en el archivo. Si llega a la longitud de
+  // la secuencia, ningún paso se puede reproducir y hay que dejar de saltar.
+  int _missingInARow = 0;
 
   GlbStep get _step => widget.steps[_index];
 
@@ -103,6 +106,7 @@ class _ExerciseGlbSequenceViewState extends State<ExerciseGlbSequenceView> {
       return;
     }
     _index = 0;
+    _missingInARow = 0;
     _loadingModel = true;
     _show(widget.steps.first);
   }
@@ -131,29 +135,14 @@ class _ExerciseGlbSequenceViewState extends State<ExerciseGlbSequenceView> {
   let token = 0;
   let awaitingFinish = false;
 
-  // Los .glb actuales traen dos clips: uno horneado con el movimiento real y
-  // otro que quedó quieto en la pose de reposo (se ve como T-pose). Medido en
-  // los 30 archivos, el bueno es siempre 'Animation', o el que empieza por
-  // 'mp_', o en su defecto el que no lleva '%temp'. Regla temporal: cuando las
-  // animaciones estén en un único .glb, cada paso dirá su clip por nombre.
-  const pickClip = () => {
-    const clips = mv.availableAnimations || [];
-    if (wantedClip && clips.includes(wantedClip)) return wantedClip;
-    return clips.find((n) => n === 'Animation')
-      || clips.find((n) => n.startsWith('mp_'))
-      || clips.find((n) => !n.includes('%temp'))
-      || clips[0]
-      || null;
-  };
-
   const playCurrent = async () => {
     const myToken = token;
-    const clip = pickClip();
-    if (!clip) {
-      send({ type: 'error', token: myToken, message: 'el modelo no trae animaciones' });
+    const clips = mv.availableAnimations || [];
+    if (!clips.includes(wantedClip)) {
+      send({ type: 'missing', token: myToken, clip: wantedClip });
       return;
     }
-    mv.animationName = clip;
+    mv.animationName = wantedClip;
     // Cambiar animationName arranca el clip en bucle infinito en la siguiente
     // actualización del componente. Hay que esperarla antes de pedir una sola
     // repetición, o esa actualización pisaría nuestro play().
@@ -162,7 +151,7 @@ class _ExerciseGlbSequenceViewState extends State<ExerciseGlbSequenceView> {
     mv.currentTime = 0;
     mv.play({ repetitions: 1 });
     awaitingFinish = true;
-    send({ type: 'playing', token: myToken, clip: clip, duration: mv.duration });
+    send({ type: 'playing', token: myToken, clip: wantedClip, duration: mv.duration });
   };
 
   mv.addEventListener('load', () => {
@@ -227,6 +216,7 @@ class _ExerciseGlbSequenceViewState extends State<ExerciseGlbSequenceView> {
           _loadingModel = false;
         });
       case 'playing':
+        _missingInARow = 0;
         final seconds = (decoded['duration'] as num?)?.toDouble() ?? 0;
         _clipDuration = Duration(milliseconds: (seconds * 1000).round());
         setState(() {
@@ -243,6 +233,8 @@ class _ExerciseGlbSequenceViewState extends State<ExerciseGlbSequenceView> {
       case 'finished':
         _fallback?.cancel();
         if (_playing) _next();
+      case 'missing':
+        _onMissingClip(decoded['clip']);
       case 'error':
         _fallback?.cancel();
         setState(() {
@@ -254,6 +246,23 @@ class _ExerciseGlbSequenceViewState extends State<ExerciseGlbSequenceView> {
           debugPrint('PingPro 3D: error del visor: ${decoded['message']}');
         }
     }
+  }
+
+  // Un nombre de clip que no está en el .glb es un error de datos (el archivo
+  // se resubió sin ese clip), no de red: se avisa y se sigue con el siguiente.
+  void _onMissingClip(Object? clip) {
+    if (kDebugMode) debugPrint('PingPro 3D: el archivo no trae el clip $clip');
+    _missingInARow++;
+    if (_missingInARow < widget.steps.length) {
+      _next();
+      return;
+    }
+    _fallback?.cancel();
+    setState(() {
+      _loadingModel = false;
+      _playing = false;
+      _error = 'No se pudo cargar la animación';
+    });
   }
 
   void _armFallback() {
