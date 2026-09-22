@@ -5,7 +5,7 @@ const CREATED = new Date('2026-03-01T12:00:00.000Z');
 const AUTH_CREATED = new Date('2026-02-01T09:00:00.000Z');
 const COMPLETED = new Date('2026-09-10T08:00:00.000Z');
 
-const step = { hit: 1, rotation: 2, zone: 3, direction: 6, side: 1 };
+const step = { hit: 1, rotation: 2, zone: 3, direction: 6, side: 1, ownZone: 4 };
 
 // Un Firestore pequeño y válido; cada caso cambia solo lo que prueba.
 function snapshot(overrides: Partial<FirestoreSnapshot> = {}): FirestoreSnapshot {
@@ -59,8 +59,26 @@ describe('buildMigrationPlan', () => {
       ['e2', 'Corto'],
     ]);
     expect(plan.rows.exercise_steps.filter((row) => row.exercise_id === 'e1')).toEqual([
-      { exercise_id: 'e1', position: 0, ...step },
-      { exercise_id: 'e1', position: 1, ...step, hit: 2 },
+      {
+        exercise_id: 'e1',
+        position: 0,
+        hit: step.hit,
+        rotation: step.rotation,
+        zone: step.zone,
+        direction: step.direction,
+        side: step.side,
+        own_zone: step.ownZone,
+      },
+      {
+        exercise_id: 'e1',
+        position: 1,
+        hit: 2,
+        rotation: step.rotation,
+        zone: step.zone,
+        direction: step.direction,
+        side: step.side,
+        own_zone: step.ownZone,
+      },
     ]);
     expect(plan.rows.trainings).toEqual([
       {

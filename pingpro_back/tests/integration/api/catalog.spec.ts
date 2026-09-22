@@ -68,7 +68,30 @@ describe('Escrituras del catálogo (emulador de Auth + Postgres)', () => {
   it('rechaza un ejercicio con un código de golpe fuera del enum (400)', async () => {
     const res = await post('/api/exercises', {
       ...exercise,
-      sequence: [{ ...exercise.sequence[0], hit: 10 }],
+      sequence: [{ ...exercise.sequence[0], hit: 13 }],
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('guarda la profundidad propia y, si no llega, la deja en Libre', async () => {
+    const res = await post('/api/exercises', {
+      ...exercise,
+      sequence: [exercise.sequence[0], { ...exercise.sequence[0], ownZone: 3 }],
+    });
+
+    expect(res.status).toBe(201);
+    const { rows } = await pool.query(
+      'SELECT own_zone FROM exercise_steps WHERE exercise_id = $1 ORDER BY position',
+      [res.body.data.id],
+    );
+    expect(rows.map((row) => row.own_zone)).toEqual([4, 3]);
+  });
+
+  it('rechaza un smash que no sale del fondo del propio campo (400)', async () => {
+    const res = await post('/api/exercises', {
+      ...exercise,
+      sequence: [{ ...exercise.sequence[0], hit: 12, rotation: 2, ownZone: 1 }],
     });
 
     expect(res.status).toBe(400);

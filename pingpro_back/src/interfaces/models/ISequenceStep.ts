@@ -1,5 +1,5 @@
 /**
- * Un paso de la secuencia de un ejercicio: un solo golpe descrito con los cinco
+ * Un paso de la secuencia de un ejercicio: un solo golpe descrito con los
  * códigos de utils/enums.ts.
  *
  * Un ejercicio es un array ordenado de estos pasos. El equivalente en la app es
@@ -14,4 +14,6 @@ export interface ISequenceStep {
   zone: ZoneCode;
   direction: DirectionCode;
   side: SideCode;
+  // Profundidad del jugador en su propio campo. Libre = sin especificar.
+  ownZone: ZoneCode;
 }

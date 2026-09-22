@@ -22,6 +22,7 @@ export const exerciseFixtures: CatalogFixtures<IExercise> = {
         zone: ZoneCode.LARGO,
         direction: DirectionCode.ESQUINA_IZQUIERDA,
         side: SideCode.ESQUINA_DERECHA,
+        ownZone: ZoneCode.LARGO,
       },
     ],
   },
@@ -36,6 +37,7 @@ export const exerciseFixtures: CatalogFixtures<IExercise> = {
         zone: ZoneCode.CORTO,
         direction: DirectionCode.MEDIO,
         side: SideCode.MEDIO,
+        ownZone: ZoneCode.CORTO,
       },
       {
         hit: HitCode.BACKHAND,
@@ -43,6 +45,7 @@ export const exerciseFixtures: CatalogFixtures<IExercise> = {
         zone: ZoneCode.INTERMEDIO,
         direction: DirectionCode.ESQUINA_DERECHA,
         side: SideCode.MEDIO_IZQUIERDO,
+        ownZone: ZoneCode.LIBRE,
       },
     ],
   },
