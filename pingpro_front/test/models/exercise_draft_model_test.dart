@@ -54,7 +54,7 @@ void main() {
 
     test('la secuencia va con los cinco códigos de cada golpe', () {
       expect(_draft().toCreateJson()['sequence'], [
-        {'hit': 1, 'rotation': 2, 'zone': 3, 'direction': 6, 'side': 1},
+        {'hit': 1, 'rotation': 2, 'zone': 3, 'direction': 6, 'side': 1, 'ownZone': 4},
       ]);
     });
   });

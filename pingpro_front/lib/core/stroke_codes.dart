@@ -22,13 +22,29 @@ abstract final class HitCode {
   static const int serve = 7;
   static const int free = 8;
   static const int untilItFalls = 9;
+  static const int hook = 10;
+  static const int globo = 11;
+  static const int smash = 12;
 }
 
-/// Las rotaciones que cambian la animación; el resto se anima como topspin.
+/// Códigos de rotación con nombre en el código: los que tienen reglas propias
+/// o cambian la animación. Espejo de RotationCode en enums.ts.
 abstract final class RotationCode {
   static const int backSpin = 1;
+  static const int topspin = 2;
+  static const int sideSpinRight = 3;
+  static const int sideSpinLeft = 4;
   static const int drive = 5;
   static const int liftado = 6;
+}
+
+/// Profundidad: la del bote en la mesa del rival (zone) o la del jugador en
+/// su propio campo (ownZone). Espejo de ZoneCode en enums.ts.
+abstract final class ZoneCode {
+  static const int short = 1;
+  static const int middle = 2;
+  static const int long = 3;
+  static const int free = 4;
 }
 
 /// Los cinco códigos de SideCode agrupados en las tres zonas en que se
@@ -57,6 +73,9 @@ const hitLabels = <int, String>{
   7: 'Servicio',
   8: 'Libre',
   9: 'Hasta que se caiga',
+  10: 'Hook',
+  11: 'Globo',
+  12: 'Smash',
 };
 
 const rotationLabels = <int, String>{
@@ -69,7 +88,7 @@ const rotationLabels = <int, String>{
   7: 'Libre',
 };
 
-/// Profundidad del bote en la mesa del rival.
+/// Profundidad, en la mesa del rival (zone) o en la propia (ownZone).
 const zoneLabels = <int, String>{
   1: 'Corto',
   2: 'Intermedio',
@@ -102,12 +121,42 @@ const sideLabels = <int, String>{
 /// conoce todavía (un valor añadido al enum después de publicar esta versión).
 String labelOf(Map<int, String> labels, int code) => labels[code] ?? 'Desconocido';
 
-/// Un golpe en una línea: "Forehand Topspin Largo a Esquina Izquierda".
+// Golpes que solo admiten algunas rotaciones; los demás admiten todas.
+// Espejo de ALLOWED_ROTATIONS en pingpro_back/src/utils/exercise.validator.ts.
+const _restrictedRotations = <int, List<int>>{
+  HitCode.hook: [RotationCode.backSpin],
+  HitCode.globo: [
+    RotationCode.topspin,
+    RotationCode.sideSpinRight,
+    RotationCode.sideSpinLeft,
+    RotationCode.drive,
+  ],
+  HitCode.smash: [RotationCode.topspin, RotationCode.drive],
+};
+
+// Golpes que solo se juegan desde el fondo del propio campo.
+// Espejo de LONG_ONLY_HITS en pingpro_back/src/utils/exercise.validator.ts.
+const _longOnlyHits = {HitCode.globo, HitCode.smash};
+
+/// Rotaciones que admite un golpe, en el orden de rotationLabels.
+List<int> allowedRotations(int hit) =>
+    _restrictedRotations[hit] ?? rotationLabels.keys.toList();
+
+/// Golpes que se pueden elegir golpeando desde la profundidad [ownZone].
+List<int> hitsAvailableFrom(int ownZone) => [
+      for (final hit in hitLabels.keys)
+        if (ownZone == ZoneCode.long || !_longOnlyHits.contains(hit)) hit,
+    ];
+
+/// Un golpe en una línea: "Forehand Topspin desde Largo, Largo a Esquina
+/// Izquierda". Sin profundidad propia (Libre) se omite el "desde …", como en
+/// los pasos guardados antes de que existiera.
 String describeStep(SequenceStep step) {
   final rotation = labelOf(rotationLabels, step.rotation);
   final zone = labelOf(zoneLabels, step.zone);
   final direction = labelOf(directionLabels, step.direction);
-  return '${_hitName(step)} $rotation $zone a $direction';
+  final from = step.ownZone == ZoneCode.free ? '' : ' desde ${labelOf(zoneLabels, step.ownZone)},';
+  return '${_hitName(step)} $rotation$from $zone a $direction';
 }
 
 String _hitName(SequenceStep step) {
