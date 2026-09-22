@@ -60,8 +60,8 @@ export enum DirectionCode {
 }
 
 // Values for table side
-// Desde dónde golpea el jugador. El mapper 3D lo agrupa en DER (1-3),
-// PIVOT (4-5) e IZQ (6-7) para escoger la animación de golpe y de desplazamiento.
+// Desde dónde golpea el jugador. El mapper 3D lo agrupa en DER (1-2),
+// CENTRO (3) e IZQ (4-5); un forehand desde IZQ es un pivot.
 export enum SideCode {
   ESQUINA_DERECHA   = 1,
   MEDIO_DERECHA     = 2,

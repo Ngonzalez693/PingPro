@@ -43,7 +43,7 @@ export function model3dRepositoryContract(name: string, setup: Model3DContractSe
 
       expect(model?.createdAt).toBeInstanceOf(Date);
       expect(model?.updatedAt).toBeInstanceOf(Date);
-      // Model3dCatalog (Flutter) hace DateTime.parse(j['createdAt']).
+      // El contrato de la API expone las fechas como texto ISO.
       expect(JSON.parse(JSON.stringify(model))).toEqual({
         id: older.id,
         name: older.name,
