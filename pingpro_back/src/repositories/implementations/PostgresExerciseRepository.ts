@@ -47,7 +47,7 @@ const SELECT_EXERCISES = `
            json_agg(
              json_build_object(
                'hit', s.hit, 'rotation', s.rotation, 'zone', s.zone,
-               'direction', s.direction, 'side', s.side
+               'direction', s.direction, 'side', s.side, 'ownZone', s.own_zone
              ) ORDER BY s.position
            ) FILTER (WHERE s.exercise_id IS NOT NULL),
            '[]'
@@ -74,10 +74,10 @@ function toExercise(row: ExerciseRow): IExercise {
 // Una sola consulta para todos los pasos; ORDINALITY da la posición (desde 1).
 async function insertSteps(client: PoolClient, exerciseId: string, steps: ISequenceStep[]): Promise<void> {
   await client.query(
-    `INSERT INTO exercise_steps (exercise_id, position, hit, rotation, zone, direction, side)
-     SELECT $1::text, step.position - 1, step.hit, step.rotation, step.zone, step.direction, step.side
-     FROM unnest($2::smallint[], $3::smallint[], $4::smallint[], $5::smallint[], $6::smallint[])
-          WITH ORDINALITY AS step(hit, rotation, zone, direction, side, position)`,
+    `INSERT INTO exercise_steps (exercise_id, position, hit, rotation, zone, direction, side, own_zone)
+     SELECT $1::text, step.position - 1, step.hit, step.rotation, step.zone, step.direction, step.side, step.own_zone
+     FROM unnest($2::smallint[], $3::smallint[], $4::smallint[], $5::smallint[], $6::smallint[], $7::smallint[])
+          WITH ORDINALITY AS step(hit, rotation, zone, direction, side, own_zone, position)`,
     [
       exerciseId,
       steps.map((step) => step.hit),
@@ -85,6 +85,7 @@ async function insertSteps(client: PoolClient, exerciseId: string, steps: ISeque
       steps.map((step) => step.zone),
       steps.map((step) => step.direction),
       steps.map((step) => step.side),
+      steps.map((step) => step.ownZone),
     ],
   );
 }

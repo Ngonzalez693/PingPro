@@ -3,7 +3,7 @@ import { exerciseSchema } from '../../../src/utils/exercise.validator';
 import { trainingSchema } from '../../../src/utils/training.validator';
 
 // Cuerpos válidos: cada caso cambia un solo campo para aislar la regla.
-const validStep = { hit: 1, rotation: 2, zone: 3, direction: 6, side: 1 };
+const validStep = { hit: 1, rotation: 2, zone: 3, direction: 6, side: 1, ownZone: 3 };
 
 function exerciseBody(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -34,11 +34,12 @@ function trainingBody(overrides: Record<string, unknown> = {}): Record<string, u
 // si se añade un valor a un enum, este test obliga a revisarlos (y a ampliar
 // el CHECK de Postgres con una migración).
 const HIGHEST_CODES: Array<[string, number]> = [
-  ['hit', 9],
+  ['hit', 12],
   ['rotation', 7],
   ['zone', 4],
   ['direction', 8],
   ['side', 5],
+  ['ownZone', 4],
 ];
 
 describe('exerciseSchema', () => {
@@ -75,6 +76,52 @@ describe('exerciseSchema', () => {
     const { error } = exerciseSchema.validate(exerciseBody({ [field]: value }));
 
     expect(error?.message).toContain(field);
+  });
+
+  it('sin ownZone, la deja en Libre (4)', () => {
+    const stepWithoutOwnZone = { hit: 1, rotation: 2, zone: 3, direction: 6, side: 1 };
+    const { error, value } = exerciseSchema.validate(exerciseBody({ sequence: [stepWithoutOwnZone] }));
+
+    expect(error).toBeUndefined();
+    expect(value.sequence[0].ownZone).toBe(4);
+  });
+
+  it.each<[string, number, number[]]>([
+    ['Hook', 10, [1]],
+    ['Globo', 11, [2, 3, 4, 5]],
+    ['Smash', 12, [2, 5]],
+  ])('%s solo admite sus rotaciones', (_name, hit, allowed) => {
+    for (let rotation = 1; rotation <= 7; rotation++) {
+      const { error } = exerciseSchema.validate(
+        exerciseBody({ sequence: [{ ...validStep, hit, rotation }] }),
+      );
+
+      if (allowed.includes(rotation)) {
+        expect(error).toBeUndefined();
+      } else {
+        expect(error?.message).toContain('rotation');
+      }
+    }
+  });
+
+  it.each([11, 12])('el golpe %i exige ownZone Largo', (hit) => {
+    for (const ownZone of [1, 2, 4]) {
+      const { error } = exerciseSchema.validate(
+        exerciseBody({ sequence: [{ ...validStep, hit, ownZone }] }),
+      );
+
+      expect(error?.message).toContain('ownZone');
+    }
+  });
+
+  it('Hook se admite desde cualquier profundidad', () => {
+    for (const ownZone of [1, 2, 3, 4]) {
+      const { error } = exerciseSchema.validate(
+        exerciseBody({ sequence: [{ ...validStep, hit: 10, rotation: 1, ownZone }] }),
+      );
+
+      expect(error).toBeUndefined();
+    }
   });
 });
 

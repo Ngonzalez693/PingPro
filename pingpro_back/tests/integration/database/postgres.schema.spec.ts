@@ -5,11 +5,11 @@ import { recreateSchema, resetPostgres } from '../helpers/postgres';
 
 const CHECK_VIOLATION = '23514';
 
-// El esquema de 0001 probado con SQL directo, sin repositorios: sus
-// restricciones son la última barrera aunque la API ya valide antes.
+// El esquema de las migraciones probado con SQL directo, sin repositorios:
+// sus restricciones son la última barrera aunque la API ya valide antes.
 // Los bloques van en orden: "restricciones" usa el esquema que crea
 // "migraciones".
-describe('Esquema de Postgres (0001)', () => {
+describe('Esquema de Postgres', () => {
   let pool: Pool;
 
   beforeAll(async () => {
@@ -19,8 +19,8 @@ describe('Esquema de Postgres (0001)', () => {
   afterAll(() => pool.end());
 
   describe('migraciones', () => {
-    it('migrate aplica 0001 en una base vacía', async () => {
-      await expect(migrate(pool)).resolves.toEqual(['0001_initial_schema']);
+    it('migrate aplica todas las migraciones en orden en una base vacía', async () => {
+      await expect(migrate(pool)).resolves.toEqual(['0001_initial_schema', '0002_own_zone_and_new_hits']);
     });
 
     it('migrate otra vez no aplica nada', async () => {
@@ -76,7 +76,24 @@ describe('Esquema de Postgres (0001)', () => {
     it('rechaza un paso con un código fuera de su enum', async () => {
       const id = await insertExercise();
 
-      await expect(insertStep(id, 10)).rejects.toMatchObject({ code: CHECK_VIOLATION });
+      await expect(insertStep(id, 13)).rejects.toMatchObject({ code: CHECK_VIOLATION });
+    });
+
+    it('acepta los golpes nuevos hasta el 12', async () => {
+      const id = await insertExercise();
+
+      await expect(insertStep(id, 12)).resolves.toBeUndefined();
+    });
+
+    it('un paso sin own_zone queda en 4 (Libre) y fuera de 1..4 se rechaza', async () => {
+      const id = await insertExercise();
+      await insertStep(id, 1);
+
+      const { rows } = await pool.query('SELECT own_zone FROM exercise_steps WHERE exercise_id = $1', [id]);
+      expect(rows[0].own_zone).toBe(4);
+      await expect(
+        pool.query('UPDATE exercise_steps SET own_zone = 5 WHERE exercise_id = $1', [id]),
+      ).rejects.toMatchObject({ code: CHECK_VIOLATION });
     });
 
     it('borrar un usuario borra en cascada todo lo suyo y deja el catálogo', async () => {

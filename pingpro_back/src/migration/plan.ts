@@ -74,6 +74,7 @@ export interface MigrationRows {
     zone: number;
     direction: number;
     side: number;
+    own_zone: number;
   }>;
   trainings: Array<{
     id: string;
@@ -200,7 +201,20 @@ function planExercises(snapshot: FirestoreSnapshot, now: Date, rows: MigrationRo
       created_at: createdAt,
       updated_at: date(data, 'updatedAt') ?? createdAt,
     });
-    exercise.sequence.forEach((step, position) => rows.exercise_steps.push({ exercise_id: id, position, ...step }));
+    // Columnas snake_case explícitas: load.ts usa las claves de la fila como
+    // nombres de columna, y el paso viene con ownZone en camelCase.
+    exercise.sequence.forEach((step, position) =>
+      rows.exercise_steps.push({
+        exercise_id: id,
+        position,
+        hit: step.hit,
+        rotation: step.rotation,
+        zone: step.zone,
+        direction: step.direction,
+        side: step.side,
+        own_zone: step.ownZone,
+      }),
+    );
   }
 }
 

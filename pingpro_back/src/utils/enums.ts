@@ -24,6 +24,9 @@ export enum HitCode {
   SERVICIO           = 7,
   LIBRE              = 8,
   HASTA_QUE_SE_CAIGA = 9,
+  HOOK               = 10,
+  GLOBO              = 11,
+  SMASH              = 12,
 }
 
 // Values for rotations
@@ -38,7 +41,8 @@ export enum RotationCode {
 }
 
 // Values for table zone
-// Profundidad del bote en la mesa contraria.
+// Profundidad: en `zone`, la del bote en la mesa contraria; en `ownZone`, la
+// del jugador en su propio campo.
 export enum ZoneCode {
   CORTO      = 1,
   INTERMEDIO = 2,
