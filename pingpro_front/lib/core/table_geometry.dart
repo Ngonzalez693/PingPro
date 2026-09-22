@@ -24,7 +24,7 @@ const netY = 0.5;
 const _lateralMargin = 0.18;
 
 /// Punto desde el que golpea el jugador.
-typedef StrokeOrigin = ({Offset position, int side});
+typedef StrokeOrigin = ({Offset position, int side, int ownZone});
 
 /// Punto donde bota la pelota en el campo del rival.
 typedef StrokeTarget = ({Offset position, int direction, int zone});
@@ -45,16 +45,16 @@ double _columnX(int column) => (column + 0.5) / 5;
 ///   10    banda izquierda
 ///   11    banda derecha
 ///
-/// El backend solo guarda el lado de izquierda a derecha (SideCode 1–5), no la
-/// profundidad: la fila corta guarda el mismo lado que la larga de su columna,
-/// y las bandas el de su esquina. Se dibujan igual para que el ejercicio se
-/// entienda, pero al guardarse esa diferencia se pierde.
+/// Cada punto da el lado (SideCode 1–5, de derecha a izquierda del jugador) y
+/// la profundidad propia (ownZone): la fila larga es Largo (3), la corta Corto
+/// (1) y las bandas, a media altura, Intermedio (2). La fila corta comparte
+/// lado con la larga de su columna, y las bandas con su esquina.
 final List<StrokeOrigin> strokeOrigins = [
-  for (final depth in [_longDepth, _shortDepth])
+  for (final (depth, ownZone) in [(_longDepth, 3), (_shortDepth, 1)])
     for (var column = 0; column < 5; column++)
-      (position: Offset(_columnX(column), netY + depth), side: _sideForColumn(column)),
-  (position: const Offset(0, netY + _lateralDepth), side: 5), // esquina izquierda
-  (position: const Offset(1, netY + _lateralDepth), side: 1), // esquina derecha
+      (position: Offset(_columnX(column), netY + depth), side: _sideForColumn(column), ownZone: ownZone),
+  (position: const Offset(0, netY + _lateralDepth), side: 5, ownZone: 2), // esquina izquierda
+  (position: const Offset(1, netY + _lateralDepth), side: 1, ownZone: 2), // esquina derecha
 ];
 
 /// Puntos de destino en el campo del rival: filas larga, media y corta, y las

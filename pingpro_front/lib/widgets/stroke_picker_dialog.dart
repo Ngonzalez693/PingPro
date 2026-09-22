@@ -6,7 +6,11 @@
 // core/stroke_codes.dart, así que nunca produce un valor que el backend no
 // acepte.
 //
-// Son dos desplegables y no una rejilla de chips: con 9 golpes y 7 rotaciones,
+// También aplica las reglas de cada golpe (core/stroke_codes.dart): solo
+// ofrece los golpes posibles desde la profundidad del origen y, para el golpe
+// elegido, solo sus rotaciones.
+//
+// Son dos desplegables y no una rejilla de chips: con 12 golpes y 7 rotaciones,
 // los chips ocupaban unos 900 px y en un móvil había que hacer scroll dentro
 // del diálogo.
 import 'package:flutter/material.dart';
@@ -17,16 +21,20 @@ import 'package:pingpro_front/core/text_styles.dart';
 /// Lo que elige el usuario en el diálogo.
 typedef StrokeChoice = ({int hit, int rotation});
 
-/// Abre el diálogo. Devuelve null si el usuario cancela.
-Future<StrokeChoice?> showStrokePicker(BuildContext context) {
+/// Abre el diálogo para un golpe que sale desde la profundidad [ownZone].
+/// Devuelve null si el usuario cancela.
+Future<StrokeChoice?> showStrokePicker(BuildContext context, {required int ownZone}) {
   return showDialog<StrokeChoice>(
     context: context,
-    builder: (_) => const StrokePickerDialog(),
+    builder: (_) => StrokePickerDialog(ownZone: ownZone),
   );
 }
 
 class StrokePickerDialog extends StatefulWidget {
-  const StrokePickerDialog({super.key});
+  /// Profundidad propia del golpe (ZoneCode): decide qué golpes se ofrecen.
+  final int ownZone;
+
+  const StrokePickerDialog({super.key, required this.ownZone});
 
   @override
   State<StrokePickerDialog> createState() => _StrokePickerDialogState();
@@ -40,6 +48,26 @@ class _StrokePickerDialogState extends State<StrokePickerDialog> {
 
   void _confirm() => Navigator.pop<StrokeChoice>(context, (hit: _hit!, rotation: _rotation!));
 
+  void _selectHit(int hit) {
+    final rotations = allowedRotations(hit);
+    setState(() {
+      _hit = hit;
+      // Con una sola rotación posible no queda nada que elegir, y una rotación
+      // que el golpe nuevo no admite no puede quedarse marcada.
+      if (rotations.length == 1) {
+        _rotation = rotations.single;
+      } else if (!rotations.contains(_rotation)) {
+        _rotation = null;
+      }
+    });
+  }
+
+  Map<int, String> _rotationOptions() {
+    final hit = _hit;
+    if (hit == null) return rotationLabels;
+    return _only(rotationLabels, allowedRotations(hit));
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -48,9 +76,17 @@ class _StrokePickerDialogState extends State<StrokePickerDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildDropdown('Golpe', hitLabels, _hit, (code) => setState(() => _hit = code)),
+          _buildDropdown('Golpe', _only(hitLabels, hitsAvailableFrom(widget.ownZone)), _hit, _selectHit),
           const SizedBox(height: 16),
-          _buildDropdown('Rotación', rotationLabels, _rotation, (code) => setState(() => _rotation = code)),
+          // La clave cambia con el golpe: así el campo se rehace con la
+          // rotación autoelegida o vaciada, en vez de conservar la anterior.
+          _buildDropdown(
+            'Rotación',
+            _rotationOptions(),
+            _rotation,
+            (code) => setState(() => _rotation = code),
+            key: ValueKey(_hit),
+          ),
         ],
       ),
       actions: [
@@ -71,9 +107,11 @@ class _StrokePickerDialogState extends State<StrokePickerDialog> {
     String label,
     Map<int, String> labels,
     int? selected,
-    ValueChanged<int> onSelected,
-  ) {
+    ValueChanged<int> onSelected, {
+    Key? key,
+  }) {
     return DropdownButtonFormField<int>(
+      key: key,
       value: selected,
       isExpanded: true,
       decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
@@ -87,3 +125,8 @@ class _StrokePickerDialogState extends State<StrokePickerDialog> {
     );
   }
 }
+
+/// Las entradas de [labels] cuyos códigos están en [codes], en ese orden.
+Map<int, String> _only(Map<int, String> labels, List<int> codes) => {
+      for (final code in codes) code: labels[code]!,
+    };
