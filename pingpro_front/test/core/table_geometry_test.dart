@@ -166,4 +166,49 @@ void main() {
       expect(originAt(const Offset(125, 100), table, 24), isNull);
     });
   });
+
+  group('originIndexFor', () {
+    test('cada punto de golpeo vuelve a sí mismo', () {
+      for (var i = 0; i < strokeOrigins.length; i++) {
+        final origin = strokeOrigins[i];
+
+        expect(originIndexFor(origin.side, origin.ownZone), i);
+      }
+    });
+
+    test('la profundidad Libre se dibuja desde la fila larga', () {
+      expect(originIndexFor(1, 4), 4); // esquina derecha, fila larga
+      expect(originIndexFor(3, 4), 2);
+    });
+
+    test('Intermedio fuera de las esquinas se dibuja desde la fila larga', () {
+      expect(originIndexFor(3, 2), 2);
+    });
+  });
+
+  group('targetPositionFor', () {
+    test('cada punto de destino vuelve a sí mismo', () {
+      for (final target in strokeTargets) {
+        expect(targetPositionFor(target.zone, target.direction), target.position);
+      }
+    });
+
+    test('la zona Libre se dibuja en la fila media', () {
+      final middle = strokeTargets.firstWhere((t) => t.zone == 2 && t.direction == 4);
+
+      expect(targetPositionFor(4, 4), middle.position);
+    });
+
+    test('la dirección Libre se dibuja en la columna central', () {
+      final centerLong = strokeTargets.firstWhere((t) => t.zone == 3 && t.direction == 4);
+
+      expect(targetPositionFor(3, 8), centerLong.position);
+    });
+
+    test('un lateral se dibuja en su punto lateral, sea cual sea la zona', () {
+      final right = strokeTargets.firstWhere((t) => t.direction == 1);
+
+      expect(targetPositionFor(3, 1), right.position);
+    });
+  });
 }

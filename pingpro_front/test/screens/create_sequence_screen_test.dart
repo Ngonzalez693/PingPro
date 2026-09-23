@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/models/sequence_step_model.dart';
 import 'package:pingpro_front/screens/pingpro_create_sequence_screen.dart';
 import 'package:pingpro_front/widgets/pingpong_table.dart';
@@ -7,10 +8,18 @@ import 'package:pingpro_front/widgets/pingpong_table.dart';
 // Flujo crítico del editor: arrastrar, elegir el golpe y devolver la secuencia.
 // La pantalla se abre con push para poder leer lo que devuelve con pop, que es
 // como la usará el formulario de creación.
+
+// Un golpe que el editor produce tal cual y otro antiguo con valores Libre
+// (profundidad, zona y dirección) que el editor no puede producir.
+final _drawable = SequenceStep(hit: 1, rotation: 2, zone: 3, direction: 6, side: 1, ownZone: 3);
+final _legacy = SequenceStep(hit: 2, rotation: 1, zone: 4, direction: 8, side: 5);
+
+List<Map<String, dynamic>> _json(List<SequenceStep>? steps) => [for (final s in steps!) s.toJson()];
+
 void main() {
   List<SequenceStep>? result;
 
-  Future<void> openEditor(WidgetTester tester) async {
+  Future<void> openEditor(WidgetTester tester, {List<SequenceStep> initialSteps = const []}) async {
     // Tamaño de un móvil corriente (360 × 780 lógicos).
     tester.view.physicalSize = const Size(1080, 2340);
     tester.view.devicePixelRatio = 3;
@@ -23,7 +32,7 @@ void main() {
           onPressed: () async {
             result = await Navigator.push<List<SequenceStep>>(
               context,
-              MaterialPageRoute(builder: (_) => const PingproCreateSequenceScreen()),
+              MaterialPageRoute(builder: (_) => PingproCreateSequenceScreen(initialSteps: initialSteps)),
             );
           },
           child: const Text('abrir'),
@@ -233,5 +242,71 @@ void main() {
     final button = tester.widget<ElevatedButton>(find.widgetWithText(ElevatedButton, 'Subir y ver'));
 
     expect(button.onPressed, isNull);
+  });
+
+  testWidgets('abre con los golpes que recibe y los devuelve sin tocar', (tester) async {
+    await openEditor(tester, initialSteps: [_drawable, _legacy]);
+
+    expect(find.text('1. Forehand Topspin desde Largo, Largo a Esquina Izquierda'), findsOneWidget);
+    expect(find.text('2. Backhand Back Spin Libre a Libre'), findsOneWidget);
+
+    await tester.tap(find.text('Subir y ver'));
+    await tester.pumpAndSettle();
+
+    expect(_json(result), _json([_drawable, _legacy]));
+  });
+
+  testWidgets('un golpe nuevo se añade después de los que recibe', (tester) async {
+    await openEditor(tester, initialSteps: [_legacy]);
+
+    await drawStroke(tester, origin: 7, to: onTable(tester, 0.5, 0.42));
+    await pickStroke(tester, 'Backhand', 'Back Spin');
+    await tester.tap(find.text('Subir y ver'));
+    await tester.pumpAndSettle();
+
+    expect(result, hasLength(2));
+    expect(result!.first.toJson(), _legacy.toJson());
+    expect(result!.last.ownZone, 1);
+  });
+
+  testWidgets('el golpe que se arrastra se ve en negro sobre el color secundario', (tester) async {
+    await openEditor(tester, initialSteps: [_drawable, _legacy]);
+    Color? colorOf(String text) => tester
+        .widgetList<RichText>(find.byWidgetPredicate((w) => w is RichText && w.text.toPlainText() == text))
+        .last
+        .text
+        .style
+        ?.color;
+    const first = '1. Forehand Topspin desde Largo, Largo a Esquina Izquierda';
+
+    expect(colorOf(first), AppColors.textWhite);
+
+    final gesture = await tester.startGesture(tester.getCenter(find.byIcon(Icons.drag_handle).first));
+    await gesture.moveBy(const Offset(0, 10));
+    await gesture.moveBy(const Offset(0, 20));
+    await tester.pump();
+
+    expect(
+      tester.widgetList<Material>(find.byType(Material)).any((m) => m.color == AppColors.secundary),
+      isTrue,
+    );
+    expect(colorOf(first), AppColors.textBlack);
+
+    await gesture.up();
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('arrastrar un golpe por su asa cambia el orden de la secuencia', (tester) async {
+    await openEditor(tester, initialSteps: [_drawable, _legacy]);
+
+    await tester.drag(find.byIcon(Icons.drag_handle).first, const Offset(0, 120));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1. Backhand Back Spin Libre a Libre'), findsOneWidget);
+
+    await tester.tap(find.text('Subir y ver'));
+    await tester.pumpAndSettle();
+
+    expect(_json(result), _json([_legacy, _drawable]));
   });
 }
