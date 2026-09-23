@@ -75,6 +75,40 @@ int _sideForColumn(int column) => 5 - column;
 // Columna 0 = esquina izquierda (6) … columna 4 = esquina derecha (2).
 int _directionForColumn(int column) => 6 - column;
 
+// Inversas de las dos de arriba: columna (0 = izquierda de la pantalla) de un
+// lado del jugador y de una dirección del rival.
+int _columnForSide(int side) => 5 - side;
+int _columnForDirection(int direction) => 6 - direction;
+
+/// Índice en strokeOrigins del punto desde el que se dibuja un paso guardado,
+/// para abrir el editor con una secuencia existente.
+///
+/// La profundidad Libre (pasos anteriores a ownZone) y una Intermedio fuera
+/// de las esquinas, que el editor no produce, se dibujan desde la fila larga.
+int originIndexFor(int side, int ownZone) {
+  if (ownZone == 2 && side == 5) return 10; // banda izquierda
+  if (ownZone == 2 && side == 1) return 11; // banda derecha
+  final column = _columnForSide(side);
+  return ownZone == 1 ? 5 + column : column;
+}
+
+/// Punto del campo rival donde termina la flecha de un paso guardado.
+///
+/// Zona o dirección Libre, que el editor no produce, se dibujan en la fila
+/// media y en la columna central; un lateral, en su punto lateral.
+Offset targetPositionFor(int zone, int direction) {
+  if (direction == 1 || direction == 7) {
+    return strokeTargets.firstWhere((t) => t.direction == direction).position;
+  }
+  final column = direction >= 2 && direction <= 6 ? _columnForDirection(direction) : 2;
+  final depth = switch (zone) {
+    1 => _shortDepth,
+    3 => _longDepth,
+    _ => _middleDepth,
+  };
+  return Offset(_columnX(column), netY - depth);
+}
+
 /// El punto de destino al que se engancha una flecha soltada en `point`, o
 /// null si está en tu propio campo (ahí soltarla no es un golpe).
 ///
