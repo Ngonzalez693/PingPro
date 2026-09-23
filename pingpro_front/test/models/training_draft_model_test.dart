@@ -7,6 +7,7 @@ TrainingDraft _draft({
   String description = '',
   List<String> exerciseIds = const ['e1', 'e2', 'e1'],
   int minutesPerExercise = 5,
+  String? editingId,
 }) =>
     TrainingDraft(
       name: name,
@@ -15,6 +16,7 @@ TrainingDraft _draft({
       description: description,
       exerciseIds: exerciseIds,
       minutesPerExercise: minutesPerExercise,
+      editingId: editingId,
     );
 
 void main() {
@@ -69,6 +71,18 @@ void main() {
 
     test('recorta los espacios del nombre', () {
       expect(_draft(name: '  Rutina  ').toCreateJson()['name'], 'Rutina');
+    });
+  });
+
+  group('edición', () {
+    test('con editingId es una edición; sin él, una creación', () {
+      expect(_draft().isEdit, isFalse);
+      expect(_draft(editingId: 't1').isEdit, isTrue);
+    });
+
+    test('al editar la descripción se manda aunque esté vacía, para poder borrarla', () {
+      expect(_draft(editingId: 't1').toCreateJson()['description'], '');
+      expect(_draft(editingId: 't1', description: ' Nueva ').toCreateJson()['description'], 'Nueva');
     });
   });
 }

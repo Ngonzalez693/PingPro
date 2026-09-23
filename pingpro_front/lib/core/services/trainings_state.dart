@@ -60,6 +60,18 @@ class TrainingsState extends ChangeNotifier {
     return id;
   }
 
+  /// Guarda los cambios de un entrenamiento y recarga la lista, como create().
+  Future<void> update(TrainingDraft draft) async {
+    await _service.update(draft);
+    await refresh();
+  }
+
+  /// Elimina el entrenamiento (por /me si es propio) y recarga la lista.
+  Future<void> delete(TrainingModel training) async {
+    await _service.delete(training.id, own: training.isOwn);
+    await refresh();
+  }
+
   /// Vacía la cache y la marca de "ya cargado". Ver ExercisesState.reset().
   void reset() {
     _byId.clear();
