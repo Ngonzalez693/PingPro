@@ -34,6 +34,7 @@ import 'package:pingpro_front/widgets/custom_bottom_navigation.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
+import 'package:pingpro_front/core/services/session_roles.dart';
 
 void main() async {
   // ensureInitialized() debe ir primero: dotenv y Firebase necesitan el binding
@@ -123,6 +124,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
     _lastUid = uid;
     ExercisesState.instance.reset();
     TrainingsState.instance.reset();
+    SessionRoles.instance.reset();
   }
 
   @override
