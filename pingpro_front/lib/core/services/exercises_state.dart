@@ -105,6 +105,19 @@ class ExercisesState extends ChangeNotifier {
     await refresh();
   }
 
+  /// Guarda los cambios de un ejercicio y recarga la lista. Sin UI optimista,
+  /// como create(): la secuencia nueva la valida el backend.
+  Future<void> update(ExerciseDraft draft) async {
+    await _service.update(draft);
+    await refresh();
+  }
+
+  /// Elimina el ejercicio (por /me si es propio) y recarga la lista.
+  Future<void> delete(ExerciseModel exercise) async {
+    await _service.delete(exercise.id, own: exercise.isOwn);
+    await refresh();
+  }
+
   /// Vacía la cache y la marca de "ya cargado".
   ///
   /// Se llama al cambiar de usuario: sin esto la guarda de `load()` daría por

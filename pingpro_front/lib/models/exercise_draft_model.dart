@@ -1,4 +1,4 @@
-// Un ejercicio que el usuario está creando y todavía no existe en el backend.
+// Un ejercicio que el usuario está creando o editando.
 //
 // No se reutiliza ExerciseModel para esto por dos motivos:
 //   - ExerciseModel.toJson lleva id, isFavorite y completedAt, y el esquema del
@@ -21,6 +21,9 @@ class ExerciseDraft {
   final List<SequenceStep> sequence;
   final ContentScope scope;
 
+  /// Id del ejercicio que se edita, o null si se está creando.
+  final String? editingId;
+
   const ExerciseDraft({
     required this.name,
     required this.category,
@@ -28,15 +31,21 @@ class ExerciseDraft {
     required this.sequence,
     this.description = '',
     this.scope = ContentScope.own,
+    this.editingId,
   });
 
-  /// Cuerpo de POST /api/exercises/me: exactamente los campos que acepta el
-  /// esquema del backend. Sin descripción, el campo no se manda.
+  bool get isEdit => editingId != null;
+
+  /// Cuerpo de POST (crear) y de PUT (editar): el esquema del backend es el
+  /// mismo. Al crear, sin descripción el campo no se manda. Al editar sí se
+  /// manda aunque esté vacía: el PUT del backend hace COALESCE con el valor
+  /// anterior cuando el campo falta, así que omitirla dejaría la descripción
+  /// vieja en vez de borrarla.
   Map<String, dynamic> toCreateJson() => {
         'name': name.trim(),
         'category': category,
         'image': image,
-        if (description.trim().isNotEmpty) 'description': description.trim(),
+        if (isEdit || description.trim().isNotEmpty) 'description': description.trim(),
         'sequence': [for (final step in sequence) step.toJson()],
       };
 

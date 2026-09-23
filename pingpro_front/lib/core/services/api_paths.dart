@@ -14,3 +14,10 @@ String createPathFor(String collection, ContentScope scope) {
       return '/api/$collection/me';
   }
 }
+
+/// Ruta de PUT y DELETE de un elemento de `collection`.
+///
+/// Lo propio va por /me, que solo deja tocar lo del usuario; el catálogo, por
+/// la raíz, que el backend reserva a los admins.
+String itemPathFor(String collection, String id, {required bool own}) =>
+    own ? '/api/$collection/me/$id' : '/api/$collection/$id';

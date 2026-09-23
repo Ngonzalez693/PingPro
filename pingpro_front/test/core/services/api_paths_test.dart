@@ -14,4 +14,16 @@ void main() {
       expect(createPathFor('trainings', ContentScope.catalog), '/api/trainings');
     });
   });
+
+  group('itemPathFor', () {
+    test('lo propio va a /me/:id, que solo deja tocar lo del usuario', () {
+      expect(itemPathFor('exercises', 'e1', own: true), '/api/exercises/me/e1');
+      expect(itemPathFor('trainings', 't1', own: true), '/api/trainings/me/t1');
+    });
+
+    test('el catálogo va a /:id, reservada a los admins', () {
+      expect(itemPathFor('exercises', 'e1', own: false), '/api/exercises/e1');
+      expect(itemPathFor('trainings', 't1', own: false), '/api/trainings/t1');
+    });
+  });
 }
