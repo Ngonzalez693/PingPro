@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pingpro_front/core/exercise_options.dart';
+import 'package:pingpro_front/models/exercise_model.dart';
+import 'package:pingpro_front/models/sequence_step_model.dart';
 import 'package:pingpro_front/widgets/create_exercise_form.dart';
 
 // El formulario hasta que abre el editor. La vista previa no se prueba aquí:
 // carga el catálogo de modelos 3D por HTTP, y eso se comprueba en el móvil.
 void main() {
-  Future<void> openForm(WidgetTester tester) async {
+  Future<void> openForm(WidgetTester tester, {ExerciseModel? initial}) async {
     tester.view.physicalSize = const Size(1080, 2340);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: CreateExerciseForm())));
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CreateExerciseForm(initial: initial))));
   }
 
   // ElevatedButton.icon crea una subclase privada, así que find.byType no la
@@ -87,5 +89,40 @@ void main() {
     for (final category in exerciseCategories) {
       expect(find.text(category), findsWidgets);
     }
+  });
+
+  ExerciseModel existing({String? image}) => ExerciseModel(
+        id: 'e1',
+        name: 'Topspin cruzado',
+        category: exerciseCategories[1],
+        image: image ?? exerciseImages[2],
+        description: 'Al fondo',
+        sequence: [SequenceStep(hit: 1, rotation: 2, zone: 3, direction: 6, side: 1, ownZone: 3)],
+      );
+
+  testWidgets('para editar sale relleno', (tester) async {
+    final handle = tester.ensureSemantics();
+    await openForm(tester, initial: existing());
+
+    expect(find.text('Topspin cruzado'), findsOneWidget);
+    expect(find.text('Al fondo'), findsOneWidget);
+    expect(find.text(exerciseCategories[1]), findsOneWidget);
+    expect(isSelected(tester, 'Imagen 3'), isTrue);
+    handle.dispose();
+  });
+
+  testWidgets('al editar, el editor abre con los golpes del ejercicio', (tester) async {
+    await openForm(tester, initial: existing());
+
+    await tester.tap(find.text('Siguiente'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1. Forehand Topspin desde Largo, Largo a Esquina Izquierda'), findsOneWidget);
+  });
+
+  testWidgets('una imagen que ya no está entre las opciones no rompe el formulario', (tester) async {
+    await openForm(tester, initial: existing(image: 'assets/images/antigua.jpg'));
+
+    expect(find.text('Topspin cruzado'), findsOneWidget);
   });
 }

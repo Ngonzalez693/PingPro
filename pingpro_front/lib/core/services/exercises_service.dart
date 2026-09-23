@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:pingpro_front/core/services/api_errors.dart';
 import 'package:pingpro_front/core/services/api_paths.dart';
 import 'package:pingpro_front/core/services/api_responses.dart';
+import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 
@@ -126,6 +127,33 @@ class ExercisesService {
       throw Exception('El servidor no devolvió el id del ejercicio creado');
     }
     return id;
+  }
+
+  /// PUT: sustituye el ejercicio `draft.editingId` entero (datos y secuencia).
+  /// Lo propio va por /me; el catálogo, por la raíz (solo admins).
+  Future<void> update(ExerciseDraft draft) async {
+    final id = draft.editingId;
+    if (id == null) throw StateError('update() necesita un borrador de edición');
+    final r = await http.put(
+      _u(itemPathFor('exercises', id, own: draft.scope == ContentScope.own)),
+      headers: await _jsonHeaders(withAuth: true),
+      body: jsonEncode(draft.toCreateJson()),
+    );
+    if (r.statusCode != 200) {
+      throw Exception(backendErrorMessage(r.body, 'No se pudo guardar el ejercicio'));
+    }
+  }
+
+  /// DELETE: el backend lo marca como borrado; deja de verse y sale de los
+  /// entrenamientos que lo usaban.
+  Future<void> delete(String id, {required bool own}) async {
+    final r = await http.delete(
+      _u(itemPathFor('exercises', id, own: own)),
+      headers: await _jsonHeaders(withAuth: true),
+    );
+    if (r.statusCode != 200) {
+      throw Exception(backendErrorMessage(r.body, 'No se pudo eliminar el ejercicio'));
+    }
   }
 
   /// POST /api/exercises/:id/favorite

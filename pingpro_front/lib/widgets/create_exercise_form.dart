@@ -1,10 +1,12 @@
-// Formulario para crear un ejercicio propio: la pestaña "Ejercicios" de Crear.
+// Formulario para crear un ejercicio (la pestaña "Ejercicios" de Crear) o, con
+// `initial`, para editar uno existente (PingproEditExerciseScreen).
 //
 // El recorrido completo:
 //   1. Aquí: nombre, categoría, descripción opcional e imagen.
 //   2. "Siguiente" abre el editor de secuencias.
 //   3. Su "Subir y ver" abre la vista previa 3D encima del editor.
-//   4. "Crear" lo guarda; al volver, el formulario se vacía y avisa.
+//   4. "Crear" lo guarda y el formulario se vacía; al editar, "Guardar" lo
+//      guarda y vuelve al detalle.
 // Si en la vista previa se vuelve atrás, el editor sigue con lo dibujado.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
@@ -13,6 +15,7 @@ import 'package:pingpro_front/core/form_styles.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
+import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/sequence_step_model.dart';
 import 'package:pingpro_front/screens/pingpro_create_sequence_screen.dart';
 import 'package:pingpro_front/screens/pingpro_exercise_preview_screen.dart';
@@ -22,7 +25,10 @@ class CreateExerciseForm extends StatefulWidget {
   /// A dónde va el ejercicio: lo propio del usuario o el catálogo (admin).
   final ContentScope scope;
 
-  const CreateExerciseForm({super.key, this.scope = ContentScope.own});
+  /// Ejercicio que se edita; sin él, el formulario crea uno nuevo.
+  final ExerciseModel? initial;
+
+  const CreateExerciseForm({super.key, this.scope = ContentScope.own, this.initial});
 
   @override
   State<CreateExerciseForm> createState() => _CreateExerciseFormState();
@@ -37,8 +43,26 @@ class _CreateExerciseFormState extends State<CreateExerciseForm> {
   @override
   void initState() {
     super.initState();
+    final initial = widget.initial;
+    if (initial != null) _fillFrom(initial);
     // Solo para activar "Siguiente" en cuanto haya nombre.
     _name.addListener(() => setState(() {}));
+  }
+
+  // La categoría tiene que estar en la lista (el desplegable y el backend no
+  // admiten otra); la imagen se conserva aunque ya no sea una de las opciones.
+  void _fillFrom(ExerciseModel exercise) {
+    _name.text = exercise.name;
+    _description.text = exercise.description;
+    _category = exerciseCategories.contains(exercise.category) ? exercise.category : exerciseCategories.first;
+    _image = exercise.image;
+  }
+
+  // Al editar, a dónde va lo decide el ejercicio, no la pestaña.
+  ContentScope get _scope {
+    final initial = widget.initial;
+    if (initial == null) return widget.scope;
+    return initial.isOwn ? ContentScope.own : ContentScope.catalog;
   }
 
   @override
@@ -54,12 +78,22 @@ class _CreateExerciseFormState extends State<CreateExerciseForm> {
     // Sin esto, al volver del editor Flutter devolvería el foco al último campo
     // y se abriría el teclado.
     FocusManager.instance.primaryFocus?.unfocus();
-    final created = await Navigator.push<List<SequenceStep>>(
+    final saved = await Navigator.push<List<SequenceStep>>(
       context,
-      MaterialPageRoute(builder: (_) => PingproCreateSequenceScreen(onReview: _review)),
+      MaterialPageRoute(
+        builder: (_) => PingproCreateSequenceScreen(
+          onReview: _review,
+          initialSteps: widget.initial?.sequence ?? const [],
+        ),
+      ),
     );
-    // El editor solo devuelve la secuencia cuando el ejercicio ya se creó.
-    if (created == null || !mounted) return;
+    // El editor solo devuelve la secuencia cuando el ejercicio ya se guardó.
+    if (saved == null || !mounted) return;
+    if (widget.initial != null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ejercicio actualizado')));
+      Navigator.pop(context);
+      return;
+    }
     _reset();
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ejercicio creado')));
   }
@@ -71,7 +105,8 @@ class _CreateExerciseFormState extends State<CreateExerciseForm> {
       image: _image,
       description: _description.text,
       sequence: steps,
-      scope: widget.scope,
+      scope: _scope,
+      editingId: widget.initial?.id,
     );
     final created = await Navigator.push<bool>(
       context,

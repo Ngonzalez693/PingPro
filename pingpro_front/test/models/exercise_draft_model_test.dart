@@ -45,6 +45,18 @@ void main() {
       expect(_draft(description: '   ').toCreateJson(), isNot(contains('description')));
     });
 
+    test('al editar con descripción vacía, sí se manda para poder borrarla', () {
+      final editing = ExerciseDraft(
+        name: 'Topspin cruzado',
+        category: 'Técnico',
+        image: 'assets/images/exercise_2.jpg',
+        sequence: [_step],
+        editingId: 'e1',
+      );
+
+      expect(editing.toCreateJson()['description'], '');
+    });
+
     test('recorta los espacios del nombre y la descripción', () {
       final json = _draft(name: '  Saque corto  ', description: ' Al medio ').toCreateJson();
 
@@ -70,5 +82,13 @@ void main() {
       expect(model.isFavorite, isFalse);
       expect(model.completedAt, isNull);
     });
+  });
+
+  test('un borrador con editingId es una edición; sin él, una creación', () {
+    final creating = ExerciseDraft(name: 'a', category: 'Técnico', image: 'i', sequence: [_step]);
+    final editing = ExerciseDraft(name: 'a', category: 'Técnico', image: 'i', sequence: [_step], editingId: 'e1');
+
+    expect(creating.isEdit, isFalse);
+    expect(editing.isEdit, isTrue);
   });
 }
