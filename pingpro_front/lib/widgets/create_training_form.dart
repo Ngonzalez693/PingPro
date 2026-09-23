@@ -17,6 +17,7 @@ import 'package:pingpro_front/core/training_options.dart';
 import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/training_draft_model.dart';
+import 'package:pingpro_front/widgets/dragged_row_decorator.dart';
 import 'package:pingpro_front/widgets/exercise_picker_sheet.dart';
 import 'package:pingpro_front/widgets/image_option_picker.dart';
 
@@ -241,24 +242,29 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       buildDefaultDragHandles: false,
+      proxyDecorator: (_, i, __) => draggedRowBackground(_buildEntry(i, dragging: true)),
       onReorder: _reorder,
       children: [for (var i = 0; i < _entries.length; i++) _buildEntry(i)],
     );
   }
 
-  Widget _buildEntry(int index) {
+  Widget _buildEntry(int index, {bool dragging = false}) {
     final exercise = _entries[index].exercise;
+    final foreground = rowForeground(dragging: dragging);
     return ListTile(
       key: ValueKey(_entries[index].key),
       contentPadding: EdgeInsets.zero,
       leading: ReorderableDragStartListener(
         index: index,
-        child: const Icon(Icons.drag_handle, color: AppColors.textGray),
+        child: Icon(Icons.drag_handle, color: dragging ? foreground : AppColors.textGray),
       ),
-      title: Text('${index + 1}. ${exercise.name}', style: TextStyles.paragraph),
-      subtitle: exercise.isOwn ? const Text('Propio', style: TextStyle(color: AppColors.primary)) : null,
+      title: Text('${index + 1}. ${exercise.name}', style: TextStyles.paragraph.copyWith(color: foreground)),
+      // Sobre el fondo claro del arrastre, el amarillo de "Propio" no se leería.
+      subtitle: exercise.isOwn
+          ? Text('Propio', style: TextStyle(color: dragging ? foreground : AppColors.primary))
+          : null,
       trailing: IconButton(
-        icon: const Icon(Icons.close, color: AppColors.textGray),
+        icon: Icon(Icons.close, color: dragging ? foreground : AppColors.textGray),
         tooltip: 'Quitar ejercicio ${index + 1}',
         onPressed: () => _removeAt(index),
       ),
