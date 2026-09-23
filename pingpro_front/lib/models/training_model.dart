@@ -8,6 +8,12 @@
 // catálogo cruzado con el progreso del usuario.
 class TrainingModel {
   final String id;
+
+  /// Dueño de un entrenamiento privado; null en los del catálogo. El backend
+  /// solo devuelve los privados de quien pregunta, así que con valor siempre
+  /// es uno del usuario actual.
+  final String? ownerId;
+
   final String name;
   final String category;
   final String image;
@@ -18,6 +24,7 @@ class TrainingModel {
 
   TrainingModel({
     required this.id,
+    this.ownerId,
     required this.name,
     required this.category,
     required this.image,
@@ -27,9 +34,13 @@ class TrainingModel {
     this.completedAt,
   });
 
+  /// Si es un entrenamiento creado por el usuario actual.
+  bool get isOwn => ownerId != null;
+
   factory TrainingModel.fromJson(Map<String, dynamic> json) {
     return TrainingModel(
       id: json['id'] ?? json['_id'],
+      ownerId: json['ownerId'] as String?,
       name: json['name'],
       category: json['category'] ?? '',
       image: json['image'] as String,

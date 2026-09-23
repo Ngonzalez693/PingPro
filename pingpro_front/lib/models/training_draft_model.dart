@@ -1,6 +1,6 @@
-// Un entrenamiento que el usuario está creando y todavía no existe en el
-// backend. Mismo motivo que ExerciseDraft: el esquema del backend rechaza los
-// campos que no conoce, así que el cuerpo de creación se construye aparte.
+// Un entrenamiento que el usuario está creando o editando. Mismo motivo que
+// ExerciseDraft: el esquema del backend rechaza los campos que no conoce, así
+// que el cuerpo se construye aparte.
 //
 // El dueño no va aquí: lo pone el backend a partir del token. `scope` decide a
 // qué ruta se envía, como en ExerciseDraft, y no viaja en el cuerpo.
@@ -20,6 +20,9 @@ class TrainingDraft {
 
   final ContentScope scope;
 
+  /// Id del entrenamiento que se edita, o null si se está creando.
+  final String? editingId;
+
   const TrainingDraft({
     required this.name,
     required this.category,
@@ -28,6 +31,7 @@ class TrainingDraft {
     required this.minutesPerExercise,
     this.description = '',
     this.scope = ContentScope.own,
+    this.editingId,
   });
 
   /// Duración total en minutos, que es lo que guarda el backend. La pantalla de
@@ -35,13 +39,17 @@ class TrainingDraft {
   /// uno.
   int get totalMinutes => minutesPerExercise * exerciseIds.length;
 
-  /// Cuerpo de POST /api/trainings/me: exactamente los campos que acepta el
-  /// esquema del backend. Sin descripción, el campo no se manda.
+  bool get isEdit => editingId != null;
+
+  /// Cuerpo de POST (crear) y de PUT (editar): el esquema del backend es el
+  /// mismo. Al crear, sin descripción el campo no se manda; al editar se manda
+  /// siempre, porque el PUT conserva la descripción anterior si falta y no
+  /// habría forma de borrarla.
   Map<String, dynamic> toCreateJson() => {
         'name': name.trim(),
         'category': category,
         'image': image,
-        if (description.trim().isNotEmpty) 'description': description.trim(),
+        if (isEdit || description.trim().isNotEmpty) 'description': description.trim(),
         'exerciseIds': exerciseIds,
         'duration': totalMinutes,
       };

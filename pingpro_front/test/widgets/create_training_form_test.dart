@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
+import 'package:pingpro_front/core/training_options.dart';
 import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
+import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/widgets/create_training_form.dart';
 
 // El formulario hasta antes de guardar: guardar llama al backend y se
@@ -31,11 +33,11 @@ void main() {
   });
   tearDown(() => ExercisesState.instance.reset());
 
-  Future<void> openForm(WidgetTester tester) async {
+  Future<void> openForm(WidgetTester tester, {TrainingModel? initial}) async {
     tester.view.physicalSize = const Size(1080, 2340);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: CreateTrainingForm())));
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CreateTrainingForm(initial: initial))));
   }
 
   Future<void> addExercise(WidgetTester tester, String name) async {
@@ -174,5 +176,67 @@ void main() {
 
     expect(find.text('1. Topspin cruzado'), findsOneWidget);
     expect(find.text('2. Saque corto'), findsOneWidget);
+  });
+
+  // Tres ejercicios guardados, uno de los cuales ya no existe en el store.
+  TrainingModel existing() => TrainingModel(
+        id: 't1',
+        ownerId: 'u1',
+        name: 'Calentamiento',
+        category: trainingCategories[1],
+        image: trainingImages[1],
+        description: 'Para empezar',
+        exerciseIds: const ['c1', 'borrado', 'c2'],
+        duration: 15,
+      );
+
+  Future<void> scrollTo(WidgetTester tester, Finder finder) =>
+      tester.scrollUntilVisible(finder, 200, scrollable: find.byType(Scrollable).first);
+
+  testWidgets('para editar sale relleno y con minutos por ejercicio', (tester) async {
+    await openForm(tester, initial: existing());
+
+    expect(find.text('Calentamiento'), findsOneWidget);
+    expect(find.text('Para empezar'), findsOneWidget);
+    expect(find.text(trainingCategories[1]), findsOneWidget);
+    expect(find.text('5'), findsOneWidget); // 15 min entre los 3 ejercicios guardados
+  });
+
+  testWidgets('al editar lista sus ejercicios en orden, sin los que ya no existen', (tester) async {
+    await openForm(tester, initial: existing());
+
+    await scrollTo(tester, find.text('2. Saque corto'));
+
+    expect(find.text('1. Topspin cruzado'), findsOneWidget);
+    expect(find.text('2. Saque corto'), findsOneWidget);
+    expect(find.textContaining('borrado'), findsNothing);
+  });
+
+  testWidgets('al editar el botón dice "Guardar"', (tester) async {
+    await openForm(tester, initial: existing());
+
+    await scrollTo(tester, find.widgetWithText(ElevatedButton, 'Guardar'));
+
+    expect(find.widgetWithText(ElevatedButton, 'Guardar'), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, 'Crear'), findsNothing);
+  });
+
+  testWidgets('al editar, con menos de un minuto por ejercicio no baja de 1', (tester) async {
+    // 1 min entre 3 ejercicios redondearía a 0: dejaría el campo sin sentido
+    // y "Guardar" deshabilitado sin ninguna pista.
+    final training = TrainingModel(
+      id: 't2',
+      ownerId: 'u1',
+      name: 'Micro',
+      category: trainingCategories[1],
+      image: trainingImages[1],
+      description: '',
+      exerciseIds: const ['c1', 'borrado', 'c2'],
+      duration: 1,
+    );
+
+    await openForm(tester, initial: training);
+
+    expect(find.text('1'), findsOneWidget);
   });
 }
