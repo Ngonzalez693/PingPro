@@ -1,5 +1,5 @@
-// Formulario para crear un entrenamiento propio: la pestaña "Entrenamientos"
-// de Crear.
+// Formulario para crear un entrenamiento (la pestaña "Entrenamientos" de
+// Crear) o, con `initial`, para editar uno existente (PingproEditTrainingScreen).
 //
 // Un entrenamiento es una lista ordenada de ejercicios. Se añaden desde una
 // hoja con los del catálogo y los propios, se pueden reordenar arrastrando y
@@ -7,16 +7,20 @@
 //
 // El tiempo se pide por ejercicio; la duración total (la que guarda el
 // backend) sale de multiplicarlo por la cantidad de ejercicios.
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/form_styles.dart';
+import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/core/training_options.dart';
 import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/training_draft_model.dart';
+import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/widgets/dragged_row_decorator.dart';
 import 'package:pingpro_front/widgets/exercise_picker_sheet.dart';
 import 'package:pingpro_front/widgets/image_option_picker.dart';
@@ -29,7 +33,10 @@ class CreateTrainingForm extends StatefulWidget {
   /// A dónde va el entrenamiento: lo propio del usuario o el catálogo (admin).
   final ContentScope scope;
 
-  const CreateTrainingForm({super.key, this.scope = ContentScope.own});
+  /// Entrenamiento que se edita; sin él, el formulario crea uno nuevo.
+  final TrainingModel? initial;
+
+  const CreateTrainingForm({super.key, this.scope = ContentScope.own, this.initial});
 
   @override
   State<CreateTrainingForm> createState() => _CreateTrainingFormState();
@@ -48,12 +55,41 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
   @override
   void initState() {
     super.initState();
+    final initial = widget.initial;
+    if (initial != null) _fillFrom(initial);
     // Para activar "Crear" y recalcular la duración total al escribir.
     _name.addListener(_refresh);
     _minutes.addListener(_refresh);
   }
 
   void _refresh() => setState(() {});
+
+  // Los ejercicios se resuelven contra el store: los que ya no existen (se
+  // borraron) no aparecen, y al guardar el entrenamiento queda sin ellos. Los
+  // minutos salen de la duración guardada entre los ejercicios guardados.
+  void _fillFrom(TrainingModel training) {
+    _name.text = training.name;
+    _description.text = training.description;
+    _category = trainingCategories.contains(training.category) ? training.category : trainingCategories.first;
+    _image = training.image;
+    final count = training.exerciseIds.length;
+    if (count > 0 && training.duration > 0) {
+      // Nunca menos de 1: con redondeo a 0 el campo quedaría vacío de sentido
+      // (0 no es válido) y "Guardar" seguiría deshabilitado sin ninguna pista.
+      _minutes.text = max(1, (training.duration / count).round()).toString();
+    }
+    _entries = [
+      for (final exercise in training.exerciseIds.map(ExercisesState.instance.getById).whereType<ExerciseModel>())
+        (key: _nextKey++, exercise: exercise),
+    ];
+  }
+
+  // Al editar, a dónde va lo decide el entrenamiento, no la pestaña.
+  ContentScope get _scope {
+    final initial = widget.initial;
+    if (initial == null) return widget.scope;
+    return initial.isOwn ? ContentScope.own : ContentScope.catalog;
+  }
 
   @override
   void dispose() {
@@ -68,7 +104,7 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
     return minutes != null && minutes > 0 ? minutes : null;
   }
 
-  bool get _canCreate =>
+  bool get _canSave =>
       !_saving && _name.text.trim().isNotEmpty && _entries.isNotEmpty && _minutesPerExercise != null;
 
   // Al cerrarse una ruta, Flutter devuelve el foco al campo que lo tenía al
@@ -78,7 +114,7 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
 
   Future<void> _addExercise() async {
     _dropFocus();
-    final exercise = await showExercisePicker(context, catalogOnly: widget.scope == ContentScope.catalog);
+    final exercise = await showExercisePicker(context, catalogOnly: _scope == ContentScope.catalog);
     if (exercise == null || !mounted) return;
     setState(() => _entries = [..._entries, (key: _nextKey++, exercise: exercise)]);
   }
@@ -95,7 +131,7 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
     });
   }
 
-  Future<void> _create() async {
+  Future<void> _save() async {
     final draft = TrainingDraft(
       name: _name.text,
       category: _category,
@@ -103,21 +139,34 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
       description: _description.text,
       exerciseIds: [for (final e in _entries) e.exercise.id],
       minutesPerExercise: _minutesPerExercise!,
-      scope: widget.scope,
+      scope: _scope,
+      editingId: widget.initial?.id,
     );
     _dropFocus();
     setState(() => _saving = true);
     try {
-      final id = await TrainingsState.instance.create(draft);
-      if (!mounted) return;
-      _reset();
-      _showMessage('Entrenamiento creado');
-      _openDetail(id);
+      await (draft.isEdit ? _saveEdit(draft) : _saveNew(draft));
     } catch (e) {
       if (mounted) _showMessage(e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  Future<void> _saveNew(TrainingDraft draft) async {
+    final id = await TrainingsState.instance.create(draft);
+    if (!mounted) return;
+    _reset();
+    _showMessage('Entrenamiento creado');
+    _openDetail(id);
+  }
+
+  // Al editar se vuelve al detalle, que lee la versión nueva del store.
+  Future<void> _saveEdit(TrainingDraft draft) async {
+    await TrainingsState.instance.update(draft);
+    if (!mounted) return;
+    _showMessage('Entrenamiento actualizado');
+    Navigator.pop(context);
   }
 
   // Abre el detalle del entrenamiento recién creado para verlo tal como quedó.
@@ -168,7 +217,7 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
         _buildExercisesHeader(),
         _buildExerciseList(),
         const SizedBox(height: 24),
-        _buildCreateButton(),
+        _buildSaveButton(),
       ],
     );
   }
@@ -271,7 +320,7 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
     );
   }
 
-  Widget _buildCreateButton() {
+  Widget _buildSaveButton() {
     return Center(
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
@@ -280,10 +329,10 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 12),
         ),
-        onPressed: _canCreate ? _create : null,
+        onPressed: _canSave ? _save : null,
         child: _saving
             ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
-            : const Text('Crear', style: TextStyles.buttons),
+            : Text(widget.initial == null ? 'Crear' : 'Guardar', style: TextStyles.buttons),
       ),
     );
   }

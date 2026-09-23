@@ -9,6 +9,10 @@
 // lo están. Esa comprobación ocurre dentro del build, de ahí las dos guardas:
 // `_completionPosted` para no enviar la petición más de una vez, y
 // addPostFrameCallback para no modificar estado en mitad del build.
+//
+// Lee siempre la versión viva del entrenamiento en el store: tras editarlo se
+// ve la nueva. El menú ⋮ (dueño o, en el catálogo, admin) abre la edición o lo
+// elimina; mientras se elimina, las acciones quedan bloqueadas.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
@@ -16,7 +20,11 @@ import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
+import 'package:pingpro_front/core/services/session_roles.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
+import 'package:pingpro_front/screens/pingpro_edit_training_screen.dart';
+import 'package:pingpro_front/widgets/confirm_delete_dialog.dart';
+import 'package:pingpro_front/widgets/content_actions_menu.dart';
 
 class PingproTrainingDetailScreen extends StatefulWidget {
   final TrainingModel training;
@@ -35,6 +43,13 @@ class _PingproTrainingDetailScreenState
   // Para evitar llamar setCompleted durante build varias veces
   bool _completionPosted = false;
 
+  bool _isAdmin = false;
+  bool _actionLoading = false;
+
+  // Última versión vista en el store: si el entrenamiento se elimina, la
+  // pantalla sigue enseñando esta (no la de antes de editarlo) hasta cerrarse.
+  TrainingModel? _lastLive;
+
   // Mapeo de categorías completas
   final Map<String, String> _categoryDescriptions = const {
     'Grado': 'Por grado de oposición',
@@ -49,13 +64,16 @@ class _PingproTrainingDetailScreenState
     super.initState();
     ExercisesState.instance.load();
     TrainingsState.instance.load();
+    SessionRoles.instance.isAdmin().then((isAdmin) {
+      if (mounted) setState(() => _isAdmin = isAdmin);
+    });
   }
 
   void _onBackPressed() => Navigator.pop(context);
 
   // Ir al primer ejercicio incompleto
   void _onNextPressed(List<ExerciseModel> list) {
-    if (list.isEmpty) return;
+    if (_actionLoading || list.isEmpty) return;
     final nextIdx = list.indexWhere((e) => e.completedAt == null);
     if (nextIdx == -1) return; // todos hechos
 
@@ -71,10 +89,30 @@ class _PingproTrainingDetailScreenState
     });
   }
 
+  void _onEditPressed(TrainingModel training) {
+    if (_actionLoading) return;
+    Navigator.push(context, MaterialPageRoute(builder: (_) => PingproEditTrainingScreen(training: training)));
+  }
+
+  Future<void> _onDeletePressed(TrainingModel training) async {
+    if (_actionLoading) return;
+    final confirmed = await confirmDelete(context, message: '¿Eliminar «${training.name}»?');
+    if (!confirmed || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _actionLoading = true);
+    try {
+      await TrainingsState.instance.delete(training);
+      messenger.showSnackBar(const SnackBar(content: Text('Entrenamiento eliminado')));
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))));
+    } finally {
+      if (mounted) setState(() => _actionLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final exerciseIds = widget.training.exerciseIds;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -83,6 +121,10 @@ class _PingproTrainingDetailScreenState
           builder: (context, _) {
             final exState = ExercisesState.instance;
             final trState = TrainingsState.instance;
+            final live = trState.getById(widget.training.id);
+            if (live != null) _lastLive = live;
+            final training = live ?? _lastLive ?? widget.training;
+            final exerciseIds = training.exerciseIds;
 
             // Ejercicios del training desde el store
             // whereType descarta los ids que no estén en el store: un ejercicio
@@ -106,20 +148,23 @@ class _PingproTrainingDetailScreenState
             final progress = total == 0 ? 0.0 : doneCount / total;
 
             // Marcar training como completado (post-frame, una sola vez)
-            final tLive = trState.getById(widget.training.id) ?? widget.training;
-            final alreadyCompleted = tLive.completedAt != null;
+            final alreadyCompleted = training.completedAt != null;
 
             if (total > 0 && doneCount == total && !alreadyCompleted && !_completionPosted) {
               _completionPosted = true; // evita múltiples posts
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                TrainingsState.instance.setCompleted(widget.training.id, true);
+                TrainingsState.instance.setCompleted(training.id, true);
               });
             }
 
-            // Duración por ejercicio
-            final totalDuration = widget.training.duration;
+            // Duración por ejercicio: se reparte entre TODOS los ids guardados,
+            // no solo los que siguen existiendo, la misma regla que usa el
+            // formulario al editar (si no, un ejercicio borrado cambia el
+            // número mostrado aquí y en el formulario).
+            final totalDuration = training.duration;
+            final exerciseCount = training.exerciseIds.length;
             final perExercise =
-                total > 0 ? (totalDuration / total).round() : totalDuration;
+                exerciseCount > 0 ? (totalDuration / exerciseCount).round() : totalDuration;
 
             // Siguiente sugerido: primer incompleto; si no hay, null
             final nextIdx = exercises.indexWhere((e) => e.completedAt == null);
@@ -142,8 +187,13 @@ class _PingproTrainingDetailScreenState
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(widget.training.name, style: TextStyles.title),
+                        child: Text(training.name, style: TextStyles.title),
                       ),
+                      if (canManage(isOwn: training.isOwn, isAdmin: _isAdmin))
+                        ContentActionsMenu(
+                          onEdit: () => _onEditPressed(training),
+                          onDelete: () => _onDeletePressed(training),
+                        ),
                     ],
                   ),
                 ),
@@ -170,7 +220,7 @@ class _PingproTrainingDetailScreenState
                             Expanded(
                               flex: 2,
                               child: Text(
-                                widget.training.description,
+                                training.description,
                                 style: TextStyles.paragraphBlack,
                               ),
                             ),
@@ -182,8 +232,7 @@ class _PingproTrainingDetailScreenState
                               children: [
                                 Text('Categoría:', style: TextStyles.buttons),
                                 Text(
-                                  _categoryDescriptions[widget.training.category] ??
-                                      widget.training.category,
+                                  _categoryDescriptions[training.category] ?? training.category,
                                   style: TextStyles.paragraphBlack,
                                 ),
 
