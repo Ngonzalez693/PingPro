@@ -19,26 +19,37 @@
 // Con `onReview`, "Subir y ver" llama primero a esa función, que abre la vista
 // previa encima del editor. Si al volver el ejercicio no se creó, el editor
 // sigue ahí con las flechas dibujadas, en vez de haberse cerrado y perderlas.
+//
+// Puede abrirse con una secuencia (`initialSteps`) para editarla: cada paso se
+// dibuja con su flecha reconstruida (table_geometry.dart) pero conserva sus
+// códigos, aunque la flecha quede en un punto aproximado. Los golpes se
+// reordenan arrastrando su asa en la lista, como en el formulario de
+// entrenamiento.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/stroke_codes.dart';
 import 'package:pingpro_front/core/table_geometry.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/sequence_step_model.dart';
+import 'package:pingpro_front/widgets/dragged_row_decorator.dart';
 import 'package:pingpro_front/widgets/pingpong_table.dart';
 import 'package:pingpro_front/widgets/plus_button.dart';
 import 'package:pingpro_front/widgets/stroke_arrows_painter.dart';
 import 'package:pingpro_front/widgets/stroke_picker_dialog.dart';
 
-/// Un golpe ya creado: sus códigos y la flecha con la que se dibujó.
-typedef _Stroke = ({SequenceStep step, StrokeArrow arrow});
+/// Un golpe de la lista: sus códigos, la flecha con la que se dibuja y una
+/// clave estable para que reordenar no confunda una fila con otra.
+typedef _Stroke = ({int key, SequenceStep step, StrokeArrow arrow});
 
 class PingproCreateSequenceScreen extends StatefulWidget {
   /// Revisa la secuencia antes de cerrar el editor. Devuelve true si ya se
   /// usó (p. ej. se creó el ejercicio) y el editor debe cerrarse.
   final Future<bool> Function(List<SequenceStep> steps)? onReview;
 
-  const PingproCreateSequenceScreen({super.key, this.onReview});
+  /// Golpes con los que abre el editor (al editar un ejercicio).
+  final List<SequenceStep> initialSteps;
+
+  const PingproCreateSequenceScreen({super.key, this.onReview, this.initialSteps = const []});
 
   @override
   State<PingproCreateSequenceScreen> createState() => _PingproCreateSequenceScreenState();
@@ -48,12 +59,29 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
   /// Distancia, en píxeles, a la que un toque cuenta como sobre un "+".
   static const _originTouchRadius = 28.0;
 
-  List<_Stroke> _strokes = const [];
+  late List<_Stroke> _strokes;
+  int _nextKey = 0;
   StrokeArrow? _dragging;
 
   // Rectángulo de la mesa en el lienzo. Lo fija LayoutBuilder en cada build y
   // lo leen los gestos, que siempre llegan después de un layout.
   Rect _table = Rect.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _strokes = [for (final step in widget.initialSteps) _savedStroke(step)];
+  }
+
+  // La flecha se reconstruye desde los códigos; el paso se guarda tal cual.
+  _Stroke _savedStroke(SequenceStep step) => (
+        key: _nextKey++,
+        step: step,
+        arrow: (
+          originIndex: originIndexFor(step.side, step.ownZone),
+          end: targetPositionFor(step.zone, step.direction),
+        ),
+      );
 
   void _onPanStart(DragStartDetails details) {
     final origin = originAt(details.localPosition, _table, _originTouchRadius);
@@ -89,11 +117,21 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
     );
     // La flecha guardada termina en el destino, no donde se levantó el dedo.
     final arrow = (originIndex: released.originIndex, end: target.position);
-    setState(() => _strokes = [..._strokes, (step: step, arrow: arrow)]);
+    setState(() => _strokes = [..._strokes, (key: _nextKey++, step: step, arrow: arrow)]);
   }
 
   void _removeStroke(int index) {
     setState(() => _strokes = [..._strokes]..removeAt(index));
+  }
+
+  void _reorderStroke(int oldIndex, int newIndex) {
+    // ReorderableListView da el destino contando todavía el golpe movido.
+    final target = newIndex > oldIndex ? newIndex - 1 : newIndex;
+    setState(() {
+      final strokes = [..._strokes];
+      strokes.insert(target, strokes.removeAt(oldIndex));
+      _strokes = strokes;
+    });
   }
 
   Future<void> _submit() async {
@@ -190,17 +228,33 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
         ),
       );
     }
-    return ListView.builder(
+    return ReorderableListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 24),
+      buildDefaultDragHandles: false,
+      proxyDecorator: (_, i, __) => draggedRowBackground(_buildStrokeRow(i, dragging: true)),
       itemCount: _strokes.length,
-      itemBuilder: (context, i) => ListTile(
-        dense: true,
-        title: Text('${i + 1}. ${describeStep(_strokes[i].step)}', style: TextStyles.paragraph),
-        trailing: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.textGray),
-          tooltip: 'Quitar golpe ${i + 1}',
-          onPressed: () => _removeStroke(i),
-        ),
+      onReorder: _reorderStroke,
+      itemBuilder: (context, i) => _buildStrokeRow(i),
+    );
+  }
+
+  Widget _buildStrokeRow(int i, {bool dragging = false}) {
+    final foreground = rowForeground(dragging: dragging);
+    return ListTile(
+      key: ValueKey(_strokes[i].key),
+      dense: true,
+      leading: ReorderableDragStartListener(
+        index: i,
+        child: Icon(Icons.drag_handle, color: dragging ? foreground : AppColors.textGray),
+      ),
+      title: Text(
+        '${i + 1}. ${describeStep(_strokes[i].step)}',
+        style: TextStyles.paragraph.copyWith(color: foreground),
+      ),
+      trailing: IconButton(
+        icon: Icon(Icons.close, color: dragging ? foreground : AppColors.textGray),
+        tooltip: 'Quitar golpe ${i + 1}',
+        onPressed: () => _removeStroke(i),
       ),
     );
   }
