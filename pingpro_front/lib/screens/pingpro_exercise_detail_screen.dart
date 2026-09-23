@@ -6,6 +6,8 @@
 //   - _buildSequenceDescription() traduce los mismos códigos a texto legible.
 //   - El botón "Hecho" es el ÚNICO sitio de la app que marca un ejercicio como
 //     completado, y por tanto el que alimenta todas las estadísticas.
+//   - El menú ⋮ (solo para el dueño o, en el catálogo, para un admin) abre la
+//     edición o elimina el ejercicio.
 //
 // Lee el ejercicio "vivo" del store por id en vez de usar el que llega por
 // parámetro: así el corazón y el estado de completado siguen siendo correctos
@@ -20,8 +22,13 @@ import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/stroke_codes.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
+import 'package:pingpro_front/screens/pingpro_edit_exercise_screen.dart';
+import 'package:pingpro_front/widgets/confirm_delete_dialog.dart';
+import 'package:pingpro_front/widgets/content_actions_menu.dart';
 import 'package:pingpro_front/widgets/exercise_done.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
+import 'package:pingpro_front/core/services/session_roles.dart';
+import 'package:pingpro_front/core/services/trainings_state.dart';
 import 'package:pingpro_front/widgets/exercise_animation_view.dart';
 
 class PingproExerciseDetailScreen extends StatefulWidget {
@@ -42,11 +49,19 @@ class PingproExerciseDetailScreen extends StatefulWidget {
 class _PingproExerciseDetailScreenState
     extends State<PingproExerciseDetailScreen> {
   bool _actionLoading = false;
+  bool _isAdmin = false;
+
+  /// Última versión "viva" vista del store, para no volver a `widget.exercise`
+  /// (desactualizado tras editar) mientras se borra y el store ya la quitó.
+  ExerciseModel? _lastLive;
 
   @override
   void initState() {
     super.initState();
     ExercisesState.instance.load();
+    SessionRoles.instance.isAdmin().then((isAdmin) {
+      if (mounted) setState(() => _isAdmin = isAdmin);
+    });
   }
 
   // Contrucción de la descripción
@@ -66,6 +81,36 @@ class _PingproExerciseDetailScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se pudo actualizar favorito')),
       );
+    }
+  }
+
+  void _onEditPressed(ExerciseModel ex) {
+    if (_actionLoading) return;
+    Navigator.push(context, MaterialPageRoute(builder: (_) => PingproEditExerciseScreen(exercise: ex)));
+  }
+
+  Future<void> _onDeletePressed(ExerciseModel ex) async {
+    if (_actionLoading) return;
+    final confirmed = await confirmDelete(
+      context,
+      message: '¿Eliminar «${ex.name}»? También se quitará de los entrenamientos que lo usen.',
+    );
+    if (!confirmed || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    // Bloquea ⋮ y "Hecho" durante todo el borrado: sin esto se podría abrir
+    // otra pantalla o completar el ejercicio justo antes de que este pop lo
+    // cierre todo de golpe.
+    setState(() => _actionLoading = true);
+    try {
+      await ExercisesState.instance.delete(ex);
+      // En el backend los entrenamientos que lo usaban ya lo han perdido.
+      await TrainingsState.instance.refresh();
+      messenger.showSnackBar(const SnackBar(content: Text('Ejercicio eliminado')));
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))));
+    } finally {
+      if (mounted) setState(() => _actionLoading = false);
     }
   }
 
@@ -106,10 +151,12 @@ class _PingproExerciseDetailScreenState
     return AnimatedBuilder(
       animation: ExercisesState.instance,
       builder: (context, _) {
-        // Buscar versión "viva" por ID; si no existe, usar la recibida
-        final ex =
-            ExercisesState.instance.getById(widget.exercise.id) ??
-            widget.exercise;
+        // Buscar versión "viva" por ID; si el store ya no la tiene (se borró),
+        // usar la última viva vista en vez de widget.exercise, que quedó
+        // desactualizada si hubo una edición de por medio.
+        final live = ExercisesState.instance.getById(widget.exercise.id);
+        if (live != null) _lastLive = live;
+        final ex = live ?? _lastLive ?? widget.exercise;
 
         final isFavorite = ex.isFavorite;
         final isCompleted = ex.completedAt != null;
@@ -136,16 +183,22 @@ class _PingproExerciseDetailScreenState
                       ),
                       const SizedBox(width: 8),
                       Expanded(child: Text(ex.name, style: TextStyles.title)),
+                      if (canManage(isOwn: ex.isOwn, isAdmin: _isAdmin))
+                        ContentActionsMenu(
+                          onEdit: () => _onEditPressed(ex),
+                          onDelete: () => _onDeletePressed(ex),
+                        ),
                     ],
                   ),
                 ),
 
-                // Visualización del widget 3D. Con el ejercicio recibido y no el
-                // del store: la animación solo depende de la secuencia, y así no
-                // se reinicia cuando cambia el favorito.
+                // Visualización del widget 3D. La clave es la lista de la
+                // secuencia: marcar favorito no la cambia y la animación sigue;
+                // editar el ejercicio trae una lista nueva y la animación se
+                // rehace con la secuencia nueva.
                 Expanded(
                   flex: 2,
-                  child: ExerciseAnimationView(exercise: widget.exercise),
+                  child: ExerciseAnimationView(key: ObjectKey(ex.sequence), exercise: ex),
                 ),
 
                 // Sección inferior con descripción y botones

@@ -2,8 +2,9 @@
 // texto, para comprobar que la secuencia dibujada es la que se quería.
 //
 // Se abre encima del editor de secuencias. "Volver a editar" cierra solo esta
-// pantalla y deja el editor con sus flechas. "Crear" lo guarda en el backend y
-// devuelve true, que es la señal para que el editor también se cierre.
+// pantalla y deja el editor con sus flechas. "Crear" (o "Guardar", al editar)
+// lo guarda en el backend y devuelve true, que es la señal para que el editor
+// también se cierre.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
@@ -24,10 +25,11 @@ class PingproExercisePreviewScreen extends StatefulWidget {
 class _PingproExercisePreviewScreenState extends State<PingproExercisePreviewScreen> {
   bool _saving = false;
 
-  Future<void> _create() async {
+  Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      await ExercisesState.instance.create(widget.draft);
+      final exercises = ExercisesState.instance;
+      await (widget.draft.isEdit ? exercises.update(widget.draft) : exercises.create(widget.draft));
       if (!mounted) return;
       Navigator.pop<bool>(context, true);
     } catch (e) {
@@ -103,10 +105,10 @@ class _PingproExercisePreviewScreenState extends State<PingproExercisePreviewScr
           Expanded(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-              onPressed: _saving ? null : _create,
+              onPressed: _saving ? null : _save,
               child: _saving
                   ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Crear', style: TextStyles.buttons),
+                  : Text(widget.draft.isEdit ? 'Guardar' : 'Crear', style: TextStyles.buttons),
             ),
           ),
         ],
