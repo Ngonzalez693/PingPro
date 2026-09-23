@@ -10,11 +10,10 @@
 // El bloque de la gráfica está copiado casi literalmente de
 // pingpro_home_screen.dart — extraerlo a un widget compartido es el refactor
 // más rentable de esta pantalla.
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pingpro_front/core/app_colors.dart';
-import 'package:pingpro_front/core/services/auth_service.dart';
+import 'package:pingpro_front/core/services/session_roles.dart';
 import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/screens/pingpro_create_screen.dart';
 import 'package:pingpro_front/core/text_styles.dart';
@@ -45,15 +44,12 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
     _loadRole();
   }
 
-  // Si falla se queda en no-admin: lo peor que pasa es que un admin no vea el
-  // botón hasta la próxima vez. El permiso real lo comprueba el backend.
+  // Si no se puede leer el rol se queda en no-admin: lo peor que pasa es que un
+  // admin no vea el botón hasta la próxima vez. El permiso real lo comprueba el
+  // backend.
   Future<void> _loadRole() async {
-    try {
-      final profile = await AuthService().fetchUserProfile();
-      if (mounted) setState(() => _isAdmin = hasAdminRole(profile));
-    } catch (e) {
-      if (kDebugMode) debugPrint('No se pudo leer el rol del usuario: $e');
-    }
+    final isAdmin = await SessionRoles.instance.isAdmin();
+    if (mounted) setState(() => _isAdmin = isAdmin);
   }
 
   void _openCatalogCreate() {
