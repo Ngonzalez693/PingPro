@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:pingpro_front/core/services/api_errors.dart';
 import 'package:pingpro_front/core/services/api_paths.dart';
 import 'package:pingpro_front/core/services/api_responses.dart';
+import 'package:pingpro_front/core/services/completion_body.dart';
 import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
@@ -169,11 +170,11 @@ class ExercisesService {
   }
 
   /// POST /api/exercises/:id/completed
-  Future<void> setCompleted({required String id, required bool completed}) async {
+  Future<void> setCompleted({required String id, required bool completed, int? session}) async {
     final r = await http.post(
       _u('/api/exercises/$id/completed'),
       headers: await _jsonHeaders(withAuth: true),
-      body: jsonEncode({'completed': completed}),
+      body: jsonEncode(completionBody(completed, session)),
     );
     if (r.statusCode != 200) {
       throw Exception('Error al actualizar completed: ${r.body}');

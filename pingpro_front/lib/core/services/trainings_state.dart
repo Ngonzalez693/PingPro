@@ -104,14 +104,15 @@ class TrainingsState extends ChangeNotifier {
   /// Marca el entrenamiento como completado (UI optimista + rollback).
   ///
   /// Quien lo llama es la pantalla de detalle, cuando detecta que todos los
-  /// ejercicios del entrenamiento están hechos.
-  Future<void> setCompleted(String id, bool completed) async {
+  /// ejercicios del entrenamiento están hechos. `session` es la sesión del día
+  /// elegida en el detalle.
+  Future<void> setCompleted(String id, bool completed, {int? session}) async {
     final t = _byId[id]; if (t == null) return;
     final prev = t.completedAt;
     t.completedAt = completed ? DateTime.now() : null;
     notifyListeners();
     try {
-      await _service.setCompleted(id, completed);
+      await _service.setCompleted(id, completed, session: session);
     } catch (_) {
       t.completedAt = prev; // revert
       notifyListeners();

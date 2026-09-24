@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:pingpro_front/core/services/api_errors.dart';
 import 'package:pingpro_front/core/services/api_paths.dart';
 import 'package:pingpro_front/core/services/api_responses.dart';
+import 'package:pingpro_front/core/services/completion_body.dart';
 import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/training_draft_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
@@ -107,12 +108,12 @@ class TrainingsService {
   }
 
   // Marcar/unmarcar como completado para el usuario
-  Future<void> setCompleted(String id, bool completed) async {
+  Future<void> setCompleted(String id, bool completed, {int? session}) async {
     final r = await http
         .post(
           _u('/api/trainings/$id/completed'),
           headers: await _jsonHeaders(withAuth: true),
-          body: jsonEncode({'completed': completed}),
+          body: jsonEncode(completionBody(completed, session)),
         )
         .timeout(const Duration(seconds: 25));
     if (r.statusCode != 200) {

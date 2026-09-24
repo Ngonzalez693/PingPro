@@ -161,9 +161,9 @@ class ExercisesState extends ChangeNotifier {
     }
   }
 
-  /// Marca/desmarca como completado con UI optimista.
-  /// En backend debe persistir `completedAt` (o `lastCompletedAt`) por usuario.
-  Future<void> setCompleted(String id, bool completed) async {
+  /// Marca/desmarca como completado con UI optimista. `session` es la sesión
+  /// del día (1..3) elegida en el detalle; sin ella queda "sin sesión".
+  Future<void> setCompleted(String id, bool completed, {int? session}) async {
     final ex = _byId[id];
     if (ex == null) return;
 
@@ -172,7 +172,7 @@ class ExercisesState extends ChangeNotifier {
     _safeNotify();
 
     try {
-      await _service.setCompleted(id: id, completed: completed);
+      await _service.setCompleted(id: id, completed: completed, session: session);
     } catch (e) {
       ex.completedAt = prevCompletedAt; // rollback si falla
       _safeNotify();
