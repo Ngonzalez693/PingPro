@@ -78,6 +78,31 @@ class StatsState extends ChangeNotifier {
 
   Future<void> refresh() => load(force: true);
 
+  /// Añade una finalización de ejercicio ya confirmada por el servidor.
+  ///
+  /// Es optimista respecto al historial: el progreso por sesión (el ✓ del
+  /// detalle) se actualiza al instante en vez de esperar al refresh() en
+  /// segundo plano, y se mantiene aunque ese refresh falle. Cuando el refresh
+  /// termina, sus eventos (que ya la incluyen) sustituyen a estos.
+  void addExerciseCompletion(ExerciseCompletionEvent event) {
+    _events = StatsEvents(
+      exerciseCompletions: [..._events.exerciseCompletions, event],
+      trainingCompletions: _events.trainingCompletions,
+      created: _events.created,
+    );
+    _safeNotify();
+  }
+
+  /// Igual que addExerciseCompletion, para entrenamientos.
+  void addTrainingCompletion(TrainingCompletionEvent event) {
+    _events = StatsEvents(
+      exerciseCompletions: _events.exerciseCompletions,
+      trainingCompletions: [..._events.trainingCompletions, event],
+      created: _events.created,
+    );
+    _safeNotify();
+  }
+
   /// Vacía el historial al cambiar de usuario (lo llama AuthWrapper).
   ///
   /// También libera _isLoading: si no, un load() disparado justo después

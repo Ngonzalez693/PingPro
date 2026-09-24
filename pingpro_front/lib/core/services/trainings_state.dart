@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:pingpro_front/core/local_completion_events.dart';
 import 'package:pingpro_front/models/training_draft_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/core/services/training_services.dart';
@@ -104,7 +105,7 @@ class TrainingsState extends ChangeNotifier {
   /// Marca el entrenamiento como completado (UI optimista + rollback).
   ///
   /// Quien lo llama es la pantalla de detalle, cuando detecta que todos los
-  /// ejercicios del entrenamiento están hechos. `session` es la sesión del día
+  /// ejercicios del entrenamiento están hechos en la sesión. `session` es la sesión del día
   /// elegida en el detalle.
   Future<void> setCompleted(String id, bool completed, {int? session}) async {
     final t = _byId[id]; if (t == null) return;
@@ -117,6 +118,14 @@ class TrainingsState extends ChangeNotifier {
       t.completedAt = prev; // revert
       notifyListeners();
       rethrow;
+    }
+
+    // Como en ExercisesState: se añade ya la finalización confirmada para no
+    // depender de que la recarga llegue (o no falle).
+    if (completed) {
+      StatsState.instance.addTrainingCompletion(
+        trainingCompletionEventFor(t, session: session, at: DateTime.now()),
+      );
     }
 
     // El historial vive en el servidor: sin recargar, la repetición recién

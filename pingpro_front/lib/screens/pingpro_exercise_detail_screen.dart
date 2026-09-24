@@ -12,8 +12,9 @@
 //     edición o elimina el ejercicio.
 //
 // Lee el ejercicio "vivo" del store por id en vez de usar el que llega por
-// parámetro: así el corazón y el estado de completado siguen siendo correctos
-// aunque se haya modificado desde otra pantalla.
+// parámetro: así el corazón sigue siendo correcto aunque se haya modificado
+// desde otra pantalla. El estado de completado ("¡Listo!") no sale del
+// ejercicio sino del historial de StatsState (core/session_progress.dart).
 //
 // Los nombres de los códigos salen de core/stroke_codes.dart, compartidos con
 // el editor de secuencias.
@@ -123,6 +124,16 @@ class _PingproExerciseDetailScreenState
 
   void _onDonePressed() {
     if (_actionLoading) return;
+    // Sin el historial la sesión por defecto sería la 1 aunque hoy ya se haya
+    // usado otra. Si la primera carga falló sí se deja completar (con la
+    // sesión por defecto): mejor eso que bloquear el botón.
+    final stats = StatsState.instance;
+    if (stats.isLoading && !stats.loadedOnce) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cargando tus sesiones, inténtalo en un momento')),
+      );
+      return;
+    }
     showDialog(
       context: context,
       barrierDismissible: false,

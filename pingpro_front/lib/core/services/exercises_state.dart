@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart'; // 👈 para SchedulerBinding
+import 'package:pingpro_front/core/local_completion_events.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/core/services/exercises_service.dart';
@@ -177,6 +178,14 @@ class ExercisesState extends ChangeNotifier {
       ex.completedAt = prevCompletedAt; // rollback si falla
       _safeNotify();
       rethrow;
+    }
+
+    // El progreso por sesión sale de StatsState: se añade ya la repetición
+    // confirmada para no depender de que la recarga llegue (o no falle).
+    if (completed) {
+      StatsState.instance.addExerciseCompletion(
+        exerciseCompletionEventFor(ex, session: session, at: DateTime.now()),
+      );
     }
 
     // El historial vive en el servidor: sin recargar, la repetición recién

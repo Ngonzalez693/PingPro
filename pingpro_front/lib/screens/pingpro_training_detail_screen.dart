@@ -1,9 +1,9 @@
 // Detalle de un entrenamiento: progreso, siguiente ejercicio y lista completa.
 //
 // El entrenamiento solo guarda `exerciseIds`, así que los ejercicios se
-// resuelven aquí contra ExercisesState.getById(). Efecto secundario útil:
-// completar un ejercicio desde su detalle actualiza esta barra de progreso al
-// volver, sin recargar nada.
+// resuelven aquí contra ExercisesState.getById(). El progreso, en cambio,
+// sale de StatsState, que los stores actualizan justo después de cada "Hecho"
+// confirmado: al volver del detalle de un ejercicio la barra ya lo incluye.
 //
 // El progreso cuenta solo los ejercicios hechos HOY en la sesión elegida
 // arriba (core/session_progress.dart, sobre el historial de StatsState): al
