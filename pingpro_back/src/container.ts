@@ -12,12 +12,14 @@ import type { Pool } from 'pg';
 import { createPool } from './config/postgres';
 import type { IExerciseRepository } from './interfaces/repositories/IExerciseRepository';
 import type { IModel3DRepository } from './interfaces/repositories/IModel3DRepository';
+import type { IStatsRepository } from './interfaces/repositories/IStatsRepository';
 import type { ITrainingRepository } from './interfaces/repositories/ITrainingRepository';
 import type { IUserExerciseStateRepository } from './interfaces/repositories/IUserExerciseStateRepository';
 import type { IUserRepository } from './interfaces/repositories/IUserRepository';
 import type { IUserTrainingStateRepository } from './interfaces/repositories/IUserTrainingStateRepository';
 import { PostgresExerciseRepository } from './repositories/implementations/PostgresExerciseRepository';
 import { PostgresModel3DRepository } from './repositories/implementations/PostgresModel3DRepository';
+import { PostgresStatsRepository } from './repositories/implementations/PostgresStatsRepository';
 import { PostgresTrainingRepository } from './repositories/implementations/PostgresTrainingRepository';
 import { PostgresUserExerciseStateRepository } from './repositories/implementations/PostgresUserExerciseStateRepository';
 import { PostgresUserRepository } from './repositories/implementations/PostgresUserRepository';
@@ -25,6 +27,7 @@ import { PostgresUserTrainingStateRepository } from './repositories/implementati
 import { AuthService } from './services/AuthService';
 import { ExerciseService } from './services/ExerciseService';
 import Model3DService from './services/Model3DService';
+import { StatsService } from './services/StatsService';
 import { TrainingService } from './services/TrainingService';
 import { UserService } from './services/UserService';
 
@@ -35,6 +38,7 @@ interface Repositories {
   trainingStates: IUserTrainingStateRepository;
   users: IUserRepository;
   models3d: IModel3DRepository;
+  stats: IStatsRepository;
 }
 
 function createPostgresRepositories(pool: Pool): Repositories {
@@ -45,6 +49,7 @@ function createPostgresRepositories(pool: Pool): Repositories {
     trainingStates: new PostgresUserTrainingStateRepository(pool),
     users: new PostgresUserRepository(pool),
     models3d: new PostgresModel3DRepository(pool),
+    stats: new PostgresStatsRepository(pool),
   };
 }
 
@@ -59,6 +64,7 @@ export const services = {
   exercises: new ExerciseService(repositories.exercises, repositories.exerciseStates),
   trainings: new TrainingService(repositories.trainings, repositories.trainingStates, repositories.exercises),
   models3d: new Model3DService(repositories.models3d),
+  stats: new StatsService(repositories.stats),
 };
 
 // Los tests de integración que importan la app tienen que cerrarlo o Jest no

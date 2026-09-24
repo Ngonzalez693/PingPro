@@ -9,6 +9,7 @@ import trainingRoutes from './trainingRoutes';
 import userRoutes from './userRoutes';
 import authRoutes from './authRoutes';
 import model3dRoutes from './model3dRoutes';
+import statsRoutes from './statsRoutes';
 
 const router = Router();
 
@@ -17,5 +18,6 @@ router.use('/trainings', trainingRoutes);
 router.use('/users', userRoutes);
 router.use('/auth', authRoutes);
 router.use('/model3d', model3dRoutes);
+router.use('/stats', statsRoutes);
 
 export default router;
