@@ -1,25 +1,19 @@
-// Estadísticas detalladas: gráfica de línea (total) + gráfica de barras del
-// tipo seleccionado, con periodo diario, semanal o mensual.
+// Estadísticas (resumen): gráfica de línea con el total y gráfica de barras
+// del tipo seleccionado, por periodo diario, semanal o mensual.
 //
-// Todo se calcula en el cliente a partir de los `completedAt` que ya están en
-// los stores. El backend no tiene endpoints de estadísticas.
-//
-// El reparto en cubos vive en core/stats_buckets.dart, que son funciones puras
-// y con pruebas. Esta pantalla solo elige el periodo y pinta.
-//
-// La serie "Creados" siempre da cero: la creación de ejercicios todavía no
-// guarda nada (ver pingpro_create_screen.dart).
+// Los datos son el historial real de StatsState (cada repetición cuenta y
+// "Creados" es lo propio que no se ha borrado); las series las calcula
+// core/stats_series.dart. Esta pantalla solo elige periodo y tipo, y pinta.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/stat_type.dart';
 import 'package:pingpro_front/core/stats_buckets.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/widgets/statistics_chart.dart';
 import 'package:pingpro_front/widgets/statistics_secundary_cart.dart';
 import 'package:pingpro_front/widgets/summary_icon_row.dart';
-import 'package:pingpro_front/core/services/exercises_state.dart';
-import 'package:pingpro_front/core/services/trainings_state.dart';
-
-enum StatType { exercises, trainings, created }
+import 'package:pingpro_front/core/services/stats_state.dart';
+import 'package:pingpro_front/core/stats_series.dart';
 
 class PingproStatsScreen extends StatefulWidget {
   const PingproStatsScreen({super.key});
@@ -35,12 +29,22 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
   @override
   void initState() {
     super.initState();
-    ExercisesState.instance.load();
-    TrainingsState.instance.load();
+    StatsState.instance.load();
   }
 
   void _onPeriodSelected(StatPeriod p) => setState(() => _period = p);
   void _onTypeSelected(StatType t) => setState(() => _activeType = t);
+
+  String _titleFor(StatType type) {
+    switch (type) {
+      case StatType.exercises:
+        return 'Ejercicios';
+      case StatType.trainings:
+        return 'Entrenamientos';
+      case StatType.created:
+        return 'Creados';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,52 +52,10 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: AnimatedBuilder(
-          animation: Listenable.merge([ExercisesState.instance, TrainingsState.instance]),
+          animation: StatsState.instance,
           builder: (context, _) {
-            final es = ExercisesState.instance;
-            final ts = TrainingsState.instance;
-
-            // fechas de eventos (completedAt) para cada tipo
-            final exercisesDates = es.all
-                .where((e) => e.completedAt != null)
-                .map((e) => e.completedAt!)
-                .toList();
-
-            final trainingsDates = ts.all
-                .where((t) => t.completedAt != null)
-                .map((t) => t.completedAt!)
-                .toList();
-
-            final createdDates = <DateTime>[]; // si luego guardas "creados", pon aquí esas fechas
-
-            // buckets + labels
-            final buckets = dateRange(_period);
-            final labels = buckets.map((b) => labelFor(b, _period)).toList();
-
-            // series
-            final exercisesSeries = bucketCounts(exercisesDates, buckets, _period);
-            final trainingsSeries = bucketCounts(trainingsDates, buckets, _period);
-            final createdSeries   = bucketCounts(createdDates,   buckets, _period);
-
-            // serie total (para el gráfico de líneas)
-            final totalSeries = List<int>.generate(
-              labels.length,
-              (i) => exercisesSeries[i] + trainingsSeries[i] + createdSeries[i],
-            );
-
-            // conteos para Summary
-            int countByPeriod(List<int> series) => series.fold<int>(0, (a, b) => a + b);
-            final exercisesCount = countByPeriod(exercisesSeries);
-            final trainingsCount = countByPeriod(trainingsSeries);
-            final createdCount   = countByPeriod(createdSeries);
-
-            // datos del secundario según selección
-            List<int> secondaryValues;
-            switch (_activeType) {
-              case StatType.exercises: secondaryValues = exercisesSeries; break;
-              case StatType.trainings: secondaryValues = trainingsSeries; break;
-              case StatType.created:   secondaryValues = createdSeries;   break;
-            }
+            final stats = StatsState.instance;
+            final series = buildStatSeries(stats.events, _period);
 
             return Column(
               children: [
@@ -138,8 +100,8 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: StatisticsChart(
-                    values: totalSeries,
-                    labels: labels,
+                    values: series.total,
+                    labels: series.labels,
                   ),
                 ),
 
@@ -149,9 +111,9 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
                 SummaryIconRow(
                   active: _activeType,
                   onSelected: _onTypeSelected,
-                  exercisesCount: exercisesCount,
-                  trainingsCount: trainingsCount,
-                  createdCount: createdCount,
+                  exercisesCount: series.totalOf(StatType.exercises),
+                  trainingsCount: series.totalOf(StatType.trainings),
+                  createdCount: series.totalOf(StatType.created),
                 ),
 
                 const SizedBox(height: 8),
@@ -160,22 +122,16 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
                 Padding(
                   padding: const EdgeInsets.only(left: 16, right: 16),
                   child: SizedBox(
-                    height: 200, // 🔹 misma altura que tenías
+                    height: 200,
                     child: StatisticsSecondaryChart(
-                      title: _activeType == StatType.exercises
-                          ? 'Ejercicios'
-                          : _activeType == StatType.trainings
-                              ? 'Entrenamientos'
-                              : 'Creados',
-                      values: secondaryValues,
-                      labels: labels,
+                      title: _titleFor(_activeType),
+                      values: series.of(_activeType),
+                      labels: series.labels,
                     ),
                   ),
                 ),
 
-                // Loader si aún no cargaron
-                if ((es.isLoading && !es.loadedOnce) ||
-                    (ts.isLoading && !ts.loadedOnce))
+                if (stats.isLoading && !stats.loadedOnce)
                   const Padding(
                     padding: EdgeInsets.all(16),
                     child: SizedBox(
@@ -183,6 +139,11 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
                       width: 24,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
+                  ),
+                if (stats.error != null && !stats.loadedOnce)
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text('No se pudieron cargar las estadísticas', style: TextStyles.paragraph),
                   ),
               ],
             );

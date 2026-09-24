@@ -1,17 +1,19 @@
 // Pestaña 1: portada con banners, recomendaciones y un resumen de actividad.
 //
-// Dispara la carga de los dos stores en initState. Como load() es idempotente,
-// si otra pestaña ya cargó no se repite la petición.
+// Dispara la carga de los tres stores (ejercicios, entrenamientos y
+// estadísticas) en initState. Como load() es idempotente, si otra pestaña ya
+// cargó no se repite la petición.
 //
-// El bloque de estadísticas agrupa por día los `completedAt` de ejercicios y
-// entrenamientos de los últimos 7 días. Ese mismo cálculo está repetido casi
-// literalmente en pingpro_profile_screen.dart y, en versión más completa, en
-// pingpro_stats_screen.dart: es el candidato más claro a extraerse a core/.
+// El bloque de estadísticas es la gráfica de los últimos 7 días de
+// StatsState, calculada con core/stats_series.dart como en Estadísticas.
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
+import 'package:pingpro_front/core/services/stats_state.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
+import 'package:pingpro_front/core/stats_buckets.dart';
+import 'package:pingpro_front/core/stats_series.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
@@ -33,6 +35,7 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
     super.initState();
     ExercisesState.instance.load();
     TrainingsState.instance.load();
+    StatsState.instance.load();
   }
 
   Future<void> _toggleFavorite(String id) async {
@@ -45,6 +48,19 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
         );
       }
     }
+  }
+
+  // Mismo alto que la gráfica para que el layout no salte al fallar la carga.
+  Widget _buildStatsError() {
+    return const SizedBox(
+      height: 160,
+      child: Center(
+        child: Text(
+          'No se pudieron cargar las estadísticas',
+          style: TextStyles.paragraph,
+        ),
+      ),
+    );
   }
 
   @override
@@ -191,79 +207,20 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, '/stats'),
               child: AnimatedBuilder(
-                animation: Listenable.merge([
-                  ExercisesState.instance,
-                  TrainingsState.instance,
-                ]),
+                animation: StatsState.instance,
                 builder: (context, _) {
-                  final es = ExercisesState.instance;
-                  final ts = TrainingsState.instance;
-
-                  // Últimos 7 días (de más viejo -> hoy)
-                  final now = DateTime.now();
-                  final buckets = List.generate(7, (i) {
-                    final d = DateTime(
-                      now.year,
-                      now.month,
-                      now.day,
-                    ).subtract(Duration(days: 6 - i));
-                    return d;
-                  });
-
-                  // Etiquetas: D L M X J V S
-                  const dias = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
-                  String labelFor(DateTime d) => dias[d.weekday % 7];
-                  final labels = buckets.map(labelFor).toList();
-
-                  // Fechas completadas
-                  final exercisesDates =
-                      es.all
-                          .where((e) => e.completedAt != null)
-                          .map((e) => e.completedAt!)
-                          .toList();
-
-                  final trainingsDates =
-                      ts.all
-                          .where((t) => t.completedAt != null)
-                          .map((t) => t.completedAt!)
-                          .toList();
-
-                  // Vacío porque la creación de ejercicios todavía no persiste
-                  // nada (ver pingpro_create_screen.dart). La serie "Creados"
-                  // sale siempre en cero.
-                  // Si luego tienes "creados", añade sus fechas aquí
-                  final createdDates = <DateTime>[];
-
-                  bool sameDay(DateTime a, DateTime b) =>
-                      a.year == b.year && a.month == b.month && a.day == b.day;
-
-                  List<int> countSeries(List<DateTime> dates) => [
-                    for (final b in buckets)
-                      dates.where((d) => sameDay(d, b)).length,
-                  ];
-
-                  final exSeries = countSeries(exercisesDates);
-                  final trSeries = countSeries(trainingsDates);
-                  final crSeries = countSeries(createdDates);
-
-                  // Serie total para el gráfico de líneas
-                  final totalSeries = List<int>.generate(
-                    buckets.length,
-                    (i) => exSeries[i] + trSeries[i] + crSeries[i],
-                  );
-
-                  // Loader mínimo (opcional)
-                  if ((es.isLoading && !es.loadedOnce) ||
-                      (ts.isLoading && !ts.loadedOnce)) {
+                  final stats = StatsState.instance;
+                  if (stats.isLoading && !stats.loadedOnce) {
                     return const SizedBox(
                       height: 160,
-                      child: Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
+                      child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                     );
                   }
-
-                  return StatisticsChart(values: totalSeries, labels: labels);
+                  if (stats.error != null && !stats.loadedOnce) {
+                    return _buildStatsError();
+                  }
+                  final week = buildStatSeries(stats.events, StatPeriod.daily);
+                  return StatisticsChart(values: week.total, labels: week.labels);
                 },
               ),
             ),
