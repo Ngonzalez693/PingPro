@@ -48,13 +48,18 @@ export class PostgresUserTrainingStateRepository implements IUserTrainingStateRe
   constructor(private readonly pool: Pool) {}
 
   // true añade una fila al historial; false borra la más reciente (deshacer).
-  async setCompleted(userId: string, trainingId: string, completed: boolean): Promise<IUserTrainingState> {
+  async setCompleted(
+    userId: string,
+    trainingId: string,
+    completed: boolean,
+    session: number | null = null,
+  ): Promise<IUserTrainingState> {
     const now = new Date();
     await withTransaction(this.pool, async (client) => {
       if (completed) {
         await client.query(
-          'INSERT INTO training_completions (user_id, training_id, completed_at) VALUES ($1, $2, $3)',
-          [userId, trainingId, now],
+          'INSERT INTO training_completions (user_id, training_id, completed_at, session) VALUES ($1, $2, $3, $4)',
+          [userId, trainingId, now, session],
         );
       } else {
         await client.query(
