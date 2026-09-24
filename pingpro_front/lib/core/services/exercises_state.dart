@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart'; // 👈 para SchedulerBinding
+import 'package:pingpro_front/core/local_completion_events.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/core/services/exercises_service.dart';
@@ -161,9 +162,9 @@ class ExercisesState extends ChangeNotifier {
     }
   }
 
-  /// Marca/desmarca como completado con UI optimista.
-  /// En backend debe persistir `completedAt` (o `lastCompletedAt`) por usuario.
-  Future<void> setCompleted(String id, bool completed) async {
+  /// Marca/desmarca como completado con UI optimista. `session` es la sesión
+  /// del día (1..3) elegida en el detalle; sin ella queda "sin sesión".
+  Future<void> setCompleted(String id, bool completed, {int? session}) async {
     final ex = _byId[id];
     if (ex == null) return;
 
@@ -172,11 +173,19 @@ class ExercisesState extends ChangeNotifier {
     _safeNotify();
 
     try {
-      await _service.setCompleted(id: id, completed: completed);
+      await _service.setCompleted(id: id, completed: completed, session: session);
     } catch (e) {
       ex.completedAt = prevCompletedAt; // rollback si falla
       _safeNotify();
       rethrow;
+    }
+
+    // El progreso por sesión sale de StatsState: se añade ya la repetición
+    // confirmada para no depender de que la recarga llegue (o no falle).
+    if (completed) {
+      StatsState.instance.addExerciseCompletion(
+        exerciseCompletionEventFor(ex, session: session, at: DateTime.now()),
+      );
     }
 
     // El historial vive en el servidor: sin recargar, la repetición recién

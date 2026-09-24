@@ -1,20 +1,26 @@
 // Detalle de un entrenamiento: progreso, siguiente ejercicio y lista completa.
 //
 // El entrenamiento solo guarda `exerciseIds`, así que los ejercicios se
-// resuelven aquí contra ExercisesState.getById(). Efecto secundario útil:
-// completar un ejercicio desde su detalle actualiza esta barra de progreso al
-// volver, sin recargar nada.
+// resuelven aquí contra ExercisesState.getById(). El progreso, en cambio,
+// sale de StatsState, que los stores actualizan justo después de cada "Hecho"
+// confirmado: al volver del detalle de un ejercicio la barra ya lo incluye.
 //
-// El entrenamiento se marca como completado solo cuando TODOS sus ejercicios
-// lo están. Esa comprobación ocurre dentro del build, de ahí las dos guardas:
-// `_completionPosted` para no enviar la petición más de una vez, y
-// addPostFrameCallback para no modificar estado en mitad del build.
+// El progreso cuenta solo los ejercicios hechos HOY en la sesión elegida
+// arriba (core/session_progress.dart, sobre el historial de StatsState): al
+// cambiar a otra sesión el entrenamiento empieza vacío y se puede repetir.
+// Cuando todos están hechos en esa sesión se registra una finalización con
+// ella. La comprobación ocurre dentro del build, de ahí las dos guardas:
+// `_postedForSession` para no enviarla dos veces mientras StatsState recarga,
+// y addPostFrameCallback para no modificar estado en mitad del build.
 //
 // Lee siempre la versión viva del entrenamiento en el store: tras editarlo se
 // ve la nueva. El menú ⋮ (dueño o, en el catálogo, admin) abre la edición o lo
 // elimina; mientras se elimina, las acciones quedan bloqueadas.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/session_progress.dart';
+import 'package:pingpro_front/core/services/current_session.dart';
+import 'package:pingpro_front/core/services/stats_state.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
@@ -25,6 +31,7 @@ import 'package:pingpro_front/core/services/trainings_state.dart';
 import 'package:pingpro_front/screens/pingpro_edit_training_screen.dart';
 import 'package:pingpro_front/widgets/confirm_delete_dialog.dart';
 import 'package:pingpro_front/widgets/content_actions_menu.dart';
+import 'package:pingpro_front/widgets/session_selector.dart';
 
 class PingproTrainingDetailScreen extends StatefulWidget {
   final TrainingModel training;
@@ -40,8 +47,9 @@ class _PingproTrainingDetailScreenState
     extends State<PingproTrainingDetailScreen> {
   int _currentIndex = 0;
 
-  // Para evitar llamar setCompleted durante build varias veces
-  bool _completionPosted = false;
+  // Sesión para la que ya se envió la finalización: StatsState tarda una
+  // recarga en traerla y, sin esto, cada build volvería a enviarla.
+  int? _postedForSession;
 
   bool _isAdmin = false;
   bool _actionLoading = false;
@@ -64,6 +72,7 @@ class _PingproTrainingDetailScreenState
     super.initState();
     ExercisesState.instance.load();
     TrainingsState.instance.load();
+    StatsState.instance.load();
     SessionRoles.instance.isAdmin().then((isAdmin) {
       if (mounted) setState(() => _isAdmin = isAdmin);
     });
@@ -71,10 +80,10 @@ class _PingproTrainingDetailScreenState
 
   void _onBackPressed() => Navigator.pop(context);
 
-  // Ir al primer ejercicio incompleto
-  void _onNextPressed(List<ExerciseModel> list) {
+  // Ir al primer ejercicio sin hacer en esta sesión
+  void _onNextPressed(List<ExerciseModel> list, List<bool> done) {
     if (_actionLoading || list.isEmpty) return;
-    final nextIdx = list.indexWhere((e) => e.completedAt == null);
+    final nextIdx = done.indexOf(false);
     if (nextIdx == -1) return; // todos hechos
 
     final exerciseToShow = list[nextIdx];
@@ -87,6 +96,19 @@ class _PingproTrainingDetailScreenState
     setState(() {
       _currentIndex = (nextIdx < list.length - 1) ? nextIdx + 1 : nextIdx;
     });
+  }
+
+  // Si falla no se reintenta en esta pantalla (se reintentaría en bucle en
+  // cada build); al volver a abrirla se comprueba otra vez.
+  Future<void> _postCompletion(String trainingId, int session) async {
+    try {
+      await TrainingsState.instance.setCompleted(trainingId, true, session: session);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo guardar el entrenamiento completado')),
+      );
+    }
   }
 
   void _onEditPressed(TrainingModel training) {
@@ -117,7 +139,12 @@ class _PingproTrainingDetailScreenState
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: AnimatedBuilder(
-          animation: Listenable.merge([ExercisesState.instance, TrainingsState.instance]),
+          animation: Listenable.merge([
+            ExercisesState.instance,
+            TrainingsState.instance,
+            StatsState.instance,
+            CurrentSession.instance,
+          ]),
           builder: (context, _) {
             final exState = ExercisesState.instance;
             final trState = TrainingsState.instance;
@@ -142,19 +169,18 @@ class _PingproTrainingDetailScreenState
               return Center(child: Text('Error: ${exState.error}'));
             }
 
-            // Progreso
+            // Progreso de hoy en la sesión elegida
+            final events = StatsState.instance.events;
+            final session = CurrentSession.instance.sessionFor(events);
+            final done = trainingDoneFlags([for (final e in exercises) e.id], events, session);
             final total = exercises.length;
-            final doneCount = exercises.where((e) => e.completedAt != null).length;
+            final doneCount = done.where((d) => d).length;
             final progress = total == 0 ? 0.0 : doneCount / total;
 
-            // Marcar training como completado (post-frame, una sola vez)
-            final alreadyCompleted = training.completedAt != null;
-
-            if (total > 0 && doneCount == total && !alreadyCompleted && !_completionPosted) {
-              _completionPosted = true; // evita múltiples posts
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                TrainingsState.instance.setCompleted(training.id, true);
-              });
+            final completedInSession = isTrainingDoneInSession(training.id, events, session);
+            if (total > 0 && doneCount == total && !completedInSession && _postedForSession != session) {
+              _postedForSession = session;
+              WidgetsBinding.instance.addPostFrameCallback((_) => _postCompletion(training.id, session));
             }
 
             // Duración por ejercicio: se reparte entre TODOS los ids guardados,
@@ -166,8 +192,8 @@ class _PingproTrainingDetailScreenState
             final perExercise =
                 exerciseCount > 0 ? (totalDuration / exerciseCount).round() : totalDuration;
 
-            // Siguiente sugerido: primer incompleto; si no hay, null
-            final nextIdx = exercises.indexWhere((e) => e.completedAt == null);
+            // Siguiente sugerido: primero sin hacer en esta sesión; si no hay, el actual
+            final nextIdx = done.indexOf(false);
             final next = nextIdx == -1
                 ? (exercises.isNotEmpty
                     ? exercises[_currentIndex.clamp(0, exercises.length - 1)]
@@ -195,6 +221,14 @@ class _PingproTrainingDetailScreenState
                           onDelete: () => _onDeletePressed(training),
                         ),
                     ],
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: SessionSelector(
+                    selected: session,
+                    onSelected: CurrentSession.instance.choose,
                   ),
                 ),
 
@@ -304,7 +338,7 @@ class _PingproTrainingDetailScreenState
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                 ),
-                                onPressed: () => _onNextPressed(exercises),
+                                onPressed: () => _onNextPressed(exercises, done),
                                 child: Text(
                                   nextIdx == -1 ? 'Completado' : 'Realizar siguiente',
                                   style: TextStyles.buttons,
@@ -336,7 +370,6 @@ class _PingproTrainingDetailScreenState
                     itemCount: exercises.length,
                     itemBuilder: (ctx, i) {
                       final ex = exercises[i];
-                      final done = ex.completedAt != null;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: ExerciseCard(
@@ -354,7 +387,7 @@ class _PingproTrainingDetailScreenState
                               },
                             );
                           },
-                          done: done,
+                          done: done[i],
                         ),
                       );
                     },

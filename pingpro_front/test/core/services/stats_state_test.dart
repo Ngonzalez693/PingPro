@@ -9,6 +9,29 @@ StatsEvents _eventsWith(String createdId) => StatsEvents(created: [
   CreatedEvent(kind: CreatedKind.exercise, id: createdId, createdAt: DateTime(2026, 9, 16)),
 ]);
 
+ExerciseCompletionEvent _exerciseCompletion(String id) => ExerciseCompletionEvent(
+  exerciseId: id,
+  completedAt: DateTime(2026, 9, 24),
+  session: 1,
+  category: 'Ataque',
+  hits: const [1],
+  rotations: const [2],
+  deleted: false,
+);
+
+TrainingCompletionEvent _trainingCompletion(String id) => TrainingCompletionEvent(
+  trainingId: id,
+  completedAt: DateTime(2026, 9, 24),
+  session: 1,
+  duration: 30,
+);
+
+StatsEvents _fullEvents(String suffix) => StatsEvents(
+  exerciseCompletions: [_exerciseCompletion('ex-$suffix')],
+  trainingCompletions: [_trainingCompletion('tr-$suffix')],
+  created: _eventsWith('c-$suffix').created,
+);
+
 void main() {
   // _safeNotify() consulta SchedulerBinding.instance.
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -102,5 +125,44 @@ void main() {
 
     expect(state.events.created.single.id, 'nuevo');
     expect(state.isLoading, isFalse);
+  });
+
+  test('addExerciseCompletion añade el evento y conserva las otras listas', () async {
+    final state = StatsState.withFetcher((_) async => _fullEvents('server'));
+    await state.load();
+
+    state.addExerciseCompletion(_exerciseCompletion('local'));
+
+    expect(state.events.exerciseCompletions.map((e) => e.exerciseId), ['ex-server', 'local']);
+    expect(state.events.trainingCompletions.single.trainingId, 'tr-server');
+    expect(state.events.created.single.id, 'c-server');
+  });
+
+  test('addTrainingCompletion añade el evento y conserva las otras listas', () async {
+    final state = StatsState.withFetcher((_) async => _fullEvents('server'));
+    await state.load();
+
+    state.addTrainingCompletion(_trainingCompletion('local'));
+
+    expect(state.events.trainingCompletions.map((e) => e.trainingId), ['tr-server', 'local']);
+    expect(state.events.exerciseCompletions.single.exerciseId, 'ex-server');
+    expect(state.events.created.single.id, 'c-server');
+  });
+
+  test('un refresh tras añadir finalizaciones las sustituye por las del servidor', () async {
+    var calls = 0;
+    final state = StatsState.withFetcher((_) async {
+      calls++;
+      return _fullEvents(calls == 1 ? 'antes' : 'despues');
+    });
+    await state.load();
+
+    state.addExerciseCompletion(_exerciseCompletion('local'));
+    state.addTrainingCompletion(_trainingCompletion('local'));
+    await state.refresh();
+
+    expect(state.events.exerciseCompletions.single.exerciseId, 'ex-despues');
+    expect(state.events.trainingCompletions.single.trainingId, 'tr-despues');
+    expect(state.events.created.single.id, 'c-despues');
   });
 }
