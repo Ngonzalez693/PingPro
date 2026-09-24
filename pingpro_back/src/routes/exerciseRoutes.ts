@@ -16,7 +16,8 @@
 import { Router } from 'express';
 import ExerciseController from '../controllers/ExerciseController';
 import { validateBody } from '../middlewares/validation';
-import { favoriteSchema, completedSchema } from '../utils/exerciseState.validator';
+import { favoriteSchema } from '../utils/exerciseState.validator';
+import { completedSchema } from '../utils/completion.validator';
 import { exerciseSchema } from '../utils/exercise.validator';
 import authMiddleware from '../middlewares/authMiddleware';
 import { requireRole } from '../middlewares/roleMiddleware';

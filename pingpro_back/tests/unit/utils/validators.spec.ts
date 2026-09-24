@@ -1,6 +1,7 @@
 import { EXERCISE_CATEGORIES, TRAINING_CATEGORIES } from '../../../src/utils/constants';
 import { exerciseSchema } from '../../../src/utils/exercise.validator';
 import { trainingSchema } from '../../../src/utils/training.validator';
+import { completedSchema } from '../../../src/utils/completion.validator';
 
 // Cuerpos válidos: cada caso cambia un solo campo para aislar la regla.
 const validStep = { hit: 1, rotation: 2, zone: 3, direction: 6, side: 1, ownZone: 3 };
@@ -138,5 +139,24 @@ describe('trainingSchema', () => {
     const { error } = trainingSchema.validate(trainingBody({ category: 'Avanzado' }));
 
     expect(error?.message).toContain('category');
+  });
+});
+
+describe('completedSchema', () => {
+  it('sin body completa sin sesión', () => {
+    const { error, value } = completedSchema.validate({});
+
+    expect(error).toBeUndefined();
+    expect(value).toEqual({ completed: true });
+  });
+
+  it.each([1, 2, 3, null])('acepta la sesión %s', (session) => {
+    expect(completedSchema.validate({ completed: true, session }).error).toBeUndefined();
+  });
+
+  it.each([0, 4, 1.5])('rechaza la sesión %s', (session) => {
+    const { error } = completedSchema.validate({ completed: true, session });
+
+    expect(error?.message).toContain('session');
   });
 });

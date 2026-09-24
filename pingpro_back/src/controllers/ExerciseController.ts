@@ -161,9 +161,11 @@ export default class ExerciseController {
       }
 
       const { id } = req.params;
+      // El body ya viene validado por completedSchema.
       const completed = req.body?.completed ?? true;
+      const session = req.body?.session ?? null;
 
-      const state = await service.setCompletedForUser(uid, id, !!completed);
+      const state = await service.setCompletedForUser(uid, id, !!completed, session);
       return success(res, state, HTTP_STATUS.OK);
     } catch (err) {
       return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);

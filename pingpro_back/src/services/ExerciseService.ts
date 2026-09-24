@@ -96,10 +96,11 @@ export class ExerciseService {
   async setCompletedForUser(
     userId: string,
     exerciseId: string,
-    completed: boolean
+    completed: boolean,
+    session: number | null = null,
   ): Promise<IUserExerciseState> {
     await this.requireVisible(exerciseId, userId);
-    return this.userStateRepo.setCompleted(userId, exerciseId, completed);
+    return this.userStateRepo.setCompleted(userId, exerciseId, completed, session);
   }
 
   // obtener todos los estados del usuario

@@ -51,4 +51,24 @@ describe('ExerciseController', () => {
     expect(statusMock).toHaveBeenCalledWith(HTTP_STATUS.UNAUTHORIZED);
     expect(ExerciseService.prototype.getAll).not.toHaveBeenCalled();
   });
+
+  it('completed pasa la sesión del body al servicio', async () => {
+    (ExerciseService.prototype.setCompletedForUser as jest.Mock).mockResolvedValue({});
+
+    await ExerciseController.completed(
+      { ...req, body: { completed: true, session: 2 } } as Request,
+      res as Response,
+      jest.fn(),
+    );
+
+    expect(ExerciseService.prototype.setCompletedForUser).toHaveBeenCalledWith('u1', '123', true, 2);
+  });
+
+  it('completed sin sesión pasa null', async () => {
+    (ExerciseService.prototype.setCompletedForUser as jest.Mock).mockResolvedValue({});
+
+    await ExerciseController.completed({ ...req, body: { completed: true } } as Request, res as Response, jest.fn());
+
+    expect(ExerciseService.prototype.setCompletedForUser).toHaveBeenCalledWith('u1', '123', true, null);
+  });
 });
