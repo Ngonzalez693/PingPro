@@ -11,6 +11,7 @@
 // guarda nada (ver pingpro_create_screen.dart).
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/stat_type.dart';
 import 'package:pingpro_front/core/stats_buckets.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/widgets/statistics_chart.dart';
@@ -18,8 +19,6 @@ import 'package:pingpro_front/widgets/statistics_secundary_cart.dart';
 import 'package:pingpro_front/widgets/summary_icon_row.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
-
-enum StatType { exercises, trainings, created }
 
 class PingproStatsScreen extends StatefulWidget {
   const PingproStatsScreen({super.key});
