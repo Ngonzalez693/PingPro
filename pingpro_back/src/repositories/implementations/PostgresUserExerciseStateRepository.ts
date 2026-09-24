@@ -66,13 +66,18 @@ export class PostgresUserExerciseStateRepository implements IUserExerciseStateRe
   }
 
   // true añade una fila al historial; false borra la más reciente (deshacer).
-  async setCompleted(userId: string, exerciseId: string, completed: boolean): Promise<IUserExerciseState> {
+  async setCompleted(
+    userId: string,
+    exerciseId: string,
+    completed: boolean,
+    session: number | null = null,
+  ): Promise<IUserExerciseState> {
     const now = new Date();
     await withTransaction(this.pool, async (client) => {
       if (completed) {
         await client.query(
-          'INSERT INTO exercise_completions (user_id, exercise_id, completed_at) VALUES ($1, $2, $3)',
-          [userId, exerciseId, now],
+          'INSERT INTO exercise_completions (user_id, exercise_id, completed_at, session) VALUES ($1, $2, $3, $4)',
+          [userId, exerciseId, now, session],
         );
       } else {
         await client.query(

@@ -38,6 +38,20 @@ describe('PostgresUserExerciseStateRepository (historial)', () => {
     return rows[0].total;
   }
 
+  async function sessionsOfU1E1(): Promise<Array<number | null>> {
+    const { rows } = await pool.query<{ session: number | null }>(
+      `SELECT session FROM exercise_completions WHERE user_id = 'u1' AND exercise_id = 'e1' ORDER BY id`,
+    );
+    return rows.map((row) => row.session);
+  }
+
+  it('guarda la sesión de cada finalización y, si no llega, NULL', async () => {
+    await repo.setCompleted('u1', 'e1', true, 2);
+    await repo.setCompleted('u1', 'e1', true);
+
+    expect(await sessionsOfU1E1()).toEqual([2, null]);
+  });
+
   it('completar dos veces deja dos filas y completedAt es la última', async () => {
     await repo.setCompleted('u1', 'e1', true);
     const second = await repo.setCompleted('u1', 'e1', true);

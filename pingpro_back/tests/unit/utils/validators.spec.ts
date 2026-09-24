@@ -1,6 +1,8 @@
 import { EXERCISE_CATEGORIES, TRAINING_CATEGORIES } from '../../../src/utils/constants';
 import { exerciseSchema } from '../../../src/utils/exercise.validator';
 import { trainingSchema } from '../../../src/utils/training.validator';
+import { completedSchema } from '../../../src/utils/completion.validator';
+import { STATS_MAX_DAYS, statsEventsQuerySchema } from '../../../src/utils/stats.validator';
 
 // Cuerpos válidos: cada caso cambia un solo campo para aislar la regla.
 const validStep = { hit: 1, rotation: 2, zone: 3, direction: 6, side: 1, ownZone: 3 };
@@ -138,5 +140,58 @@ describe('trainingSchema', () => {
     const { error } = trainingSchema.validate(trainingBody({ category: 'Avanzado' }));
 
     expect(error?.message).toContain('category');
+  });
+});
+
+describe('completedSchema', () => {
+  it('sin body completa sin sesión', () => {
+    const { error, value } = completedSchema.validate({});
+
+    expect(error).toBeUndefined();
+    expect(value).toEqual({ completed: true });
+  });
+
+  it.each([1, 2, 3, null])('acepta la sesión %s', (session) => {
+    expect(completedSchema.validate({ completed: true, session }).error).toBeUndefined();
+  });
+
+  it.each([0, 4, 1.5])('rechaza la sesión %s', (session) => {
+    const { error } = completedSchema.validate({ completed: true, session });
+
+    expect(error?.message).toContain('session');
+  });
+});
+
+describe('statsEventsQuerySchema', () => {
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const daysAgo = (days: number): string => new Date(Date.now() - days * DAY_MS).toISOString();
+
+  it('acepta una fecha ISO reciente y la convierte a Date', () => {
+    const { error, value } = statsEventsQuerySchema.validate({ from: daysAgo(180) });
+
+    expect(error).toBeUndefined();
+    expect(value.from).toBeInstanceOf(Date);
+  });
+
+  it('rechaza la petición sin from', () => {
+    expect(statsEventsQuerySchema.validate({}).error?.message).toContain('from');
+  });
+
+  it('rechaza un from que no es una fecha ISO', () => {
+    expect(statsEventsQuerySchema.validate({ from: 'ayer' }).error?.message).toContain('from');
+  });
+
+  it('rechaza un from en el futuro', () => {
+    expect(statsEventsQuerySchema.validate({ from: daysAgo(-1) }).error?.message).toContain('from');
+  });
+
+  it(`rechaza un from de hace más de ${STATS_MAX_DAYS} días`, () => {
+    const { error } = statsEventsQuerySchema.validate({ from: daysAgo(STATS_MAX_DAYS + 1) });
+
+    expect(error?.message).toContain(`${STATS_MAX_DAYS} days`);
+  });
+
+  it('rechaza parámetros desconocidos', () => {
+    expect(statsEventsQuerySchema.validate({ from: daysAgo(1), uid: 'u2' }).error).toBeDefined();
   });
 });

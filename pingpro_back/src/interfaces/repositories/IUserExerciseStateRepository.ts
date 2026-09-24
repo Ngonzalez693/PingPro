@@ -9,7 +9,8 @@ import type { IUserExerciseState } from '../models/IUserExerciseState';
 
 export interface IUserExerciseStateRepository {
   setFavorite(userId: string, exerciseId: string, isFavorite: boolean): Promise<IUserExerciseState>;
-  setCompleted(userId: string, exerciseId: string, completed: boolean): Promise<IUserExerciseState>;
+  // session: 1..3, o null si no se indica ("sin sesión"). Solo cuenta al completar.
+  setCompleted(userId: string, exerciseId: string, completed: boolean, session?: number | null): Promise<IUserExerciseState>;
   getState(userId: string, exerciseId: string): Promise<IUserExerciseState | null>;
   getAllStates(userId: string): Promise<IUserExerciseState[]>;
 }

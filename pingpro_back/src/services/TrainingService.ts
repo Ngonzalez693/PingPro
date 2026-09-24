@@ -102,8 +102,13 @@ export class TrainingService {
     return training;
   }
 
-  //  Completar entrenamiento por usuario 
-  async setCompletedForUser(userId: string, trainingId: string, completed: boolean): Promise<IUserTrainingState> {
+  //  Completar entrenamiento por usuario
+  async setCompletedForUser(
+    userId: string,
+    trainingId: string,
+    completed: boolean,
+    session: number | null = null,
+  ): Promise<IUserTrainingState> {
     // Con su propio uid: puede completar tanto los del catálogo como los suyos.
     const exists = await this.trainingRepo.exists(trainingId, userId);
     if (!exists) {
@@ -111,7 +116,7 @@ export class TrainingService {
       err.status = 404;
       throw err;
     }
-    return this.userTrainingStateRepo.setCompleted(userId, trainingId, completed);
+    return this.userTrainingStateRepo.setCompleted(userId, trainingId, completed, session);
   }
 
   // Obtener todos los estados del usuario 

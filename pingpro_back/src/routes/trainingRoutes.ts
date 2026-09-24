@@ -10,6 +10,7 @@ import { Router } from 'express';
 import TrainingController from '../controllers/TrainingController';
 import { validateBody } from '../middlewares/validation';
 import { trainingSchema } from '../utils/training.validator';
+import { completedSchema } from '../utils/completion.validator';
 import authMiddleware from '../middlewares/authMiddleware';
 import { requireRole } from '../middlewares/roleMiddleware';
 import { USER_ROLES } from '../utils/constants';
@@ -29,7 +30,7 @@ router.post('/me', validateBody(trainingSchema), TrainingController.createMine);
 router.put('/me/:id', validateBody(trainingSchema), TrainingController.updateMine);
 router.delete('/me/:id', TrainingController.deleteMine);
 
-router.post('/:id/completed', TrainingController.completed);
+router.post('/:id/completed', validateBody(completedSchema), TrainingController.completed);
 
 router.get('/', TrainingController.getAll);
 router.get('/:id', TrainingController.getById);

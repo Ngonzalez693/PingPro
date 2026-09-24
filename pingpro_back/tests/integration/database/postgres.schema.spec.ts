@@ -20,7 +20,11 @@ describe('Esquema de Postgres', () => {
 
   describe('migraciones', () => {
     it('migrate aplica todas las migraciones en orden en una base vacía', async () => {
-      await expect(migrate(pool)).resolves.toEqual(['0001_initial_schema', '0002_own_zone_and_new_hits']);
+      await expect(migrate(pool)).resolves.toEqual([
+        '0001_initial_schema',
+        '0002_own_zone_and_new_hits',
+        '0003_completion_session',
+      ]);
     });
 
     it('migrate otra vez no aplica nada', async () => {
@@ -134,6 +138,32 @@ describe('Esquema de Postgres', () => {
         states: 0,
         completions: 0,
       });
+    });
+
+    it('la sesión de una finalización es NULL por defecto y solo admite 1..3', async () => {
+      await pool.query(`INSERT INTO users (id, email) VALUES ('u1', 'ana@test.dev')`);
+      const exerciseId = await insertExercise();
+      const { rows: trainings } = await pool.query<{ id: string }>(
+        `INSERT INTO trainings (name, category, image)
+         VALUES ('Calentamiento', 'Grado', 'assets/images/training_1.jpg')
+         RETURNING id`,
+      );
+      const trainingId = trainings[0].id;
+
+      const { rows } = await pool.query<{ session: number | null }>(
+        `INSERT INTO exercise_completions (user_id, exercise_id) VALUES ('u1', $1) RETURNING session`,
+        [exerciseId],
+      );
+      expect(rows[0].session).toBeNull();
+      await expect(
+        pool.query(`INSERT INTO exercise_completions (user_id, exercise_id, session) VALUES ('u1', $1, 3)`, [exerciseId]),
+      ).resolves.toBeDefined();
+      await expect(
+        pool.query(`INSERT INTO exercise_completions (user_id, exercise_id, session) VALUES ('u1', $1, 4)`, [exerciseId]),
+      ).rejects.toMatchObject({ code: CHECK_VIOLATION });
+      await expect(
+        pool.query(`INSERT INTO training_completions (user_id, training_id, session) VALUES ('u1', $1, 0)`, [trainingId]),
+      ).rejects.toMatchObject({ code: CHECK_VIOLATION });
     });
   });
 });

@@ -49,12 +49,14 @@ const training: ITraining = {
 describe('TrainingService', () => {
   let trainingRepo: jest.Mocked<ITrainingRepository>;
   let exerciseRepo: jest.Mocked<IExerciseRepository>;
+  let trainingStateRepo: jest.Mocked<IUserTrainingStateRepository>;
   let service: TrainingService;
 
   beforeEach(() => {
     trainingRepo = fakeTrainingRepo();
     exerciseRepo = fakeExerciseRepo();
-    service = new TrainingService(trainingRepo, fakeTrainingStateRepo(), exerciseRepo);
+    trainingStateRepo = fakeTrainingStateRepo();
+    service = new TrainingService(trainingRepo, trainingStateRepo, exerciseRepo);
   });
 
   function onlyExisting(...ids: string[]): void {
@@ -132,5 +134,20 @@ describe('TrainingService', () => {
 
     expect(exerciseRepo.exists).not.toHaveBeenCalled();
     expect(trainingRepo.update).toHaveBeenCalledWith('t1', { name: 'Calentamiento largo' }, null);
+  });
+
+  it('setCompletedForUser pasa la sesión al repositorio', async () => {
+    trainingRepo.exists.mockResolvedValue(true);
+
+    await service.setCompletedForUser('u1', 't1', true, 3);
+
+    expect(trainingStateRepo.setCompleted).toHaveBeenCalledWith('u1', 't1', true, 3);
+  });
+
+  it('setCompletedForUser responde 404 y no escribe si el entrenamiento no existe', async () => {
+    trainingRepo.exists.mockResolvedValue(false);
+
+    await expect(service.setCompletedForUser('u1', 't9', true, 1)).rejects.toMatchObject({ status: 404 });
+    expect(trainingStateRepo.setCompleted).not.toHaveBeenCalled();
   });
 });

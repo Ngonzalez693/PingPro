@@ -186,4 +186,20 @@ describe('ExerciseService', () => {
     // privado no se podría marcar como favorito.
     expect(exerciseRepo.getById).toHaveBeenCalledWith('e1', 'u1');
   });
+
+  it('setCompletedForUser pasa la sesión al repositorio', async () => {
+    exerciseRepo.getById.mockResolvedValue(exercise);
+
+    await service.setCompletedForUser('u1', 'e1', true, 2);
+
+    expect(userStateRepo.setCompleted).toHaveBeenCalledWith('u1', 'e1', true, 2);
+  });
+
+  it('setCompletedForUser sin sesión la guarda como null', async () => {
+    exerciseRepo.getById.mockResolvedValue(exercise);
+
+    await service.setCompletedForUser('u1', 'e1', true);
+
+    expect(userStateRepo.setCompleted).toHaveBeenCalledWith('u1', 'e1', true, null);
+  });
 });
