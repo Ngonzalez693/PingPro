@@ -50,6 +50,19 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
     }
   }
 
+  // Mismo alto que la gráfica para que el layout no salte al fallar la carga.
+  Widget _buildStatsError() {
+    return const SizedBox(
+      height: 160,
+      child: Center(
+        child: Text(
+          'No se pudieron cargar las estadísticas',
+          style: TextStyles.paragraph,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -202,6 +215,9 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
                       height: 160,
                       child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                     );
+                  }
+                  if (stats.error != null && !stats.loadedOnce) {
+                    return _buildStatsError();
                   }
                   final week = buildStatSeries(stats.events, StatPeriod.daily);
                   return StatisticsChart(values: week.total, labels: week.labels);

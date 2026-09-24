@@ -1,7 +1,7 @@
 // Pestaña 5: perfil con resumen de actividad e historial reciente.
 //
-// La actividad sale de los stores en memoria. "Recientes" se calcula ordenando
-// por completedAt descendente.
+// "Recientes" sale de los stores en memoria (ExercisesState/TrainingsState),
+// calculado ordenando por completedAt descendente.
 //
 // El nombre viene de FirebaseAuth.currentUser. La única petición propia es
 // GET /api/users/me, solo para saber si el usuario es admin: a los admins se
@@ -62,6 +62,28 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
       context,
       MaterialPageRoute(builder: (_) => const PingproCreateScreen(scope: ContentScope.catalog)),
     );
+  }
+
+  // Mismo alto que la gráfica para que el layout no salte al fallar la carga.
+  Widget _buildStatsChart(StatsState stats, StatSeries week) {
+    if (stats.isLoading && !stats.loadedOnce) {
+      return const SizedBox(
+        height: 160,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+    if (stats.error != null && !stats.loadedOnce) {
+      return const SizedBox(
+        height: 160,
+        child: Center(
+          child: Text(
+            'No se pudieron cargar las estadísticas',
+            style: TextStyles.paragraph,
+          ),
+        ),
+      );
+    }
+    return StatisticsChart(values: week.total, labels: week.labels);
   }
 
   Widget _buildCatalogButton() {
@@ -181,12 +203,7 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: GestureDetector(
                       onTap: () => Navigator.pushNamed(context, '/stats'),
-                      child: stats.isLoading && !stats.loadedOnce
-                          ? const SizedBox(
-                              height: 160,
-                              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                            )
-                          : StatisticsChart(values: week.total, labels: week.labels),
+                      child: _buildStatsChart(stats, week),
                     ),
                   ),
 

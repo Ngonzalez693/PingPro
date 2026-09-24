@@ -2,7 +2,8 @@
 //
 // Son funciones puras sobre fechas, sin nada de Flutter: viven fuera de la
 // pantalla para poder probarlas sin construir widgets. Quien las usa les pasa
-// los `completedAt` que ya tiene en memoria.
+// las fechas de los eventos de estadísticas que llegan del servidor
+// (core/stats_series.dart), no fechas en memoria.
 //
 // Todas las fechas se construyen con el constructor DateTime(y, m, d) en vez
 // de restar Duration(days: n). Duration son horas exactas, así que cruzar un
