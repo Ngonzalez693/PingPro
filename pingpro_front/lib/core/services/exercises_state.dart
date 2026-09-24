@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart'; // 👈 para SchedulerBinding
 import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/core/services/exercises_service.dart';
+import 'package:pingpro_front/core/services/stats_state.dart';
 
 /// Store global para ejercicios con estado por usuario (favoritos / completados).
 /// - Carga idempotente (no vuelve a cargar si ya lo hizo a menos que uses force).
@@ -103,6 +106,7 @@ class ExercisesState extends ChangeNotifier {
   Future<void> create(ExerciseDraft draft) async {
     await _service.create(draft);
     await refresh();
+    unawaited(StatsState.instance.refresh());
   }
 
   /// Guarda los cambios de un ejercicio y recarga la lista. Sin UI optimista,
@@ -110,12 +114,14 @@ class ExercisesState extends ChangeNotifier {
   Future<void> update(ExerciseDraft draft) async {
     await _service.update(draft);
     await refresh();
+    unawaited(StatsState.instance.refresh());
   }
 
   /// Elimina el ejercicio (por /me si es propio) y recarga la lista.
   Future<void> delete(ExerciseModel exercise) async {
     await _service.delete(exercise.id, own: exercise.isOwn);
     await refresh();
+    unawaited(StatsState.instance.refresh());
   }
 
   /// Vacía la cache y la marca de "ya cargado".
@@ -172,6 +178,10 @@ class ExercisesState extends ChangeNotifier {
       _safeNotify();
       rethrow;
     }
+
+    // El historial vive en el servidor: sin recargar, la repetición recién
+    // hecha no aparecería en las gráficas.
+    unawaited(StatsState.instance.refresh());
   }
 
   /// Actualiza/insertar un ejercicio en memoria (por ejemplo, si vuelves del detalle con un objeto actualizado).

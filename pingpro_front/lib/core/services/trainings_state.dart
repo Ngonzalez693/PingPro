@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:pingpro_front/models/training_draft_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/core/services/training_services.dart';
+import 'package:pingpro_front/core/services/stats_state.dart';
 
 /// Store global de entrenamientos. Gemelo de ExercisesState: singleton +
 /// ChangeNotifier, carga idempotente, cache indexada por id y UI optimista con
@@ -57,6 +60,7 @@ class TrainingsState extends ChangeNotifier {
   Future<String> create(TrainingDraft draft) async {
     final id = await _service.create(draft);
     await refresh();
+    unawaited(StatsState.instance.refresh());
     return id;
   }
 
@@ -64,12 +68,14 @@ class TrainingsState extends ChangeNotifier {
   Future<void> update(TrainingDraft draft) async {
     await _service.update(draft);
     await refresh();
+    unawaited(StatsState.instance.refresh());
   }
 
   /// Elimina el entrenamiento (por /me si es propio) y recarga la lista.
   Future<void> delete(TrainingModel training) async {
     await _service.delete(training.id, own: training.isOwn);
     await refresh();
+    unawaited(StatsState.instance.refresh());
   }
 
   /// Vacía la cache y la marca de "ya cargado". Ver ExercisesState.reset().
@@ -111,5 +117,9 @@ class TrainingsState extends ChangeNotifier {
       notifyListeners();
       rethrow;
     }
+
+    // El historial vive en el servidor: sin recargar, la repetición recién
+    // hecha no aparecería en las gráficas.
+    unawaited(StatsState.instance.refresh());
   }
 }
