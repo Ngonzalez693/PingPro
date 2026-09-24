@@ -5,7 +5,9 @@
 //     reproduce.
 //   - _buildSequenceDescription() traduce los mismos códigos a texto legible.
 //   - El botón "Hecho" es el ÚNICO sitio de la app que marca un ejercicio como
-//     completado, y por tanto el que alimenta todas las estadísticas.
+//     completado, y por tanto el que alimenta todas las estadísticas. Envía la
+//     sesión del día elegida arriba y se puede pulsar más veces (cada vez es
+//     una repetición). "¡Listo!" significa hecho HOY en esa sesión.
 //   - El menú ⋮ (solo para el dueño o, en el catálogo, para un admin) abre la
 //     edición o elimina el ejercicio.
 //
@@ -30,6 +32,10 @@ import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/session_roles.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
 import 'package:pingpro_front/widgets/exercise_animation_view.dart';
+import 'package:pingpro_front/core/session_progress.dart';
+import 'package:pingpro_front/core/services/current_session.dart';
+import 'package:pingpro_front/core/services/stats_state.dart';
+import 'package:pingpro_front/widgets/session_selector.dart';
 
 class PingproExerciseDetailScreen extends StatefulWidget {
   final ExerciseModel exercise;
@@ -59,6 +65,7 @@ class _PingproExerciseDetailScreenState
   void initState() {
     super.initState();
     ExercisesState.instance.load();
+    StatsState.instance.load();
     SessionRoles.instance.isAdmin().then((isAdmin) {
       if (mounted) setState(() => _isAdmin = isAdmin);
     });
@@ -134,7 +141,8 @@ class _PingproExerciseDetailScreenState
     final id = widget.exercise.id;
 
     try {
-      await ExercisesState.instance.setCompleted(id, true);
+      final session = CurrentSession.instance.sessionFor(StatsState.instance.events);
+      await ExercisesState.instance.setCompleted(id, true, session: session);
       Navigator.of(context).pop(ExercisesState.instance.getById(id));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -149,7 +157,11 @@ class _PingproExerciseDetailScreenState
   Widget build(BuildContext context) {
     // Usamos AnimatedBuilder para leer el ejercicio vivo del store
     return AnimatedBuilder(
-      animation: ExercisesState.instance,
+      animation: Listenable.merge([
+        ExercisesState.instance,
+        StatsState.instance,
+        CurrentSession.instance,
+      ]),
       builder: (context, _) {
         // Buscar versión "viva" por ID; si el store ya no la tiene (se borró),
         // usar la última viva vista en vez de widget.exercise, que quedó
@@ -159,7 +171,9 @@ class _PingproExerciseDetailScreenState
         final ex = live ?? _lastLive ?? widget.exercise;
 
         final isFavorite = ex.isFavorite;
-        final isCompleted = ex.completedAt != null;
+        final events = StatsState.instance.events;
+        final session = CurrentSession.instance.sessionFor(events);
+        final isCompleted = isExerciseDoneInSession(ex.id, events, session);
 
         return Scaffold(
           backgroundColor: AppColors.background,
@@ -189,6 +203,14 @@ class _PingproExerciseDetailScreenState
                           onDelete: () => _onDeletePressed(ex),
                         ),
                     ],
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: SessionSelector(
+                    selected: session,
+                    onSelected: CurrentSession.instance.choose,
                   ),
                 ),
 
