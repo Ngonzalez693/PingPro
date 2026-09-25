@@ -37,7 +37,7 @@ class ConsistencyCard extends StatelessWidget {
           Row(
             children: [
               _buildFigure('$streak', streak == 1 ? 'día de racha' : 'días de racha'),
-              _buildFigure('$activeDays', 'días activos'),
+              _buildFigure('$activeDays', activeDays == 1 ? 'día activo' : 'días activos'),
               _buildFigure('$minutes', 'minutos'),
             ],
           ),

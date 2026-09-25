@@ -1,5 +1,5 @@
 // Barra apilada por cubo con las sesiones entrenadas (S1, S2, S3, sin
-// sesión). Mismo marco y eje que StatisticsSecondaryChart.
+// sesión). Comparte el mismo eje (no el marco) que StatisticsSecondaryChart.
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
@@ -15,6 +15,10 @@ const _sessionColors = <int?, Color>{
 };
 
 const _sessionNames = <int?, String>{1: 'S1', 2: 'S2', 3: 'S3', null: 'Sin sesión'};
+
+// Un solo tamaño de 11px para los dos ejes: con el de 14 por defecto las
+// etiquetas semanales ("14 Sep" × 8) se solapan en un teléfono de ~360dp.
+final _axisLabelStyle = TextStyles.aditional.copyWith(fontSize: 11);
 
 class SessionsChart extends StatelessWidget {
   final Map<int?, List<int>> perSession;
@@ -75,7 +79,7 @@ class SessionsChart extends StatelessWidget {
           showTitles: true,
           reservedSize: 28,
           interval: axis.interval,
-          getTitlesWidget: (v, meta) => Text(axis.label(v), style: TextStyles.aditional),
+          getTitlesWidget: (v, meta) => Text(axis.label(v), style: _axisLabelStyle),
         ),
       ),
       rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -87,9 +91,12 @@ class SessionsChart extends StatelessWidget {
           getTitlesWidget: (v, meta) {
             final i = v.toInt();
             if (i < 0 || i >= labels.length) return const SizedBox.shrink();
+            // Con más de 7 etiquetas (semanal) no caben todas: se muestra
+            // una sí y una no para que no se amontonen.
+            if (labels.length > 7 && i.isOdd) return const SizedBox.shrink();
             return Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: Text(labels[i], style: TextStyles.aditional),
+              child: Text(labels[i], style: _axisLabelStyle),
             );
           },
         ),

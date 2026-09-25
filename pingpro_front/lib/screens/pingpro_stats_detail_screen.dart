@@ -108,9 +108,15 @@ class _PingproStatsDetailScreenState extends State<PingproStatsDetailScreen> {
       );
     }
     final inPeriod = eventsInPeriod(stats.events, _period);
+    final noActivity =
+        inPeriod.exerciseCompletions.isEmpty && inPeriod.trainingCompletions.isEmpty;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
       children: [
+        if (noActivity) ...[
+          Text('Aún no hay actividad en este periodo', style: TextStyles.paragraph),
+          const SizedBox(height: 16),
+        ],
         _buildConsistency(stats.events, inPeriod),
         const SizedBox(height: 16),
         CountBars(
@@ -139,7 +145,7 @@ class _PingproStatsDetailScreenState extends State<PingproStatsDetailScreen> {
 
   Widget _buildStrokes(StatsEvents inPeriod) {
     return CountBars(
-      title: 'Por golpe',
+      title: _aspect == StrokeAspect.hit ? 'Por golpe' : 'Por rotación',
       entries: countByStroke(inPeriod.exerciseCompletions, _aspect),
       header: LabeledTabs<StrokeAspect>(
         options: const [
@@ -164,7 +170,7 @@ class _PingproStatsDetailScreenState extends State<PingproStatsDetailScreen> {
           ))
             (top.exercise, '×${top.count}'),
         ],
-        emptyText: 'Aún no hay repeticiones en este periodo',
+        emptyText: _emptyExercisesText('Aún no hay repeticiones en este periodo'),
         onTap: _openExercise,
       ),
       const SizedBox(height: 16),
@@ -174,9 +180,18 @@ class _PingproStatsDetailScreenState extends State<PingproStatsDetailScreen> {
           for (final neglected in neglectedExercises(exercises))
             (neglected.exercise, neglectLabel(neglected.daysSince)),
         ],
-        emptyText: 'No hay ejercicios',
+        emptyText: _emptyExercisesText('No hay ejercicios'),
         onTap: _openExercise,
       ),
     ];
+  }
+
+  // Mientras ExercisesState hace su primera carga (o si falló), el vacío no
+  // significa "no hay nada": hay que decirlo en vez de mostrar el texto normal.
+  String _emptyExercisesText(String fallback) {
+    final exercises = ExercisesState.instance;
+    if (exercises.isLoading && !exercises.loadedOnce) return 'Cargando ejercicios…';
+    if (exercises.error != null && !exercises.loadedOnce) return 'No se pudieron cargar los ejercicios';
+    return fallback;
   }
 }

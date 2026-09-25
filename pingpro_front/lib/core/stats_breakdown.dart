@@ -100,6 +100,8 @@ List<CountEntry> countByStroke(List<ExerciseCompletionEvent> completions, Stroke
       if (!excluded.contains(code)) code: 0,
   };
   for (final completion in completions) {
+    // El backend manda los hits/rotations de cada finalización ya sin
+    // duplicados, así que cada uno cuenta una sola vez por ejercicio completado.
     final codes = aspect == StrokeAspect.hit ? completion.hits : completion.rotations;
     for (final code in codes) {
       final current = counts[code];
@@ -153,7 +155,9 @@ List<ExerciseCount> topExercises(
     for (final e in counts.entries) ExerciseCount(exercise: byId[e.key]!, count: e.value),
   ]..sort((a, b) {
       final byCount = b.count.compareTo(a.count);
-      return byCount != 0 ? byCount : a.exercise.name.compareTo(b.exercise.name);
+      return byCount != 0
+          ? byCount
+          : a.exercise.name.toLowerCase().compareTo(b.exercise.name.toLowerCase());
     });
   return ranked.take(limit).toList();
 }
@@ -184,7 +188,7 @@ String neglectLabel(int? daysSince) {
 int _byNeglect(ExerciseModel a, ExerciseModel b) {
   final aDone = a.completedAt;
   final bDone = b.completedAt;
-  if (aDone == null && bDone == null) return a.name.compareTo(b.name);
+  if (aDone == null && bDone == null) return a.name.toLowerCase().compareTo(b.name.toLowerCase());
   if (aDone == null) return -1;
   if (bDone == null) return 1;
   return aDone.compareTo(bDone);

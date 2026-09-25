@@ -235,6 +235,14 @@ void main() {
       expect([for (final n in neglected) n.daysSince], [null, null, 10]);
     });
 
+    test('el desempate por nombre entre nunca hechos no distingue mayúsculas', () {
+      final exercises = [_model('b', 'beta'), _model('a', 'Alfa')];
+
+      final neglected = neglectedExercises(exercises, now: _now);
+
+      expect([for (final n in neglected) n.exercise.name], ['Alfa', 'beta']);
+    });
+
     test('lo hecho hoy son 0 días', () {
       final neglected = neglectedExercises([_model('d', 'Hoy', completedAt: DateTime(2026, 9, 16, 8))], now: _now);
 
@@ -242,12 +250,14 @@ void main() {
     });
 
     test('un completedAt en UTC se cuenta en días del teléfono', () {
+      // Justo pasada la medianoche local: en una zona UTC+ esto cae en el día
+      // siguiente en UTC, así que sin .toLocal() el conteo saldría mal.
       final neglected = neglectedExercises(
-        [_model('c', 'Hace diez', completedAt: DateTime(2026, 9, 6, 20).toUtc())],
+        [_model('c', 'Hace diez', completedAt: DateTime(2026, 9, 7, 0, 30).toUtc())],
         now: _now,
       );
 
-      expect(neglected.single.daysSince, 10);
+      expect(neglected.single.daysSince, 9);
     });
   });
 
