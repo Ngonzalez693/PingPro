@@ -4,6 +4,7 @@
 import 'package:pingpro_front/core/exercise_options.dart';
 import 'package:pingpro_front/core/stats_buckets.dart';
 import 'package:pingpro_front/core/stroke_codes.dart';
+import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/stats_events_model.dart';
 
 /// Una barra del desglose: qué, cuántas veces y si toca reforzarlo.
@@ -119,4 +120,79 @@ List<CountEntry> _withReinforce(List<(String, int)> counts, {required int lowest
     for (final c in counts)
       CountEntry(label: c.$1, count: c.$2, reinforce: total > 0 && c.$2 <= threshold),
   ];
+}
+
+class ExerciseCount {
+  final ExerciseModel exercise;
+  final int count;
+
+  const ExerciseCount({required this.exercise, required this.count});
+}
+
+class NeglectedExercise {
+  final ExerciseModel exercise;
+  // null = nunca hecho.
+  final int? daysSince;
+
+  const NeglectedExercise({required this.exercise, required this.daysSince});
+}
+
+/// Los más repetidos del periodo. Solo ejercicios que siguen existiendo: el
+/// nombre sale de ExercisesState y el de un borrado ya no está.
+List<ExerciseCount> topExercises(
+  List<ExerciseCompletionEvent> completions,
+  List<ExerciseModel> exercises, {
+  int limit = 5,
+}) {
+  final byId = {for (final e in exercises) e.id: e};
+  final counts = <String, int>{};
+  for (final c in completions) {
+    if (byId.containsKey(c.exerciseId)) counts[c.exerciseId] = (counts[c.exerciseId] ?? 0) + 1;
+  }
+  final ranked = [
+    for (final e in counts.entries) ExerciseCount(exercise: byId[e.key]!, count: e.value),
+  ]..sort((a, b) {
+      final byCount = b.count.compareTo(a.count);
+      return byCount != 0 ? byCount : a.exercise.name.compareTo(b.exercise.name);
+    });
+  return ranked.take(limit).toList();
+}
+
+/// Los que más tiempo llevan sin hacerse, sobre la última finalización de
+/// siempre (`completedAt`), no solo la del periodo: "descuidado" es de toda
+/// la historia.
+List<NeglectedExercise> neglectedExercises(
+  List<ExerciseModel> exercises, {
+  DateTime? now,
+  int limit = 5,
+}) {
+  final today = _startOfDay(now ?? DateTime.now());
+  final ranked = [...exercises]..sort(_byNeglect);
+  return [
+    for (final e in ranked.take(limit))
+      NeglectedExercise(exercise: e, daysSince: _daysSince(e.completedAt, today)),
+  ];
+}
+
+String neglectLabel(int? daysSince) {
+  if (daysSince == null) return 'nunca';
+  if (daysSince == 0) return 'hoy';
+  if (daysSince == 1) return 'hace 1 día';
+  return 'hace $daysSince días';
+}
+
+int _byNeglect(ExerciseModel a, ExerciseModel b) {
+  final aDone = a.completedAt;
+  final bDone = b.completedAt;
+  if (aDone == null && bDone == null) return a.name.compareTo(b.name);
+  if (aDone == null) return -1;
+  if (bDone == null) return 1;
+  return aDone.compareTo(bDone);
+}
+
+// Redondeando horas y no con inDays: entre dos medianoches con un cambio de
+// horario en medio hay 23 o 25 horas.
+int? _daysSince(DateTime? when, DateTime today) {
+  if (when == null) return null;
+  return (today.difference(_startOfDay(when.toLocal())).inHours / 24).round();
 }

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pingpro_front/core/stats_breakdown.dart';
 import 'package:pingpro_front/core/stats_buckets.dart';
+import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/stats_events_model.dart';
 
 // Miércoles 16 de septiembre de 2026, fijo.
@@ -33,6 +34,16 @@ TrainingCompletionEvent _training({DateTime? at, int? session, int? duration = 3
 
 List<String> _reinforced(List<CountEntry> entries) =>
     [for (final e in entries) if (e.reinforce) e.label];
+
+ExerciseModel _model(String id, String name, {DateTime? completedAt}) => ExerciseModel(
+  id: id,
+  name: name,
+  category: 'Técnico',
+  image: '',
+  description: '',
+  sequence: const [],
+  completedAt: completedAt,
+);
 
 void main() {
   group('eventsInPeriod', () {
@@ -179,5 +190,71 @@ void main() {
 
       expect(sessionsPerBucket(events, StatPeriod.weekly, now: _now)[1]!.last, 2);
     });
+  });
+
+  group('topExercises', () {
+    test('ordena por repeticiones, solo ejercicios existentes, desempate por nombre', () {
+      final exercises = [_model('e1', 'Topspin'), _model('e2', 'Bloqueo'), _model('e3', 'Corte')];
+      final completions = [
+        _exercise(id: 'e1'), _exercise(id: 'e1'), _exercise(id: 'e1'),
+        _exercise(id: 'e2'),
+        _exercise(id: 'e3'),
+        for (var i = 0; i < 5; i++) _exercise(id: 'borrado'),
+      ];
+
+      final top = topExercises(completions, exercises);
+
+      expect([for (final t in top) t.exercise.name], ['Topspin', 'Bloqueo', 'Corte']);
+      expect([for (final t in top) t.count], [3, 1, 1]);
+    });
+
+    test('respeta el límite', () {
+      final exercises = [for (var i = 0; i < 7; i++) _model('e$i', 'Ejercicio $i')];
+      final completions = [for (var i = 0; i < 7; i++) _exercise(id: 'e$i')];
+
+      final top = topExercises(completions, exercises);
+
+      expect(top, hasLength(5));
+      expect([for (final t in top) t.exercise.name],
+          ['Ejercicio 0', 'Ejercicio 1', 'Ejercicio 2', 'Ejercicio 3', 'Ejercicio 4']);
+    });
+  });
+
+  group('neglectedExercises', () {
+    test('primero los nunca hechos por nombre, luego el más antiguo', () {
+      final exercises = [
+        _model('d', 'Hoy', completedAt: DateTime(2026, 9, 16, 8)),
+        _model('c', 'Hace diez', completedAt: DateTime(2026, 9, 6, 20)),
+        _model('b', 'Beta'),
+        _model('a', 'Alfa'),
+      ];
+
+      final neglected = neglectedExercises(exercises, now: _now, limit: 3);
+
+      expect([for (final n in neglected) n.exercise.name], ['Alfa', 'Beta', 'Hace diez']);
+      expect([for (final n in neglected) n.daysSince], [null, null, 10]);
+    });
+
+    test('lo hecho hoy son 0 días', () {
+      final neglected = neglectedExercises([_model('d', 'Hoy', completedAt: DateTime(2026, 9, 16, 8))], now: _now);
+
+      expect(neglected.single.daysSince, 0);
+    });
+
+    test('un completedAt en UTC se cuenta en días del teléfono', () {
+      final neglected = neglectedExercises(
+        [_model('c', 'Hace diez', completedAt: DateTime(2026, 9, 6, 20).toUtc())],
+        now: _now,
+      );
+
+      expect(neglected.single.daysSince, 10);
+    });
+  });
+
+  test('neglectLabel', () {
+    expect(neglectLabel(null), 'nunca');
+    expect(neglectLabel(0), 'hoy');
+    expect(neglectLabel(1), 'hace 1 día');
+    expect(neglectLabel(5), 'hace 5 días');
   });
 }
