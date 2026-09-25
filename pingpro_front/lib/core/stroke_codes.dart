@@ -36,6 +36,7 @@ abstract final class RotationCode {
   static const int sideSpinLeft = 4;
   static const int drive = 5;
   static const int liftado = 6;
+  static const int free = 7;
 }
 
 /// Profundidad: la del bote en la mesa del rival (zone) o la del jugador en
