@@ -23,6 +23,14 @@ ExerciseCompletionEvent _exercise({
   deleted: false,
 );
 
+TrainingCompletionEvent _training({DateTime? at, int? session, int? duration = 30}) =>
+    TrainingCompletionEvent(
+      trainingId: 't1',
+      completedAt: at ?? DateTime(2026, 9, 16, 10),
+      session: session,
+      duration: duration,
+    );
+
 List<String> _reinforced(List<CountEntry> entries) =>
     [for (final e in entries) if (e.reinforce) e.label];
 
@@ -94,6 +102,82 @@ void main() {
       // Drive 1, Liftado 0: el umbral es el tercer conteo más bajo (2).
       expect(entries, hasLength(6));
       expect(_reinforced(entries), ['Side Spin Izquierda', 'Drive', 'Liftado']);
+    });
+  });
+
+  group('currentStreak', () {
+    StatsEvents onDays(List<int> days) => StatsEvents(exerciseCompletions: [
+      for (final day in days) _exercise(at: DateTime(2026, 9, day, 18)),
+    ]);
+
+    test('cuenta los días seguidos hasta hoy', () {
+      expect(currentStreak(onDays([16, 15, 14, 12]), now: _now), 3);
+    });
+
+    test('si hoy aún no hay nada, cuenta hasta ayer', () {
+      expect(currentStreak(onDays([15, 14]), now: _now), 2);
+    });
+
+    test('sin ayer ni hoy la racha es 0', () {
+      expect(currentStreak(onDays([13]), now: _now), 0);
+    });
+
+    test('los entrenamientos también cuentan', () {
+      final events = StatsEvents(trainingCompletions: [_training(at: DateTime(2026, 9, 16, 8))]);
+
+      expect(currentStreak(events, now: _now), 1);
+    });
+  });
+
+  test('activeDays cuenta días distintos con alguna finalización', () {
+    final events = StatsEvents(
+      exerciseCompletions: [
+        _exercise(at: DateTime(2026, 9, 16, 9)),
+        _exercise(at: DateTime(2026, 9, 16, 19)),
+      ],
+      trainingCompletions: [_training(at: DateTime(2026, 9, 14, 9))],
+    );
+
+    expect(activeDays(events), 2);
+  });
+
+  test('minutesTrained suma la duración de los entrenamientos y null cuenta 0', () {
+    final events = StatsEvents(trainingCompletions: [
+      _training(duration: 30),
+      _training(duration: null),
+      _training(duration: 45),
+    ]);
+
+    expect(minutesTrained(events), 75);
+  });
+
+  group('sessionsPerBucket', () {
+    test('cuenta días distintos por sesión en cada cubo', () {
+      final events = StatsEvents(
+        exerciseCompletions: [
+          _exercise(at: DateTime(2026, 9, 16, 9), session: 1),
+          _exercise(at: DateTime(2026, 9, 16, 9, 30), session: 1),
+          _exercise(at: DateTime(2026, 9, 15, 9)),
+        ],
+        trainingCompletions: [_training(at: DateTime(2026, 9, 16, 18), session: 2)],
+      );
+
+      final series = sessionsPerBucket(events, StatPeriod.daily, now: _now);
+
+      expect(series.keys, sessionKeys);
+      expect(series[1], [0, 0, 0, 0, 0, 0, 1]);
+      expect(series[2], [0, 0, 0, 0, 0, 0, 1]);
+      expect(series[3], List.filled(7, 0));
+      expect(series[null], [0, 0, 0, 0, 0, 1, 0]);
+    });
+
+    test('en semanal suma los días de la semana', () {
+      final events = StatsEvents(exerciseCompletions: [
+        _exercise(at: DateTime(2026, 9, 14, 9), session: 1),
+        _exercise(at: DateTime(2026, 9, 16, 9), session: 1),
+      ]);
+
+      expect(sessionsPerBucket(events, StatPeriod.weekly, now: _now)[1]!.last, 2);
     });
   });
 }

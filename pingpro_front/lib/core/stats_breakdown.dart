@@ -41,6 +41,56 @@ List<CountEntry> countByCategory(List<ExerciseCompletionEvent> completions) {
   return _withReinforce([for (final e in counts.entries) (e.key, e.value)], lowest: 1);
 }
 
+/// Claves de las series apiladas de sesiones: 1, 2, 3 y null (sin sesión).
+const sessionKeys = <int?>[1, 2, 3, null];
+
+/// Días seguidos con alguna finalización hasta hoy, o hasta ayer si hoy aún
+/// no hay nada (la racha no se rompe hasta que termina el día).
+int currentStreak(StatsEvents events, {DateTime? now}) {
+  final days = _activeDates(events);
+  final today = _startOfDay(now ?? DateTime.now());
+  var day = days.contains(today) ? today : _dayBefore(today);
+  var streak = 0;
+  while (days.contains(day)) {
+    streak++;
+    day = _dayBefore(day);
+  }
+  return streak;
+}
+
+int activeDays(StatsEvents events) => _activeDates(events).length;
+
+int minutesTrained(StatsEvents events) =>
+    events.trainingCompletions.fold(0, (sum, e) => sum + (e.duration ?? 0));
+
+/// Por cada sesión, en cuántos días distintos de cada cubo se entrenó en ella.
+/// Se cuentan días y no finalizaciones: la gráfica responde "cuántas sesiones
+/// hice", no "cuántos ejercicios".
+Map<int?, List<int>> sessionsPerBucket(StatsEvents events, StatPeriod period, {DateTime? now}) {
+  final buckets = dateRange(period, now: now);
+  final daysBySession = {for (final key in sessionKeys) key: <DateTime>{}};
+  for (final e in events.exerciseCompletions) {
+    daysBySession[e.session]?.add(_startOfDay(e.completedAt));
+  }
+  for (final e in events.trainingCompletions) {
+    daysBySession[e.session]?.add(_startOfDay(e.completedAt));
+  }
+  return {
+    for (final key in sessionKeys) key: bucketCounts(daysBySession[key]!.toList(), buckets, period),
+  };
+}
+
+Set<DateTime> _activeDates(StatsEvents events) => {
+  for (final e in events.exerciseCompletions) _startOfDay(e.completedAt),
+  for (final e in events.trainingCompletions) _startOfDay(e.completedAt),
+};
+
+// Por calendario y no restando Duration: cruzar un cambio de horario con
+// Duration(days: 1) no cae en medianoche (ver stats_buckets.dart).
+DateTime _startOfDay(DateTime d) => DateTime(d.year, d.month, d.day);
+
+DateTime _dayBefore(DateTime day) => DateTime(day.year, day.month, day.day - 1);
+
 List<CountEntry> countByStroke(List<ExerciseCompletionEvent> completions, StrokeAspect aspect) {
   final labels = aspect == StrokeAspect.hit ? hitLabels : rotationLabels;
   final excluded = aspect == StrokeAspect.hit ? _freeHits : _freeRotations;
