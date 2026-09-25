@@ -13,6 +13,13 @@
 /// Periodo que agrupa la gráfica.
 enum StatPeriod { daily, weekly, monthly }
 
+/// Pestañas de periodo, en el orden en que se enseñan.
+const statPeriodOptions = [
+  (StatPeriod.daily, 'Diario'),
+  (StatPeriod.weekly, 'Semanal'),
+  (StatPeriod.monthly, 'Mensual'),
+];
+
 const _weekdayLabels = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
 const _monthLabels = [
   'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',

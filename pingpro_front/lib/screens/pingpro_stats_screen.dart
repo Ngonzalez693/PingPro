@@ -9,6 +9,7 @@ import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/stat_type.dart';
 import 'package:pingpro_front/core/stats_buckets.dart';
 import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/widgets/labeled_tabs.dart';
 import 'package:pingpro_front/widgets/statistics_chart.dart';
 import 'package:pingpro_front/widgets/statistics_secundary_cart.dart';
 import 'package:pingpro_front/widgets/summary_icon_row.dart';
@@ -82,15 +83,10 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
                 // Period tabs
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildPeriodTab('Diario', StatPeriod.daily),
-                      const SizedBox(width: 8),
-                      _buildPeriodTab('Semanal', StatPeriod.weekly),
-                      const SizedBox(width: 8),
-                      _buildPeriodTab('Mensual', StatPeriod.monthly),
-                    ],
+                  child: LabeledTabs<StatPeriod>(
+                    options: statPeriodOptions,
+                    selected: _period,
+                    onSelected: _onPeriodSelected,
                   ),
                 ),
 
@@ -148,24 +144,6 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
               ],
             );
           },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPeriodTab(String label, StatPeriod p) {
-    final selected = _period == p;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => _onPeriodSelected(p),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: selected ? AppColors.primary : AppColors.secundary,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          alignment: Alignment.center,
-          child: Text(label, style: TextStyles.buttons),
         ),
       ),
     );
