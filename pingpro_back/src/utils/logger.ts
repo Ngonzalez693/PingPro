@@ -1,9 +1,9 @@
 /**
  * Logger de winston con nivel según NODE_ENV.
  *
- * Configurado pero sin usar: hoy el backend registra con console.log y morgan.
- * Sustituir esos por este logger es pendiente antes de desplegar en producción,
- * donde hacen falta niveles y salida estructurada.
+ * Lo usa errorHandler para registrar los errores internos (los que no se le
+ * enseñan al usuario). El resto del backend aún registra con console.log y
+ * morgan.
  */
 import { createLogger, transports, format } from 'winston';
 

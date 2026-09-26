@@ -13,4 +13,5 @@ export * from './user.validator';
 export * from './auth.validator';
 export * from './enums';
 export * from './apiResponse';
+export * from './httpError';
 export { default as logger } from './logger';
