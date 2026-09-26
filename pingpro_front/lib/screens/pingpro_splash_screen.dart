@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/widgets/bouncing_ball_indicator.dart';
 
 class PingproSplashScreen extends StatefulWidget {
@@ -37,32 +38,20 @@ class _PingproSplashScreenState extends State<PingproSplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Imagen mitad arriba
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.5,
-            width: double.infinity,
-            child: Image.asset(
-              'assets/images/loading_image.jpg',
-              fit: BoxFit.cover,
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset('assets/images/LogoInv_PingPro.png', height: 180),
+            const SizedBox(height: 16),
+            Text(
+              'PingPro',
+              style: TextStyles.brandTitle.copyWith(fontSize: 40),
             ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Logo con altura 180
-          SizedBox(
-            height: 180,
-            child: Image.asset('assets/images/LogoInv_PingPro.png'),
-          ),
-
-          const SizedBox(height: 32),
-
-          // Indicador animado con pelota rebotando
-          const BouncingBallIndicator(),
-        ],
+            const SizedBox(height: 32),
+            const BouncingBallIndicator(),
+          ],
+        ),
       ),
     );
   }
