@@ -12,10 +12,18 @@ import 'package:pingpro_front/core/services/stats_state.dart';
 /// ChangeNotifier, carga idempotente, cache indexada por id y UI optimista con
 /// rollback. Ver ExercisesState para la explicación completa del patrón.
 class TrainingsState extends ChangeNotifier with SafeNotify {
-  TrainingsState._();
-  static final TrainingsState instance = TrainingsState._();
+  TrainingsState._(this._service, this._stats);
 
-  final _service = TrainingsService();
+  /// Con un servicio falso y un StatsState propio, para probar el store sin
+  /// red ni singletons.
+  @visibleForTesting
+  TrainingsState.forTest({required TrainingsService service, required StatsState stats})
+      : this._(service, stats);
+
+  static final TrainingsState instance = TrainingsState._(TrainingsService(), StatsState.instance);
+
+  final TrainingsService _service;
+  final StatsState _stats;
 
   bool _isLoading = false;
   bool _loadedOnce = false;
@@ -57,7 +65,7 @@ class TrainingsState extends ChangeNotifier with SafeNotify {
   Future<String> create(TrainingDraft draft) async {
     final id = await _service.create(draft);
     await refresh();
-    unawaited(StatsState.instance.refresh());
+    unawaited(_stats.refresh());
     return id;
   }
 
@@ -65,14 +73,14 @@ class TrainingsState extends ChangeNotifier with SafeNotify {
   Future<void> update(TrainingDraft draft) async {
     await _service.update(draft);
     await refresh();
-    unawaited(StatsState.instance.refresh());
+    unawaited(_stats.refresh());
   }
 
   /// Elimina el entrenamiento (por /me si es propio) y recarga la lista.
   Future<void> delete(TrainingModel training) async {
     await _service.delete(training.id, own: training.isOwn);
     await refresh();
-    unawaited(StatsState.instance.refresh());
+    unawaited(_stats.refresh());
   }
 
   /// Vacía la cache y la marca de "ya cargado". Ver ExercisesState.reset().
@@ -107,21 +115,21 @@ class TrainingsState extends ChangeNotifier with SafeNotify {
 
     // Como en ExercisesState: se añade ya la finalización confirmada para no
     // depender de que la recarga llegue (o no falle).
-    StatsState.instance.addTrainingCompletion(
+    _stats.addTrainingCompletion(
       trainingCompletionEventFor(t, session: session, at: DateTime.now()),
     );
 
     // El historial vive en el servidor: sin recargar, la repetición recién
     // hecha no aparecería en las gráficas.
-    unawaited(StatsState.instance.refresh());
+    unawaited(_stats.refresh());
   }
 
   /// Como en ExercisesState: la "última vez" pasa a ser la anterior, que solo
   /// sabe el servidor, así que se recarga la lista en vez de ponerla a null.
   Future<void> _undoLastCompletion(TrainingModel t) async {
     await _service.setCompleted(t.id, false);
-    StatsState.instance.removeLatestTrainingCompletion(t.id);
+    _stats.removeLatestTrainingCompletion(t.id);
     unawaited(refresh());
-    unawaited(StatsState.instance.refresh());
+    unawaited(_stats.refresh());
   }
 }

@@ -26,10 +26,18 @@ import 'package:pingpro_front/core/services/stats_state.dart';
 /// AuthWrapper llama a `reset()` cuando cambia el uid, o el siguiente usuario
 /// vería los datos del anterior.
 class ExercisesState extends ChangeNotifier with SafeNotify {
-  ExercisesState._();
-  static final ExercisesState instance = ExercisesState._();
+  ExercisesState._(this._service, this._stats);
 
-  final _service = ExercisesService();
+  /// Con un servicio falso y un StatsState propio, para probar el store sin
+  /// red ni singletons.
+  @visibleForTesting
+  ExercisesState.forTest({required ExercisesService service, required StatsState stats})
+      : this._(service, stats);
+
+  static final ExercisesState instance = ExercisesState._(ExercisesService(), StatsState.instance);
+
+  final ExercisesService _service;
+  final StatsState _stats;
 
   bool _isLoading = false;
   bool _loadedOnce = false;
@@ -86,7 +94,7 @@ class ExercisesState extends ChangeNotifier with SafeNotify {
   Future<void> create(ExerciseDraft draft) async {
     await _service.create(draft);
     await refresh();
-    unawaited(StatsState.instance.refresh());
+    unawaited(_stats.refresh());
   }
 
   /// Guarda los cambios de un ejercicio y recarga la lista. Sin UI optimista,
@@ -94,14 +102,14 @@ class ExercisesState extends ChangeNotifier with SafeNotify {
   Future<void> update(ExerciseDraft draft) async {
     await _service.update(draft);
     await refresh();
-    unawaited(StatsState.instance.refresh());
+    unawaited(_stats.refresh());
   }
 
   /// Elimina el ejercicio (por /me si es propio) y recarga la lista.
   Future<void> delete(ExerciseModel exercise) async {
     await _service.delete(exercise.id, own: exercise.isOwn);
     await refresh();
-    unawaited(StatsState.instance.refresh());
+    unawaited(_stats.refresh());
   }
 
   /// Vacía la cache y la marca de "ya cargado".
@@ -163,13 +171,13 @@ class ExercisesState extends ChangeNotifier with SafeNotify {
 
     // El progreso por sesión sale de StatsState: se añade ya la repetición
     // confirmada para no depender de que la recarga llegue (o no falle).
-    StatsState.instance.addExerciseCompletion(
+    _stats.addExerciseCompletion(
       exerciseCompletionEventFor(ex, session: session, at: DateTime.now()),
     );
 
     // El historial vive en el servidor: sin recargar, la repetición recién
     // hecha no aparecería en las gráficas.
-    unawaited(StatsState.instance.refresh());
+    unawaited(_stats.refresh());
   }
 
   /// Sin UI optimista sobre `completedAt`: tras deshacer, la "última vez"
@@ -177,9 +185,9 @@ class ExercisesState extends ChangeNotifier with SafeNotify {
   /// eso se recarga la lista en vez de ponerlo a null).
   Future<void> _undoLastCompletion(ExerciseModel ex) async {
     await _service.setCompleted(id: ex.id, completed: false);
-    StatsState.instance.removeLatestExerciseCompletion(ex.id);
+    _stats.removeLatestExerciseCompletion(ex.id);
     unawaited(refresh());
-    unawaited(StatsState.instance.refresh());
+    unawaited(_stats.refresh());
   }
 
   /// Actualiza/insertar un ejercicio en memoria (por ejemplo, si vuelves del detalle con un objeto actualizado).
