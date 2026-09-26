@@ -137,9 +137,9 @@ export class TrainingService {
     const byId = new Map(states.map(s => [s.trainingId, s]));
 
     return trainings.map(t => {
-      // Ajusta si tu modelo usa otra propiedad de id
-      const tid = (t as any).id || (t as any).trainingId || t.id;
-      const st = byId.get(tid);
+      // `id` es opcional en ITraining (no lo lleva al crear), pero lo que sale
+      // del repositorio siempre lo tiene.
+      const st = t.id ? byId.get(t.id) : undefined;
 
       const completedAt = st?.completedAt ? st.completedAt.toISOString() : null;
       return {

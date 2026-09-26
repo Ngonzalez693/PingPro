@@ -8,7 +8,7 @@
 import { Response } from 'express';
 
 // Success response
-export const success = (res: Response, data: any, status = 200) =>
+export const success = (res: Response, data: unknown, status = 200) =>
   res.status(status).json({ success: true, data });
 
 // Error response

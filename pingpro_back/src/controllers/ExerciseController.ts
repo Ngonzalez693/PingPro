@@ -136,8 +136,7 @@ export default class ExerciseController {
   // Set exercise as favorite or not
   static async favorite(req: Request, res: Response, next: NextFunction) {
     try {
-      // uid viene del authMiddleware que ya activaste
-      const uid = (req as any).user?.uid || req.user?.uid;
+      const uid = req.user?.uid;
       if (!uid) {
         return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
       }
@@ -156,7 +155,7 @@ export default class ExerciseController {
   // Mark exercise as completed or not
   static async completed(req: Request, res: Response, next: NextFunction) {
     try {
-      const uid = (req as any).user?.uid || req.user?.uid;
+      const uid = req.user?.uid;
       if (!uid) {
         return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
       }
@@ -176,7 +175,7 @@ export default class ExerciseController {
   // Obtener TODOS los estados del usuario autenticado
   static async myStates(req: Request, res: Response, next: NextFunction) {
     try {
-      const uid = (req as any).user?.uid || req.user?.uid;
+      const uid = req.user?.uid;
       if (!uid) {
         return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
       }

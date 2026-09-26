@@ -130,8 +130,7 @@ export default class TrainingController {
   // Completar entrenamiento por usuario
   static async completed(req: Request, res: Response, next: NextFunction) {
     try {
-      // uid del authMiddleware (usa el que estés populando)
-      const uid = (req as any).user?.uid || (req as any).uid || (req as any).userId || (req as any).auth?.uid;
+      const uid = req.user?.uid;
       if (!uid) return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
 
       const { id } = req.params;
@@ -148,7 +147,7 @@ export default class TrainingController {
   // Obtener todos los estados del usuario
   static async myStates(req: Request, res: Response, next: NextFunction) {
     try {
-      const uid = (req as any).user?.uid || (req as any).uid || (req as any).userId || (req as any).auth?.uid;
+      const uid = req.user?.uid;
       if (!uid) return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
       const states = await service.getUserTrainingStates(uid);
       return success(res, states, HTTP_STATUS.OK);
@@ -159,7 +158,7 @@ export default class TrainingController {
 
   static async listWithUserState(req: Request, res: Response, next: NextFunction) {
     try {
-      const uid = (req as any).user?.uid || (req as any).uid || (req as any).userId || req.user?.uid;
+      const uid = req.user?.uid;
       if (!uid) return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
 
       const data = await service.getAllWithUserState(uid);
