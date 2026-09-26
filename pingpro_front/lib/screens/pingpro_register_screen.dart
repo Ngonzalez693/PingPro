@@ -8,6 +8,7 @@
 // signupViaBackend ya deja la sesión iniciada.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/email_validation.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
 import 'package:pingpro_front/widgets/custom_text_field.dart';
@@ -84,6 +85,12 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Todos los campos son obligatorios')),
       );
+      return;
+    }
+    if (!isValidEmail(email)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Email no válido')));
       return;
     }
 

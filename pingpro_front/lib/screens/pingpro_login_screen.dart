@@ -4,11 +4,10 @@
 // backend. Tras autenticar vuelve a la raíz y es AuthWrapper quien decide la
 // pantalla; también mantiene la sesión en los siguientes arranques.
 //
-// PENDIENTE para publicar: "¿Olvidaste tu contraseña?" no está implementado, y
-// la validación se limita a comprobar que los campos no estén vacíos (no se
-// valida el formato del email antes de llamar a Firebase).
+// PENDIENTE para publicar: "¿Olvidaste tu contraseña?" no está implementado.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/email_validation.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
 import 'package:pingpro_front/widgets/custom_text_field.dart';
@@ -32,6 +31,12 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Email y contraseña son obligatorios')),
       );
+      return;
+    }
+    if (!isValidEmail(email)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Email no válido')));
       return;
     }
 
