@@ -107,13 +107,17 @@ class TrainingsState extends ChangeNotifier {
   /// Quien lo llama es la pantalla de detalle, cuando detecta que todos los
   /// ejercicios del entrenamiento están hechos en la sesión. `session` es la sesión del día
   /// elegida en el detalle.
+  ///
+  /// Con `completed` false deshace la última finalización (al deshacer el
+  /// "Hecho" que lo había completado).
   Future<void> setCompleted(String id, bool completed, {int? session}) async {
     final t = _byId[id]; if (t == null) return;
+    if (!completed) return _undoLastCompletion(t);
     final prev = t.completedAt;
-    t.completedAt = completed ? DateTime.now() : null;
+    t.completedAt = DateTime.now();
     notifyListeners();
     try {
-      await _service.setCompleted(id, completed, session: session);
+      await _service.setCompleted(id, true, session: session);
     } catch (_) {
       t.completedAt = prev; // revert
       notifyListeners();
@@ -122,14 +126,21 @@ class TrainingsState extends ChangeNotifier {
 
     // Como en ExercisesState: se añade ya la finalización confirmada para no
     // depender de que la recarga llegue (o no falle).
-    if (completed) {
-      StatsState.instance.addTrainingCompletion(
-        trainingCompletionEventFor(t, session: session, at: DateTime.now()),
-      );
-    }
+    StatsState.instance.addTrainingCompletion(
+      trainingCompletionEventFor(t, session: session, at: DateTime.now()),
+    );
 
     // El historial vive en el servidor: sin recargar, la repetición recién
     // hecha no aparecería en las gráficas.
+    unawaited(StatsState.instance.refresh());
+  }
+
+  /// Como en ExercisesState: la "última vez" pasa a ser la anterior, que solo
+  /// sabe el servidor, así que se recarga la lista en vez de ponerla a null.
+  Future<void> _undoLastCompletion(TrainingModel t) async {
+    await _service.setCompleted(t.id, false);
+    StatsState.instance.removeLatestTrainingCompletion(t.id);
+    unawaited(refresh());
     unawaited(StatsState.instance.refresh());
   }
 }

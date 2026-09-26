@@ -1,11 +1,16 @@
-// Confirmación antes de eliminar un ejercicio o un entrenamiento. Desde la app
-// no se puede deshacer, así que siempre se pregunta.
+// Confirmación antes de borrar algo que no se puede recuperar desde la app:
+// un ejercicio, un entrenamiento o una repetición ya hecha.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 
-/// Devuelve true solo si el usuario pulsa "Eliminar".
-Future<bool> confirmDelete(BuildContext context, {required String message}) async {
+/// Devuelve true solo si el usuario pulsa el botón de confirmar
+/// (`confirmLabel`, "Eliminar" por defecto).
+Future<bool> confirmDelete(
+  BuildContext context, {
+  required String message,
+  String confirmLabel = 'Eliminar',
+}) async {
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (dialogContext) => AlertDialog(
@@ -19,7 +24,7 @@ Future<bool> confirmDelete(BuildContext context, {required String message}) asyn
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
           onPressed: () => Navigator.pop(dialogContext, true),
-          child: const Text('Eliminar', style: TextStyles.buttons),
+          child: Text(confirmLabel, style: TextStyles.buttons),
         ),
       ],
     ),

@@ -7,7 +7,10 @@
 //   - El botón "Hecho" es el ÚNICO sitio de la app que marca un ejercicio como
 //     completado, y por tanto el que alimenta todas las estadísticas. Envía la
 //     sesión del día elegida arriba y se puede pulsar más veces (cada vez es
-//     una repetición). "¡Listo!" significa hecho HOY en esa sesión.
+//     una repetición). "¡Listo!" significa hecho HOY en esa sesión. Tras
+//     "Hecho" un SnackBar permite deshacer, y "Deshacer" bajo el botón lo
+//     permite después, mientras la última repetición sea de hoy y de esa
+//     sesión (core/session_progress.dart).
 //   - El menú ⋮ (solo para el dueño o, en el catálogo, para un admin) abre la
 //     edición o elimina el ejercicio.
 //
@@ -34,6 +37,7 @@ import 'package:pingpro_front/core/services/session_roles.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
 import 'package:pingpro_front/widgets/exercise_animation_view.dart';
 import 'package:pingpro_front/core/session_progress.dart';
+import 'package:pingpro_front/core/services/completion_undo.dart';
 import 'package:pingpro_front/core/services/current_session.dart';
 import 'package:pingpro_front/core/services/stats_state.dart';
 import 'package:pingpro_front/widgets/session_selector.dart';
@@ -150,10 +154,20 @@ class _PingproExerciseDetailScreenState
   Future<void> _handleFinalize() async {
     setState(() => _actionLoading = true);
     final id = widget.exercise.id;
+    final messenger = ScaffoldMessenger.of(context);
 
     try {
       final session = CurrentSession.instance.sessionFor(StatsState.instance.events);
       await ExercisesState.instance.setCompleted(id, true, session: session);
+      // El SnackBar sobrevive al pop: se ve en la pantalla a la que se vuelve.
+      messenger.showSnackBar(SnackBar(
+        content: const Text('Repetición guardada'),
+        action: SnackBarAction(
+          label: 'Deshacer',
+          textColor: AppColors.primary,
+          onPressed: () => _undoAndReport(messenger, id, session),
+        ),
+      ));
       Navigator.of(context).pop(ExercisesState.instance.getById(id));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -161,6 +175,31 @@ class _PingproExerciseDetailScreenState
       );
     } finally {
       if (mounted) setState(() => _actionLoading = false);
+    }
+  }
+
+  Future<void> _onUndoPressed(int session) async {
+    if (_actionLoading) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await confirmDelete(
+      context,
+      message: '¿Deshacer la última repetición de esta sesión?',
+      confirmLabel: 'Deshacer',
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _actionLoading = true);
+    await _undoAndReport(messenger, widget.exercise.id, session);
+    if (mounted) setState(() => _actionLoading = false);
+  }
+
+  // Estático y sin context: el "Deshacer" del SnackBar puede pulsarse con esta
+  // pantalla ya cerrada, así que solo usa el messenger capturado antes.
+  static Future<void> _undoAndReport(ScaffoldMessengerState messenger, String exerciseId, int session) async {
+    try {
+      await undoExerciseCompletion(exerciseId, session);
+      messenger.showSnackBar(const SnackBar(content: Text('Repetición deshecha')));
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('No se pudo deshacer')));
     }
   }
 
@@ -185,6 +224,7 @@ class _PingproExerciseDetailScreenState
         final events = StatsState.instance.events;
         final session = CurrentSession.instance.sessionFor(events);
         final isCompleted = isExerciseDoneInSession(ex.id, events, session);
+        final canUndo = canUndoInSession(ex.id, events, session);
 
         return Scaffold(
           backgroundColor: AppColors.background,
@@ -342,6 +382,15 @@ class _PingproExerciseDetailScreenState
                                 ),
                               ),
                             ),
+
+                            if (canUndo)
+                              TextButton(
+                                onPressed: () => _onUndoPressed(session),
+                                child: Text(
+                                  'Deshacer',
+                                  style: TextStyles.paragraph.copyWith(decoration: TextDecoration.underline),
+                                ),
+                              ),
                           ],
                         ),
                       ],

@@ -162,18 +162,20 @@ class ExercisesState extends ChangeNotifier {
     }
   }
 
-  /// Marca/desmarca como completado con UI optimista. `session` es la sesión
-  /// del día (1..3) elegida en el detalle; sin ella queda "sin sesión".
+  /// Marca como completado con UI optimista, o deshace la última repetición
+  /// (`completed` false). `session` es la sesión del día (1..3) elegida en el
+  /// detalle; sin ella queda "sin sesión".
   Future<void> setCompleted(String id, bool completed, {int? session}) async {
     final ex = _byId[id];
     if (ex == null) return;
+    if (!completed) return _undoLastCompletion(ex);
 
     final prevCompletedAt = ex.completedAt;
-    ex.completedAt = completed ? DateTime.now() : null;
+    ex.completedAt = DateTime.now();
     _safeNotify();
 
     try {
-      await _service.setCompleted(id: id, completed: completed, session: session);
+      await _service.setCompleted(id: id, completed: true, session: session);
     } catch (e) {
       ex.completedAt = prevCompletedAt; // rollback si falla
       _safeNotify();
@@ -182,14 +184,22 @@ class ExercisesState extends ChangeNotifier {
 
     // El progreso por sesión sale de StatsState: se añade ya la repetición
     // confirmada para no depender de que la recarga llegue (o no falle).
-    if (completed) {
-      StatsState.instance.addExerciseCompletion(
-        exerciseCompletionEventFor(ex, session: session, at: DateTime.now()),
-      );
-    }
+    StatsState.instance.addExerciseCompletion(
+      exerciseCompletionEventFor(ex, session: session, at: DateTime.now()),
+    );
 
     // El historial vive en el servidor: sin recargar, la repetición recién
     // hecha no aparecería en las gráficas.
+    unawaited(StatsState.instance.refresh());
+  }
+
+  /// Sin UI optimista sobre `completedAt`: tras deshacer, la "última vez"
+  /// pasa a ser la repetición anterior, y esa solo la sabe el servidor (por
+  /// eso se recarga la lista en vez de ponerlo a null).
+  Future<void> _undoLastCompletion(ExerciseModel ex) async {
+    await _service.setCompleted(id: ex.id, completed: false);
+    StatsState.instance.removeLatestExerciseCompletion(ex.id);
+    unawaited(refresh());
     unawaited(StatsState.instance.refresh());
   }
 
