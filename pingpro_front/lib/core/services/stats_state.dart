@@ -103,6 +103,37 @@ class StatsState extends ChangeNotifier {
     _safeNotify();
   }
 
+  /// Quita la finalización más reciente del ejercicio tras un "Deshacer"
+  /// confirmado por el servidor, que borra justo esa. Como en
+  /// addExerciseCompletion, el progreso cambia al instante y el refresh()
+  /// posterior lo confirma.
+  void removeLatestExerciseCompletion(String exerciseId) {
+    _events = StatsEvents(
+      exerciseCompletions: _withoutLatest(
+        _events.exerciseCompletions,
+        (e) => e.exerciseId == exerciseId,
+        (e) => e.completedAt,
+      ),
+      trainingCompletions: _events.trainingCompletions,
+      created: _events.created,
+    );
+    _safeNotify();
+  }
+
+  /// Igual que removeLatestExerciseCompletion, para entrenamientos.
+  void removeLatestTrainingCompletion(String trainingId) {
+    _events = StatsEvents(
+      exerciseCompletions: _events.exerciseCompletions,
+      trainingCompletions: _withoutLatest(
+        _events.trainingCompletions,
+        (e) => e.trainingId == trainingId,
+        (e) => e.completedAt,
+      ),
+      created: _events.created,
+    );
+    _safeNotify();
+  }
+
   /// Vacía el historial al cambiar de usuario (lo llama AuthWrapper).
   ///
   /// También libera _isLoading: si no, un load() disparado justo después
@@ -132,4 +163,16 @@ class StatsState extends ChangeNotifier {
       if (hasListeners) notifyListeners();
     });
   }
+}
+
+/// La lista sin el elemento más reciente de los que cumplen `matches`; si no
+/// hay ninguno, la misma lista.
+List<T> _withoutLatest<T>(List<T> items, bool Function(T) matches, DateTime Function(T) dateOf) {
+  int? latest;
+  for (var i = 0; i < items.length; i++) {
+    if (!matches(items[i])) continue;
+    if (latest == null || dateOf(items[i]).isAfter(dateOf(items[latest]))) latest = i;
+  }
+  if (latest == null) return items;
+  return [...items]..removeAt(latest);
 }

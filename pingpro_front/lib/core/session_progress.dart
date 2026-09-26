@@ -5,6 +5,7 @@
 // Las finalizaciones sin sesión (anteriores a las sesiones, o de la app
 // vieja) nunca cuentan para el progreso de hoy.
 import 'package:pingpro_front/models/stats_events_model.dart';
+import 'package:pingpro_front/models/training_model.dart';
 
 /// Sesiones que se pueden elegir en un día.
 const sessionNumbers = [1, 2, 3];
@@ -44,6 +45,39 @@ bool isTrainingDoneInSession(String trainingId, StatsEvents events, int session,
   final today = now ?? DateTime.now();
   return events.trainingCompletions.any((e) =>
       e.trainingId == trainingId && e.session == session && isSameDay(e.completedAt, today));
+}
+
+/// Si se puede deshacer una repetición del ejercicio desde la sesión elegida:
+/// el backend siempre borra la ÚLTIMA, así que solo se ofrece si esa última
+/// es de hoy y de esta sesión (si no, se borraría la de otra sesión o día).
+bool canUndoInSession(String exerciseId, StatsEvents events, int session, {DateTime? now}) {
+  ExerciseCompletionEvent? latest;
+  for (final e in events.exerciseCompletions) {
+    if (e.exerciseId != exerciseId) continue;
+    if (latest == null || e.completedAt.isAfter(latest.completedAt)) latest = e;
+  }
+  return latest != null &&
+      latest.session == session &&
+      isSameDay(latest.completedAt, now ?? DateTime.now());
+}
+
+/// Entrenamientos completados hoy en la sesión que contienen el ejercicio y,
+/// con `events` ya sin la repetición deshecha, han dejado de estar completos:
+/// su finalización también hay que deshacerla.
+List<String> trainingsToReopen(
+  String exerciseId,
+  StatsEvents events,
+  List<TrainingModel> trainings,
+  int session, {
+  DateTime? now,
+}) {
+  return [
+    for (final t in trainings)
+      if (t.exerciseIds.contains(exerciseId) &&
+          isTrainingDoneInSession(t.id, events, session, now: now) &&
+          trainingDoneFlags(t.exerciseIds, events, session, now: now).contains(false))
+        t.id,
+  ];
 }
 
 Iterable<ExerciseCompletionEvent> _exerciseCompletionsIn(StatsEvents events, int session, DateTime day) =>
