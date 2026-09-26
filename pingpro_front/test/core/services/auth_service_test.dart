@@ -22,4 +22,25 @@ void main() {
       expect(hasAdminRole({'roles': null}), isFalse);
     });
   });
+
+  group('passwordResetErrorMessage', () {
+    test('traduce los errores que el usuario puede resolver', () {
+      expect(passwordResetErrorMessage('invalid-email'), 'Email no válido');
+      expect(
+        passwordResetErrorMessage('too-many-requests'),
+        'Demasiados intentos, prueba más tarde',
+      );
+      expect(
+        passwordResetErrorMessage('network-request-failed'),
+        'Sin conexión, revisa tu red',
+      );
+    });
+
+    test('cualquier otro código cae en un mensaje genérico', () {
+      expect(
+        passwordResetErrorMessage('internal-error'),
+        'No se pudo enviar el correo, inténtalo de nuevo',
+      );
+    });
+  });
 }
