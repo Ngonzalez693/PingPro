@@ -2,9 +2,6 @@
 //
 // Es puramente visual: espera 3 segundos fijos y navega, no aguarda a que
 // termine ninguna carga real (Firebase y dotenv ya se inicializan en main()).
-//
-// PENDIENTE: el Timer no se cancela en dispose(). Si el usuario sale antes de
-// los 3 segundos, la navegación se dispara sobre un contexto ya desmontado.
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -18,13 +15,22 @@ class PingproSplashScreen extends StatefulWidget {
 }
 
 class _PingproSplashScreenState extends State<PingproSplashScreen> {
+  late final Timer _timer;
+
   @override
   void initState() {
     super.initState();
-    // Simula carga, luego navega al login
-    Timer(const Duration(seconds: 3), () {
+    _timer = Timer(const Duration(seconds: 3), () {
       Navigator.of(context).pushReplacementNamed('/login');
     });
+  }
+
+  // Si el usuario sale antes de los 3 segundos, la navegación no debe
+  // dispararse sobre un contexto ya desmontado.
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 
   @override
