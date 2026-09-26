@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/scheduler.dart'; // 👈 para SchedulerBinding
+import 'package:pingpro_front/core/services/safe_notify.dart';
 import 'package:pingpro_front/core/local_completion_events.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
@@ -25,11 +25,19 @@ import 'package:pingpro_front/core/services/stats_state.dart';
 /// Al ser singleton, el estado sobreviviría al cierre de sesión: por eso
 /// AuthWrapper llama a `reset()` cuando cambia el uid, o el siguiente usuario
 /// vería los datos del anterior.
-class ExercisesState extends ChangeNotifier {
-  ExercisesState._();
-  static final ExercisesState instance = ExercisesState._();
+class ExercisesState extends ChangeNotifier with SafeNotify {
+  ExercisesState._(this._service, this._stats);
 
-  final _service = ExercisesService();
+  /// Con un servicio falso y un StatsState propio, para probar el store sin
+  /// red ni singletons.
+  @visibleForTesting
+  ExercisesState.forTest({required ExercisesService service, required StatsState stats})
+      : this._(service, stats);
+
+  static final ExercisesState instance = ExercisesState._(ExercisesService(), StatsState.instance);
+
+  final ExercisesService _service;
+  final StatsState _stats;
 
   bool _isLoading = false;
   bool _loadedOnce = false;
@@ -49,27 +57,6 @@ class ExercisesState extends ChangeNotifier {
 
   ExerciseModel? getById(String id) => _byId[id];
 
-  /// Notifica de forma segura: si estamos en mitad de un build, pospone la notificación.
-  ///
-  /// Hace falta porque varias pantallas llaman a load() desde initState, que
-  /// corre durante el build. Un notifyListeners() en ese momento lanza
-  /// "setState() called during build"; aquí se aplaza al siguiente frame.
-  void _safeNotify() {
-    if (!hasListeners) return;
-    final phase = SchedulerBinding.instance.schedulerPhase;
-    if (phase == SchedulerPhase.idle || phase == SchedulerPhase.postFrameCallbacks) {
-      // Es seguro notificar ahora
-      notifyListeners();
-    } else {
-      // Posponer al siguiente frame
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (hasListeners) {
-          notifyListeners();
-        }
-      });
-    }
-  }
-
   /// Carga listado + estados del usuario y los guarda en memoria.
   Future<void> load({bool force = false}) async {
     // Estas dos guardas son la razón de que casi todas las pantallas puedan
@@ -80,7 +67,7 @@ class ExercisesState extends ChangeNotifier {
 
     _isLoading = true;
     _error = null;
-    _safeNotify();
+    safeNotify();
 
     try {
       final list = await _service.fetchAllMergedWithUserState();
@@ -92,7 +79,7 @@ class ExercisesState extends ChangeNotifier {
       _error = e.toString();
     } finally {
       _isLoading = false;
-      _safeNotify();
+      safeNotify();
     }
   }
 
@@ -107,7 +94,7 @@ class ExercisesState extends ChangeNotifier {
   Future<void> create(ExerciseDraft draft) async {
     await _service.create(draft);
     await refresh();
-    unawaited(StatsState.instance.refresh());
+    unawaited(_stats.refresh());
   }
 
   /// Guarda los cambios de un ejercicio y recarga la lista. Sin UI optimista,
@@ -115,14 +102,14 @@ class ExercisesState extends ChangeNotifier {
   Future<void> update(ExerciseDraft draft) async {
     await _service.update(draft);
     await refresh();
-    unawaited(StatsState.instance.refresh());
+    unawaited(_stats.refresh());
   }
 
   /// Elimina el ejercicio (por /me si es propio) y recarga la lista.
   Future<void> delete(ExerciseModel exercise) async {
     await _service.delete(exercise.id, own: exercise.isOwn);
     await refresh();
-    unawaited(StatsState.instance.refresh());
+    unawaited(_stats.refresh());
   }
 
   /// Vacía la cache y la marca de "ya cargado".
@@ -134,7 +121,7 @@ class ExercisesState extends ChangeNotifier {
     _byId.clear();
     _loadedOnce = false;
     _error = null;
-    _safeNotify();
+    safeNotify();
   }
 
   // Alterna favorito con UI optimista.
@@ -151,13 +138,13 @@ class ExercisesState extends ChangeNotifier {
 
     final prev = ex.isFavorite;
     ex.isFavorite = !ex.isFavorite;
-    _safeNotify();
+    safeNotify();
 
     try {
       await _service.setFavorite(id: id, isFavorite: ex.isFavorite);
     } catch (e) {
       ex.isFavorite = prev; // rollback si falla
-      _safeNotify();
+      safeNotify();
       rethrow;
     }
   }
@@ -172,25 +159,25 @@ class ExercisesState extends ChangeNotifier {
 
     final prevCompletedAt = ex.completedAt;
     ex.completedAt = DateTime.now();
-    _safeNotify();
+    safeNotify();
 
     try {
       await _service.setCompleted(id: id, completed: true, session: session);
     } catch (e) {
       ex.completedAt = prevCompletedAt; // rollback si falla
-      _safeNotify();
+      safeNotify();
       rethrow;
     }
 
     // El progreso por sesión sale de StatsState: se añade ya la repetición
     // confirmada para no depender de que la recarga llegue (o no falle).
-    StatsState.instance.addExerciseCompletion(
+    _stats.addExerciseCompletion(
       exerciseCompletionEventFor(ex, session: session, at: DateTime.now()),
     );
 
     // El historial vive en el servidor: sin recargar, la repetición recién
     // hecha no aparecería en las gráficas.
-    unawaited(StatsState.instance.refresh());
+    unawaited(_stats.refresh());
   }
 
   /// Sin UI optimista sobre `completedAt`: tras deshacer, la "última vez"
@@ -198,15 +185,15 @@ class ExercisesState extends ChangeNotifier {
   /// eso se recarga la lista en vez de ponerlo a null).
   Future<void> _undoLastCompletion(ExerciseModel ex) async {
     await _service.setCompleted(id: ex.id, completed: false);
-    StatsState.instance.removeLatestExerciseCompletion(ex.id);
+    _stats.removeLatestExerciseCompletion(ex.id);
     unawaited(refresh());
-    unawaited(StatsState.instance.refresh());
+    unawaited(_stats.refresh());
   }
 
   /// Actualiza/insertar un ejercicio en memoria (por ejemplo, si vuelves del detalle con un objeto actualizado).
   void upsert(ExerciseModel e) {
     _byId[e.id] = e;
-    _safeNotify();
+    safeNotify();
   }
 
   /// Helpers opcionales

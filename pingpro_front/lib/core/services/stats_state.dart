@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/scheduler.dart';
+import 'package:pingpro_front/core/services/safe_notify.dart';
 import 'package:pingpro_front/core/services/stats_service.dart';
 import 'package:pingpro_front/core/stats_series.dart';
 import 'package:pingpro_front/models/stats_events_model.dart';
@@ -13,7 +13,7 @@ typedef StatsFetcher = Future<StatsEvents> Function(DateTime from);
 /// - refresh() durante una carga no se pierde: ExercisesState y
 ///   TrainingsState llaman a refresh() tras cada "Hecho", y si coincide con
 ///   una carga en curso esa carga ya no incluye el cambio.
-class StatsState extends ChangeNotifier {
+class StatsState extends ChangeNotifier with SafeNotify {
   StatsState._(this._fetch);
 
   @visibleForTesting
@@ -48,7 +48,7 @@ class StatsState extends ChangeNotifier {
     final generation = _generation;
     _isLoading = true;
     _error = null;
-    _safeNotify();
+    safeNotify();
 
     try {
       final events = await _fetch(statsWindowStart());
@@ -64,7 +64,7 @@ class StatsState extends ChangeNotifier {
       // carga del usuario nuevo que puede estar en curso.
       if (generation == _generation) {
         _isLoading = false;
-        _safeNotify();
+        safeNotify();
       }
     }
 
@@ -90,7 +90,7 @@ class StatsState extends ChangeNotifier {
       trainingCompletions: _events.trainingCompletions,
       created: _events.created,
     );
-    _safeNotify();
+    safeNotify();
   }
 
   /// Igual que addExerciseCompletion, para entrenamientos.
@@ -100,7 +100,7 @@ class StatsState extends ChangeNotifier {
       trainingCompletions: [..._events.trainingCompletions, event],
       created: _events.created,
     );
-    _safeNotify();
+    safeNotify();
   }
 
   /// Quita la finalización más reciente del ejercicio tras un "Deshacer"
@@ -117,7 +117,7 @@ class StatsState extends ChangeNotifier {
       trainingCompletions: _events.trainingCompletions,
       created: _events.created,
     );
-    _safeNotify();
+    safeNotify();
   }
 
   /// Igual que removeLatestExerciseCompletion, para entrenamientos.
@@ -131,7 +131,7 @@ class StatsState extends ChangeNotifier {
       ),
       created: _events.created,
     );
-    _safeNotify();
+    safeNotify();
   }
 
   /// Vacía el historial al cambiar de usuario (lo llama AuthWrapper).
@@ -147,21 +147,7 @@ class StatsState extends ChangeNotifier {
     _loadedOnce = false;
     _reloadQueued = false;
     _error = null;
-    _safeNotify();
-  }
-
-  /// Notifica fuera del build: load() se llama desde initState y reset()
-  /// desde el builder de AuthWrapper. Ver ExercisesState._safeNotify.
-  void _safeNotify() {
-    if (!hasListeners) return;
-    final phase = SchedulerBinding.instance.schedulerPhase;
-    if (phase == SchedulerPhase.idle || phase == SchedulerPhase.postFrameCallbacks) {
-      notifyListeners();
-      return;
-    }
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (hasListeners) notifyListeners();
-    });
+    safeNotify();
   }
 }
 
