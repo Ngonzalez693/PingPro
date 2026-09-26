@@ -13,6 +13,10 @@
 // `_postedForSession` para no enviarla dos veces mientras StatsState recarga,
 // y addPostFrameCallback para no modificar estado en mitad del build.
 //
+// Es a propósito que se complete si le quitan el único ejercicio pendiente
+// (se borró ese ejercicio o se sacó al editar el entrenamiento) y el resto ya
+// estaba hecho hoy en esa sesión: todo lo que contiene ahora se entrenó.
+//
 // Lee siempre la versión viva del entrenamiento en el store: tras editarlo se
 // ve la nueva. El menú ⋮ (dueño o, en el catálogo, admin) abre la edición o lo
 // elimina; mientras se elimina, las acciones quedan bloqueadas.
