@@ -33,7 +33,7 @@ StatsEvents _fullEvents(String suffix) => StatsEvents(
 );
 
 void main() {
-  // _safeNotify() consulta SchedulerBinding.instance.
+  // safeNotify() (mixin SafeNotify) consulta SchedulerBinding.instance.
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('load guarda los eventos y los pide desde el inicio de la ventana de 6 meses', () async {

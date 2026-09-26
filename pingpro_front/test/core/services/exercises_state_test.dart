@@ -14,7 +14,7 @@ ExerciseModel _exercise(String id) => ExerciseModel(
 );
 
 void main() {
-  // _safeNotify() consulta SchedulerBinding.instance, que necesita el binding
+  // safeNotify() (mixin SafeNotify) consulta SchedulerBinding.instance, que necesita el binding
   // listo. En la app lo deja listo main() con WidgetsFlutterBinding.
   TestWidgetsFlutterBinding.ensureInitialized();
 

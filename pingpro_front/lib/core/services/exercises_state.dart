@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/scheduler.dart'; // 👈 para SchedulerBinding
+import 'package:pingpro_front/core/services/safe_notify.dart';
 import 'package:pingpro_front/core/local_completion_events.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
@@ -25,7 +25,7 @@ import 'package:pingpro_front/core/services/stats_state.dart';
 /// Al ser singleton, el estado sobreviviría al cierre de sesión: por eso
 /// AuthWrapper llama a `reset()` cuando cambia el uid, o el siguiente usuario
 /// vería los datos del anterior.
-class ExercisesState extends ChangeNotifier {
+class ExercisesState extends ChangeNotifier with SafeNotify {
   ExercisesState._();
   static final ExercisesState instance = ExercisesState._();
 
@@ -49,27 +49,6 @@ class ExercisesState extends ChangeNotifier {
 
   ExerciseModel? getById(String id) => _byId[id];
 
-  /// Notifica de forma segura: si estamos en mitad de un build, pospone la notificación.
-  ///
-  /// Hace falta porque varias pantallas llaman a load() desde initState, que
-  /// corre durante el build. Un notifyListeners() en ese momento lanza
-  /// "setState() called during build"; aquí se aplaza al siguiente frame.
-  void _safeNotify() {
-    if (!hasListeners) return;
-    final phase = SchedulerBinding.instance.schedulerPhase;
-    if (phase == SchedulerPhase.idle || phase == SchedulerPhase.postFrameCallbacks) {
-      // Es seguro notificar ahora
-      notifyListeners();
-    } else {
-      // Posponer al siguiente frame
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (hasListeners) {
-          notifyListeners();
-        }
-      });
-    }
-  }
-
   /// Carga listado + estados del usuario y los guarda en memoria.
   Future<void> load({bool force = false}) async {
     // Estas dos guardas son la razón de que casi todas las pantallas puedan
@@ -80,7 +59,7 @@ class ExercisesState extends ChangeNotifier {
 
     _isLoading = true;
     _error = null;
-    _safeNotify();
+    safeNotify();
 
     try {
       final list = await _service.fetchAllMergedWithUserState();
@@ -92,7 +71,7 @@ class ExercisesState extends ChangeNotifier {
       _error = e.toString();
     } finally {
       _isLoading = false;
-      _safeNotify();
+      safeNotify();
     }
   }
 
@@ -134,7 +113,7 @@ class ExercisesState extends ChangeNotifier {
     _byId.clear();
     _loadedOnce = false;
     _error = null;
-    _safeNotify();
+    safeNotify();
   }
 
   // Alterna favorito con UI optimista.
@@ -151,13 +130,13 @@ class ExercisesState extends ChangeNotifier {
 
     final prev = ex.isFavorite;
     ex.isFavorite = !ex.isFavorite;
-    _safeNotify();
+    safeNotify();
 
     try {
       await _service.setFavorite(id: id, isFavorite: ex.isFavorite);
     } catch (e) {
       ex.isFavorite = prev; // rollback si falla
-      _safeNotify();
+      safeNotify();
       rethrow;
     }
   }
@@ -172,13 +151,13 @@ class ExercisesState extends ChangeNotifier {
 
     final prevCompletedAt = ex.completedAt;
     ex.completedAt = DateTime.now();
-    _safeNotify();
+    safeNotify();
 
     try {
       await _service.setCompleted(id: id, completed: true, session: session);
     } catch (e) {
       ex.completedAt = prevCompletedAt; // rollback si falla
-      _safeNotify();
+      safeNotify();
       rethrow;
     }
 
@@ -206,7 +185,7 @@ class ExercisesState extends ChangeNotifier {
   /// Actualiza/insertar un ejercicio en memoria (por ejemplo, si vuelves del detalle con un objeto actualizado).
   void upsert(ExerciseModel e) {
     _byId[e.id] = e;
-    _safeNotify();
+    safeNotify();
   }
 
   /// Helpers opcionales

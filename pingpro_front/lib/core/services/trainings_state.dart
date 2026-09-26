@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/scheduler.dart';
+import 'package:pingpro_front/core/services/safe_notify.dart';
 import 'package:pingpro_front/core/local_completion_events.dart';
 import 'package:pingpro_front/models/training_draft_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
@@ -11,11 +11,7 @@ import 'package:pingpro_front/core/services/stats_state.dart';
 /// Store global de entrenamientos. Gemelo de ExercisesState: singleton +
 /// ChangeNotifier, carga idempotente, cache indexada por id y UI optimista con
 /// rollback. Ver ExercisesState para la explicación completa del patrón.
-///
-/// Una diferencia: aquí se usa notifyListeners() directo en vez de un
-/// _safeNotify(). Funciona porque load() se dispara tras el primer await, pero
-/// es más frágil que en ExercisesState; valdría la pena unificar los dos stores.
-class TrainingsState extends ChangeNotifier {
+class TrainingsState extends ChangeNotifier with SafeNotify {
   TrainingsState._();
   static final TrainingsState instance = TrainingsState._();
 
@@ -37,7 +33,7 @@ class TrainingsState extends ChangeNotifier {
   Future<void> load({bool force = false}) async {
     if (_isLoading) return;
     if (_loadedOnce && !force) return;
-    _isLoading = true; _error = null; notifyListeners();
+    _isLoading = true; _error = null; safeNotify();
     try {
       final list = await _service.fetchAllWithUserState();
       _byId
@@ -47,7 +43,7 @@ class TrainingsState extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
     } finally {
-      _isLoading = false; notifyListeners();
+      _isLoading = false; safeNotify();
     }
   }
 
@@ -84,22 +80,7 @@ class TrainingsState extends ChangeNotifier {
     _byId.clear();
     _loadedOnce = false;
     _error = null;
-    _safeNotify();
-  }
-
-  /// Notifica fuera del build. A diferencia del resto de métodos, reset() lo
-  /// llama AuthWrapper desde su builder, donde un notifyListeners() directo
-  /// rompería con "setState() called during build".
-  void _safeNotify() {
-    if (!hasListeners) return;
-    final phase = SchedulerBinding.instance.schedulerPhase;
-    if (phase == SchedulerPhase.idle || phase == SchedulerPhase.postFrameCallbacks) {
-      notifyListeners();
-      return;
-    }
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (hasListeners) notifyListeners();
-    });
+    safeNotify();
   }
 
   /// Marca el entrenamiento como completado (UI optimista + rollback).
@@ -115,12 +96,12 @@ class TrainingsState extends ChangeNotifier {
     if (!completed) return _undoLastCompletion(t);
     final prev = t.completedAt;
     t.completedAt = DateTime.now();
-    notifyListeners();
+    safeNotify();
     try {
       await _service.setCompleted(id, true, session: session);
     } catch (_) {
       t.completedAt = prev; // revert
-      notifyListeners();
+      safeNotify();
       rethrow;
     }
 
