@@ -43,6 +43,13 @@ class TextStyles {
 
   static const aditional = TextStyle(color: AppColors.textBlack, fontSize: 14);
 
+  // Solo para el nombre de la app: Anta es la tipografía de marca, no de UI.
+  static const brandTitle = TextStyle(
+    fontFamily: 'Anta',
+    color: AppColors.primary,
+    fontSize: 28,
+  );
+
   static const loginRegister = TextStyle(
     color: AppColors.secundary,
     fontWeight: FontWeight.bold,
