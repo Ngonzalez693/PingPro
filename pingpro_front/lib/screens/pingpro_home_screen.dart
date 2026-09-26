@@ -8,7 +8,6 @@
 // StatsState, calculada con core/stats_series.dart como en Estadísticas.
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/stats_state.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
@@ -75,14 +74,8 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            Center(
-              child: Text(
-                'PingPro',
-                style: TextStyles.title.copyWith(
-                  fontSize: 28,
-                  color: AppColors.primary,
-                ),
-              ),
+            const Center(
+              child: Text('PingPro', style: TextStyles.brandTitle),
             ),
             const SizedBox(height: 16),
             Text(

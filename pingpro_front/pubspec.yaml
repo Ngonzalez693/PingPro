@@ -28,3 +28,7 @@ flutter:
     - assets/images/
     - assets/icons/
     - .env
+  fonts:
+    - family: Anta
+      fonts:
+        - asset: assets/fonts/Anta-Regular.ttf
