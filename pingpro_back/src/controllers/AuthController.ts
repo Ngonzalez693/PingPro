@@ -9,9 +9,16 @@ import { Request, Response, NextFunction } from 'express';
 import { services } from '../container';
 import { success, error } from '../utils/apiResponse';
 import { HTTP_STATUS } from '../utils/constants';
+import { HttpError } from '../utils/httpError';
 
 const authService = services.auth;
 const userService = services.users;
+
+// firebase-admin marca sus errores de cuenta con códigos 'auth/...'.
+function isFirebaseAuthError(err: unknown): err is { code: string; message: string } {
+  const code = (err as { code?: unknown } | null)?.code;
+  return typeof code === 'string' && code.startsWith('auth/');
+}
 
 export default class AuthController {
   static async signUp(req: Request, res: Response, next: NextFunction) {
@@ -33,7 +40,10 @@ export default class AuthController {
 
       return success(res, { uid: userRecord.uid, email: userRecord.email }, HTTP_STATUS.CREATED);
     } catch (err) {
-      return error(res, (err as Error).message, HTTP_STATUS.BAD_REQUEST);
+      // Los errores de cuenta de Firebase ("email ya en uso", contraseña
+      // débil...) son para el usuario; cualquier otro (p. ej. Postgres al
+      // crear el perfil) va a errorHandler como 500 sin detalles.
+      return next(isFirebaseAuthError(err) ? new HttpError(HTTP_STATUS.BAD_REQUEST, err.message) : err);
     }
   }
 

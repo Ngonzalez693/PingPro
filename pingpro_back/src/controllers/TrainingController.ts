@@ -27,7 +27,7 @@ export default class TrainingController {
       const trainings = await service.getAll(uid);
       return success(res, trainings, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
@@ -42,7 +42,7 @@ export default class TrainingController {
       const training = await service.getById(req.params.id, uid);
       return success(res, training, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
@@ -54,8 +54,7 @@ export default class TrainingController {
       const id = await service.create(req.body, null);
       return success(res, { id }, HTTP_STATUS.CREATED);
     } catch (err) {
-      const status = (err as { status?: number }).status ?? HTTP_STATUS.INTERNAL_ERROR;
-      return error(res, (err as Error).message, status);
+      return next(err);
     }
   }
 
@@ -65,7 +64,7 @@ export default class TrainingController {
       await service.update(req.params.id, req.body, null);
       return success(res, null, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
@@ -75,7 +74,7 @@ export default class TrainingController {
       await service.delete(req.params.id, null);
       return success(res, null, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
@@ -84,7 +83,7 @@ export default class TrainingController {
   // El dueño sale del uid del token, nunca del body.
 
   // Create a training owned by the caller
-  static async createMine(req: Request, res: Response, _next: NextFunction) {
+  static async createMine(req: Request, res: Response, next: NextFunction) {
     try {
       const uid = req.user?.uid;
       if (!uid) {
@@ -94,13 +93,12 @@ export default class TrainingController {
       const id = await service.create(req.body, uid);
       return success(res, { id }, HTTP_STATUS.CREATED);
     } catch (err) {
-      const status = (err as { status?: number }).status ?? HTTP_STATUS.INTERNAL_ERROR;
-      return error(res, (err as Error).message, status);
+      return next(err);
     }
   }
 
   // Update a training owned by the caller
-  static async updateMine(req: Request, res: Response, _next: NextFunction) {
+  static async updateMine(req: Request, res: Response, next: NextFunction) {
     try {
       const uid = req.user?.uid;
       if (!uid) {
@@ -110,12 +108,12 @@ export default class TrainingController {
       await service.update(req.params.id, req.body, uid);
       return success(res, null, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
   // Delete a training owned by the caller
-  static async deleteMine(req: Request, res: Response, _next: NextFunction) {
+  static async deleteMine(req: Request, res: Response, next: NextFunction) {
     try {
       const uid = req.user?.uid;
       if (!uid) {
@@ -125,15 +123,14 @@ export default class TrainingController {
       await service.delete(req.params.id, uid);
       return success(res, null, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
   // Completar entrenamiento por usuario
-  static async completed(req: Request, res: Response, _next: NextFunction) {
+  static async completed(req: Request, res: Response, next: NextFunction) {
     try {
-      // uid del authMiddleware (usa el que estés populando)
-      const uid = (req as any).user?.uid || (req as any).uid || (req as any).userId || (req as any).auth?.uid;
+      const uid = req.user?.uid;
       if (!uid) return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
 
       const { id } = req.params;
@@ -143,31 +140,31 @@ export default class TrainingController {
       const state = await service.setCompletedForUser(uid, id, !!completed, session);
       return success(res, state, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
   // Obtener todos los estados del usuario
-  static async myStates(req: Request, res: Response, _next: NextFunction) {
+  static async myStates(req: Request, res: Response, next: NextFunction) {
     try {
-      const uid = (req as any).user?.uid || (req as any).uid || (req as any).userId || (req as any).auth?.uid;
+      const uid = req.user?.uid;
       if (!uid) return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
       const states = await service.getUserTrainingStates(uid);
       return success(res, states, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
-  static async listWithUserState(req: Request, res: Response, _next: NextFunction) {
+  static async listWithUserState(req: Request, res: Response, next: NextFunction) {
     try {
-      const uid = (req as any).user?.uid || (req as any).uid || (req as any).userId || req.user?.uid;
+      const uid = req.user?.uid;
       if (!uid) return error(res, 'Unauthorized', HTTP_STATUS.UNAUTHORIZED);
 
       const data = await service.getAllWithUserState(uid);
       return success(res, data, HTTP_STATUS.OK);
-    } catch (err: any) {
-      return error(res, err.message, err.status || HTTP_STATUS.INTERNAL_ERROR);
+    } catch (err) {
+      return next(err);
     }
   }
 }

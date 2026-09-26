@@ -71,4 +71,15 @@ describe('ExerciseController', () => {
 
     expect(ExerciseService.prototype.setCompletedForUser).toHaveBeenCalledWith('u1', '123', true, null);
   });
+
+  it('un error del servicio no se responde aquí: va a errorHandler con next', async () => {
+    const failure = new Error('relation "exercises" does not exist');
+    (ExerciseService.prototype.getById as jest.Mock).mockRejectedValue(failure);
+    const next = jest.fn();
+
+    await ExerciseController.getById(req as Request, res as Response, next);
+
+    expect(next).toHaveBeenCalledWith(failure);
+    expect(statusMock).not.toHaveBeenCalled();
+  });
 });

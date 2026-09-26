@@ -14,6 +14,7 @@ import type { IExerciseRepository } from '../interfaces/repositories/IExerciseRe
 import type { IUserTrainingState } from '../interfaces/models/IUserTrainingState';
 import type { ITrainingRepository } from '../interfaces/repositories/ITrainingRepository';
 import type { IUserTrainingStateRepository } from '../interfaces/repositories/IUserTrainingStateRepository';
+import { HttpError } from '../utils/httpError';
 
 export class TrainingService {
   // Los recibe de src/container.ts: el servicio solo conoce las interfaces.
@@ -74,7 +75,7 @@ export class TrainingService {
     const found = await Promise.all(uniqueIds.map((id) => this.exerciseRepo.exists(id, viewerId)));
     const missing = uniqueIds.filter((_, i) => !found[i]);
     if (missing.length > 0) {
-      throw Object.assign(new Error(`Unknown exercise ids: ${missing.join(', ')}`), { status: 400 });
+      throw new HttpError(400, `Unknown exercise ids: ${missing.join(', ')}`);
     }
   }
 
@@ -87,7 +88,7 @@ export class TrainingService {
   private async requireVisible(id: string, viewerId: string | null): Promise<ITraining> {
     const training = await this.trainingRepo.getById(id, viewerId);
     if (!training) {
-      throw Object.assign(new Error('Training not found'), { status: 404 });
+      throw new HttpError(404, 'Training not found');
     }
     return training;
   }
@@ -97,7 +98,7 @@ export class TrainingService {
   private async requireOwned(id: string, ownerId: string | null): Promise<ITraining> {
     const training = await this.requireVisible(id, ownerId);
     if ((training.ownerId ?? null) !== ownerId) {
-      throw Object.assign(new Error('Training not found'), { status: 404 });
+      throw new HttpError(404, 'Training not found');
     }
     return training;
   }
@@ -112,9 +113,7 @@ export class TrainingService {
     // Con su propio uid: puede completar tanto los del catálogo como los suyos.
     const exists = await this.trainingRepo.exists(trainingId, userId);
     if (!exists) {
-      const err: any = new Error('Training not found');
-      err.status = 404;
-      throw err;
+      throw new HttpError(404, 'Training not found');
     }
     return this.userTrainingStateRepo.setCompleted(userId, trainingId, completed, session);
   }
@@ -138,9 +137,9 @@ export class TrainingService {
     const byId = new Map(states.map(s => [s.trainingId, s]));
 
     return trainings.map(t => {
-      // Ajusta si tu modelo usa otra propiedad de id
-      const tid = (t as any).id || (t as any).trainingId || t.id;
-      const st = byId.get(tid);
+      // `id` es opcional en ITraining (no lo lleva al crear), pero lo que sale
+      // del repositorio siempre lo tiene.
+      const st = t.id ? byId.get(t.id) : undefined;
 
       const completedAt = st?.completedAt ? st.completedAt.toISOString() : null;
       return {
