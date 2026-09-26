@@ -10,6 +10,7 @@ import { IExercise } from '../interfaces/models/IExercise';
 import type { IUserExerciseState } from '../interfaces/models/IUserExerciseState';
 import type { IExerciseRepository } from '../interfaces/repositories/IExerciseRepository';
 import type { IUserExerciseStateRepository } from '../interfaces/repositories/IUserExerciseStateRepository';
+import { HttpError } from '../utils/httpError';
 
 export class ExerciseService {
   // Los recibe de src/container.ts: el servicio solo conoce las interfaces.
@@ -57,7 +58,7 @@ export class ExerciseService {
   private async requireVisible(id: string, viewerId: string | null): Promise<IExercise> {
     const exercise = await this.exerciseRepo.getById(id, viewerId);
     if (!exercise) {
-      throw Object.assign(new Error('Exercise not found'), { status: 404 });
+      throw new HttpError(404, 'Exercise not found');
     }
     return exercise;
   }
@@ -71,7 +72,7 @@ export class ExerciseService {
   private async requireOwned(id: string, ownerId: string | null): Promise<IExercise> {
     const exercise = await this.requireVisible(id, ownerId);
     if ((exercise.ownerId ?? null) !== ownerId) {
-      throw Object.assign(new Error('Exercise not found'), { status: 404 });
+      throw new HttpError(404, 'Exercise not found');
     }
     return exercise;
   }

@@ -7,6 +7,7 @@
  */
 import { IUser } from '../interfaces/models/IUser';
 import type { IUserRepository } from '../interfaces/repositories/IUserRepository';
+import { HttpError } from '../utils/httpError';
 
 export class UserService {
   // Lo recibe de src/container.ts: el servicio solo conoce la interfaz.
@@ -14,7 +15,7 @@ export class UserService {
 
   async getById(id: string): Promise<IUser> {
     const user = await this.repo.getById(id);
-    if (!user) throw Object.assign(new Error("User not found"), { status: 404 });
+    if (!user) throw new HttpError(404, "User not found");
     return user;
   }
 

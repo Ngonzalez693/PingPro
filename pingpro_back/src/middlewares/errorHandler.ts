@@ -1,6 +1,7 @@
 /**
  * Manejador de errores global de Express (4 parámetros = error middleware).
- * Registrado al final de app.ts: recibe lo que llegue con next(err).
+ * Registrado al final de app.ts; los controllers le pasan sus errores con
+ * next(err).
  *
  * Es el único sitio que decide qué ve el usuario: un HttpError sale con su
  * status y su mensaje (los servicios los escriben para la app); cualquier otro

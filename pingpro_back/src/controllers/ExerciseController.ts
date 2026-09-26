@@ -2,8 +2,9 @@
  * Controlador de ejercicios.
  *
  * Su única responsabilidad es traducir HTTP ↔ servicio: leer params/body,
- * delegar en ExerciseService y envolver la respuesta con success()/error().
- * No hay lógica de negocio aquí.
+ * delegar en ExerciseService y envolver la respuesta con success(). No hay
+ * lógica de negocio aquí. Los errores van a errorHandler con next(err), que
+ * decide qué se le enseña al usuario.
  *
  * Los métodos de la mitad de abajo (favorite, completed, myStates) trabajan
  * sobre el estado por usuario y por eso dependen del uid que inyecta
@@ -31,7 +32,7 @@ export default class ExerciseController {
       const exercises = await service.getAll(uid);
       return success(res, exercises, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
@@ -46,7 +47,7 @@ export default class ExerciseController {
       const exercise = await service.getById(req.params.id, uid);
       return success(res, exercise, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
@@ -58,7 +59,7 @@ export default class ExerciseController {
       const id = await service.create(req.body, null);
       return success(res, { id }, HTTP_STATUS.CREATED);
     } catch (err) {
-      return error(res, (err as Error).message, HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
@@ -68,7 +69,7 @@ export default class ExerciseController {
       await service.update(req.params.id, req.body, null);
       return success(res, null, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
@@ -78,7 +79,7 @@ export default class ExerciseController {
       await service.delete(req.params.id, null);
       return success(res, null, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
@@ -88,7 +89,7 @@ export default class ExerciseController {
   // sirve de nada porque el esquema Joi rechaza los campos desconocidos.
 
   // Create an exercise owned by the caller
-  static async createMine(req: Request, res: Response, _next: NextFunction) {
+  static async createMine(req: Request, res: Response, next: NextFunction) {
     try {
       const uid = req.user?.uid;
       if (!uid) {
@@ -98,12 +99,12 @@ export default class ExerciseController {
       const id = await service.create(req.body, uid);
       return success(res, { id }, HTTP_STATUS.CREATED);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
   // Update an exercise owned by the caller
-  static async updateMine(req: Request, res: Response, _next: NextFunction) {
+  static async updateMine(req: Request, res: Response, next: NextFunction) {
     try {
       const uid = req.user?.uid;
       if (!uid) {
@@ -113,12 +114,12 @@ export default class ExerciseController {
       await service.update(req.params.id, req.body, uid);
       return success(res, null, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
   // Delete an exercise owned by the caller
-  static async deleteMine(req: Request, res: Response, _next: NextFunction) {
+  static async deleteMine(req: Request, res: Response, next: NextFunction) {
     try {
       const uid = req.user?.uid;
       if (!uid) {
@@ -128,12 +129,12 @@ export default class ExerciseController {
       await service.delete(req.params.id, uid);
       return success(res, null, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
   // Set exercise as favorite or not
-  static async favorite(req: Request, res: Response, _next: NextFunction) {
+  static async favorite(req: Request, res: Response, next: NextFunction) {
     try {
       // uid viene del authMiddleware que ya activaste
       const uid = (req as any).user?.uid || req.user?.uid;
@@ -148,12 +149,12 @@ export default class ExerciseController {
       const state = await service.setFavoriteForUser(uid, id, !!isFavorite);
       return success(res, state, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
   // Mark exercise as completed or not
-  static async completed(req: Request, res: Response, _next: NextFunction) {
+  static async completed(req: Request, res: Response, next: NextFunction) {
     try {
       const uid = (req as any).user?.uid || req.user?.uid;
       if (!uid) {
@@ -168,12 +169,12 @@ export default class ExerciseController {
       const state = await service.setCompletedForUser(uid, id, !!completed, session);
       return success(res, state, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 
   // Obtener TODOS los estados del usuario autenticado
-  static async myStates(req: Request, res: Response, _next: NextFunction) {
+  static async myStates(req: Request, res: Response, next: NextFunction) {
     try {
       const uid = (req as any).user?.uid || req.user?.uid;
       if (!uid) {
@@ -183,7 +184,7 @@ export default class ExerciseController {
       const states = await service.getUserExerciseStates(uid);
       return success(res, states, HTTP_STATUS.OK);
     } catch (err) {
-      return error(res, (err as Error).message, (err as any).status || HTTP_STATUS.INTERNAL_ERROR);
+      return next(err);
     }
   }
 }
