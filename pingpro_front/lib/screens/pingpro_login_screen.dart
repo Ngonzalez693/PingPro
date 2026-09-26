@@ -3,15 +3,13 @@
 // Va directo contra Firebase Auth (AuthService.login), sin pasar por el
 // backend. Tras autenticar vuelve a la raíz y es AuthWrapper quien decide la
 // pantalla; también mantiene la sesión en los siguientes arranques.
-//
-// PENDIENTE para publicar: "¿Olvidaste tu contraseña?" no está implementado, y
-// la validación se limita a comprobar que los campos no estén vacíos (no se
-// valida el formato del email antes de llamar a Firebase).
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/email_validation.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
 import 'package:pingpro_front/widgets/custom_text_field.dart';
+import 'package:pingpro_front/widgets/forgot_password_dialog.dart';
 
 class PingproLoginScreen extends StatefulWidget {
   const PingproLoginScreen({super.key});
@@ -34,6 +32,12 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
       );
       return;
     }
+    if (!isValidEmail(email)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Email no válido')));
+      return;
+    }
 
     setState(() => _isLoading = true);
     try {
@@ -49,6 +53,22 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _onForgotPasswordPressed() async {
+    final sent = await showForgotPasswordDialog(
+      context,
+      initialEmail: _emailCtrl.text.trim(),
+    );
+    if (!sent || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Si el email tiene una cuenta, te enviamos un enlace para '
+          'restablecer la contraseña.',
+        ),
+      ),
+    );
   }
 
   @override
@@ -116,9 +136,7 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
             const SizedBox(height: 90),
 
             TextButton(
-              onPressed: () {
-                // Ruta recuperación contraseña
-              },
+              onPressed: _onForgotPasswordPressed,
               child: Text(
                 '¿Olvidaste tu contraseña?',
                 style: TextStyle(color: AppColors.secundary),

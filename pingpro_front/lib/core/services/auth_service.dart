@@ -24,6 +24,21 @@ bool hasAdminRole(Map<String, dynamic> profile) {
   return roles is List && roles.contains('admin');
 }
 
+/// Mensaje para el usuario según el código de FirebaseAuthException que lanza
+/// [AuthService.sendPasswordReset].
+String passwordResetErrorMessage(String code) {
+  switch (code) {
+    case 'invalid-email':
+      return 'Email no válido';
+    case 'too-many-requests':
+      return 'Demasiados intentos, prueba más tarde';
+    case 'network-request-failed':
+      return 'Sin conexión, revisa tu red';
+    default:
+      return 'No se pudo enviar el correo, inténtalo de nuevo';
+  }
+}
+
 class AuthService {
   final _auth = FirebaseAuth.instance;
   final String _baseUrl = dotenv.env['API_BASE_URL']!;
@@ -93,6 +108,20 @@ class AuthService {
     } catch (_) {}
 
     throw Exception('$msg: ${resp.body}');
+  }
+
+  /// Pide a Firebase el correo con el enlace para elegir una contraseña nueva.
+  ///
+  /// Si el email no tiene cuenta termina igual que si la tuviera: decirlo
+  /// permitiría averiguar qué emails están registrados.
+  Future<void> sendPasswordReset(String email) async {
+    await _auth.setLanguageCode('es');
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') return;
+      rethrow;
+    }
   }
 
   Future<void> logout() async {
