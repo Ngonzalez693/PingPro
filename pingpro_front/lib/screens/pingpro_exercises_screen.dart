@@ -15,6 +15,8 @@ import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
+import 'package:pingpro_front/widgets/exercise_card_skeleton.dart';
+import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
 
 class PingproExercisesScreen extends StatefulWidget {
   const PingproExercisesScreen({super.key});
@@ -140,7 +142,17 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
                 final s = ExercisesState.instance;
 
                 if (s.isLoading && !s.loadedOnce) {
-                  return const Center(child: CircularProgressIndicator());
+                  return SkeletonShimmer(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: 6,
+                      itemBuilder: (_, i) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: ExerciseCardSkeleton(showTopDivider: i != 0),
+                      ),
+                    ),
+                  );
                 }
                 if (s.error != null) {
                   return Center(child: Text('Error: ${s.error}'));
