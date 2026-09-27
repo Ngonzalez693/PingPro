@@ -19,8 +19,12 @@ import 'package:pingpro_front/screens/pingpro_create_screen.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/widgets/statistics_chart.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
+import 'package:pingpro_front/widgets/exercise_card_skeleton.dart';
+import 'package:pingpro_front/widgets/skeleton_box.dart';
+import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
 import 'package:pingpro_front/widgets/summary_icon.dart';
 import 'package:pingpro_front/widgets/training_card.dart';
+import 'package:pingpro_front/widgets/training_card_skeleton.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
@@ -67,9 +71,8 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
   // Mismo alto que la gráfica para que el layout no salte al fallar la carga.
   Widget _buildStatsChart(StatsState stats, StatSeries week) {
     if (stats.isLoading && !stats.loadedOnce) {
-      return const SizedBox(
-        height: 160,
-        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      return const SkeletonShimmer(
+        child: SkeletonBox(height: 160, radius: 16),
       );
     }
     if (stats.error != null && !stats.loadedOnce) {
@@ -258,11 +261,16 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                       !exState.loadedOnce &&
                       recentExercises.isEmpty)
                     const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 24,
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: SkeletonShimmer(
+                        child: Column(
+                          children: [
+                            ExerciseCardSkeleton(showTopDivider: false),
+                            SizedBox(height: 12),
+                            ExerciseCardSkeleton(),
+                          ],
+                        ),
                       ),
-                      child: Center(child: CircularProgressIndicator()),
                     )
                   else if (recentExercises.isEmpty)
                     const Padding(
@@ -319,12 +327,21 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                   if (trState.isLoading &&
                       !trState.loadedOnce &&
                       recentTrainings.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 24,
+                    SizedBox(
+                      height: 140,
+                      child: SkeletonShimmer(
+                        child: ListView.separated(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          scrollDirection: Axis.horizontal,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: 3,
+                          separatorBuilder: (_, __) => const SizedBox(width: 12),
+                          itemBuilder: (_, __) => const SizedBox(
+                            width: 120,
+                            child: TrainingCardSkeleton(),
+                          ),
+                        ),
                       ),
-                      child: Center(child: CircularProgressIndicator()),
                     )
                   else if (recentTrainings.isEmpty)
                     const Padding(

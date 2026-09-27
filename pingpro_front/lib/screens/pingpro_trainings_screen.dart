@@ -7,7 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/training_model.dart';
+import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
 import 'package:pingpro_front/widgets/training_card.dart';
+import 'package:pingpro_front/widgets/training_card_skeleton.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
 
 class PingproTrainingsScreen extends StatefulWidget {
@@ -48,9 +50,6 @@ class _PingproTrainingsScreenState extends State<PingproTrainingsScreen> {
         builder: (context, _) {
           final s = TrainingsState.instance;
 
-          if (s.isLoading && !s.loadedOnce) {
-            return const Center(child: CircularProgressIndicator());
-          }
           if (s.error != null) {
             return Center(child: Text('Error: ${s.error}'));
           }
@@ -100,33 +99,50 @@ class _PingproTrainingsScreenState extends State<PingproTrainingsScreen> {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: GridView.builder(
-                    itemCount: filtered.length,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.1,
-                    ),
-                    itemBuilder: (context, i) {
-                      final t = filtered[i];
-                      return TrainingCard(
-                        training: t,
-                        onTap: () {
-                          Navigator.pushNamed(
-                            context,
-                            '/trainingDetail',
-                            arguments: t,
-                          );
-                        },
-                      );
-                    },
-                  ),
+                  // Título y pestañas se ven desde el principio; mientras
+                  // carga, solo la cuadrícula es skeleton.
+                  child: s.isLoading && !s.loadedOnce
+                      ? _buildSkeletonGrid()
+                      : _buildGrid(filtered),
                 ),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  static const _gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
+    crossAxisCount: 2,
+    crossAxisSpacing: 12,
+    mainAxisSpacing: 12,
+    childAspectRatio: 1.1,
+  );
+
+  Widget _buildGrid(List<TrainingModel> trainings) {
+    return GridView.builder(
+      itemCount: trainings.length,
+      gridDelegate: _gridDelegate,
+      itemBuilder: (context, i) {
+        final t = trainings[i];
+        return TrainingCard(
+          training: t,
+          onTap: () {
+            Navigator.pushNamed(context, '/trainingDetail', arguments: t);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSkeletonGrid() {
+    return SkeletonShimmer(
+      child: GridView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 6,
+        gridDelegate: _gridDelegate,
+        itemBuilder: (_, __) => const TrainingCardSkeleton(),
       ),
     );
   }

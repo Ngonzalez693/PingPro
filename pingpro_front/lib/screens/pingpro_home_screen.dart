@@ -18,9 +18,13 @@ import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
+import 'package:pingpro_front/widgets/exercise_card_skeleton.dart';
 import 'package:pingpro_front/widgets/image_banner_carousel.dart';
+import 'package:pingpro_front/widgets/skeleton_box.dart';
+import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
 import 'package:pingpro_front/widgets/statistics_chart.dart';
 import 'package:pingpro_front/widgets/training_card.dart';
+import 'package:pingpro_front/widgets/training_card_skeleton.dart';
 
 class PingproHomeScreen extends StatefulWidget {
   const PingproHomeScreen({super.key});
@@ -101,7 +105,18 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
                   final ts = TrainingsState.instance;
 
                   if (ts.isLoading && !ts.loadedOnce) {
-                    return const Center(child: CircularProgressIndicator());
+                    return SkeletonShimmer(
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: 4,
+                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                        itemBuilder: (_, __) => const SizedBox(
+                          width: 120,
+                          child: TrainingCardSkeleton(),
+                        ),
+                      ),
+                    );
                   }
                   if (ts.error != null) {
                     return Center(
@@ -153,7 +168,15 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
                 final s = ExercisesState.instance;
 
                 if (s.isLoading && !s.loadedOnce) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const SkeletonShimmer(
+                    child: Column(
+                      children: [
+                        ExerciseCardSkeleton(),
+                        SizedBox(height: 12),
+                        ExerciseCardSkeleton(),
+                      ],
+                    ),
+                  );
                 }
                 if (s.error != null) {
                   return Text('Error al cargar ejercicios: ${s.error}');
@@ -204,9 +227,8 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
                 builder: (context, _) {
                   final stats = StatsState.instance;
                   if (stats.isLoading && !stats.loadedOnce) {
-                    return const SizedBox(
-                      height: 160,
-                      child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                    return const SkeletonShimmer(
+                      child: SkeletonBox(height: 160, radius: 16),
                     );
                   }
                   if (stats.error != null && !stats.loadedOnce) {
