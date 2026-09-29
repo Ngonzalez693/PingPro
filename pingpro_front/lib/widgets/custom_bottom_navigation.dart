@@ -2,7 +2,7 @@
 //
 // Hecha a mano en vez de con BottomNavigationBar para poder usar los SVG de
 // assets/icons/ (cada pestaña tiene versión seleccionada y sin seleccionar) y
-// elevar el icono activo 8 px.
+// elevar el icono activo 8 px, con una transición en vez de un salto.
 //
 // Cada pestaña ocupa un quinto del ancho y todo el alto de la barra, y esa
 // celda entera es el área pulsable.
@@ -14,6 +14,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 /// Alto de la barra. Es también el alto del área pulsable de cada pestaña.
 const double _barHeight = 70;
+
+const Duration _iconAnimation = Duration(milliseconds: 250);
 
 class CustomBottomNavigation extends StatelessWidget {
   final int currentIndex;
@@ -93,11 +95,21 @@ class CustomBottomNavigation extends StatelessWidget {
           child: Center(
             // El desplazamiento del icono activo es solo visual: queda dentro
             // de la celda, que sigue siendo pulsable de arriba abajo.
-            child: Transform.translate(
-              offset: Offset(0, isSelected ? -8 : 0),
-              child: SvgPicture.asset(
-                isSelected ? assetSelected : assetUnselected,
-                height: 26,
+            // easeOutBack hace que suba un poco de más y se asiente.
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(end: isSelected ? -8 : 0),
+              duration: _iconAnimation,
+              curve: Curves.easeOutBack,
+              builder: (_, dy, child) =>
+                  Transform.translate(offset: Offset(0, dy), child: child),
+              child: AnimatedScale(
+                scale: isSelected ? 1.1 : 1,
+                duration: _iconAnimation,
+                curve: Curves.easeOutBack,
+                child: SvgPicture.asset(
+                  isSelected ? assetSelected : assetUnselected,
+                  height: 26,
+                ),
               ),
             ),
           ),
