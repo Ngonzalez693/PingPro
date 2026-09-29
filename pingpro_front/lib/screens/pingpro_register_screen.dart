@@ -13,6 +13,7 @@ import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
 import 'package:pingpro_front/widgets/custom_text_field.dart';
 import 'package:pingpro_front/widgets/fade_slide_in.dart';
+import 'package:pingpro_front/widgets/pressable_scale.dart';
 
 class PingproRegisterScreen extends StatefulWidget {
   const PingproRegisterScreen({super.key});
@@ -186,19 +187,21 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
                   ? const Center(
                       child: CircularProgressIndicator(color: AppColors.primary),
                     )
-                  : SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.textBlack,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                  : PressableScale(
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: AppColors.textBlack,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
+                          onPressed: _onRegisterPressed,
+                          child: Text('Crear cuenta', style: TextStyles.buttons),
                         ),
-                        onPressed: _onRegisterPressed,
-                        child: Text('Crear cuenta', style: TextStyles.buttons),
                       ),
                     ),
             ),

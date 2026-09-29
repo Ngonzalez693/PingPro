@@ -11,6 +11,7 @@ import 'package:pingpro_front/core/services/auth_service.dart';
 import 'package:pingpro_front/widgets/custom_text_field.dart';
 import 'package:pingpro_front/widgets/fade_slide_in.dart';
 import 'package:pingpro_front/widgets/forgot_password_dialog.dart';
+import 'package:pingpro_front/widgets/pressable_scale.dart';
 
 class PingproLoginScreen extends StatefulWidget {
   const PingproLoginScreen({super.key});
@@ -133,19 +134,21 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
                   ? const Center(
                     child: CircularProgressIndicator(color: AppColors.primary),
                   )
-                  : SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.textBlack,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                  : PressableScale(
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.textBlack,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
+                        onPressed: _onLoginPressed,
+                        child: Text('Iniciar sesión', style: TextStyles.buttons),
                       ),
-                      onPressed: _onLoginPressed,
-                      child: Text('Iniciar sesión', style: TextStyles.buttons),
                     ),
                   ),
             ),
