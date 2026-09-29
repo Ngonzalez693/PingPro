@@ -12,6 +12,7 @@ import 'package:pingpro_front/widgets/custom_text_field.dart';
 import 'package:pingpro_front/widgets/fade_slide_in.dart';
 import 'package:pingpro_front/widgets/forgot_password_dialog.dart';
 import 'package:pingpro_front/widgets/pressable_scale.dart';
+import 'package:pingpro_front/widgets/shake_on_error.dart';
 
 class PingproLoginScreen extends StatefulWidget {
   const PingproLoginScreen({super.key});
@@ -24,20 +25,25 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _isLoading = false;
+  int _errorCount = 0;
+
+  void _showError(String message) {
+    if (!mounted) return;
+    setState(() => _errorCount++);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
 
   Future<void> _onLoginPressed() async {
     final email = _emailCtrl.text.trim();
     final password = _passwordCtrl.text;
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email y contraseña son obligatorios')),
-      );
+      _showError('Email y contraseña son obligatorios');
       return;
     }
     if (!isValidEmail(email)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Email no válido')));
+      _showError('Email no válido');
       return;
     }
 
@@ -49,9 +55,7 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
       // instancias vivas, la del wrapper y la empujada encima.
       Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al iniciar sesión: $e')));
+      _showError('Error al iniciar sesión: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -68,6 +72,31 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
         content: Text(
           'Si el email tiene una cuenta, te enviamos un enlace para '
           'restablecer la contraseña.',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoginButton() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+    return PressableScale(
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.textBlack,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          onPressed: _onLoginPressed,
+          child: Text('Iniciar sesión', style: TextStyles.buttons),
         ),
       ),
     );
@@ -111,46 +140,30 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
 
             const SizedBox(height: 32),
 
-            FadeSlideIn(
-              index: 2,
+            ShakeOnError(
+              errorCount: _errorCount,
               child: Column(
                 children: [
-                  CustomTextField(hint: 'Email', controller: _emailCtrl),
-                  const SizedBox(height: 16),
-                  CustomTextField(
-                    hint: 'Contraseña',
-                    obscure: true,
-                    controller: _passwordCtrl,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            FadeSlideIn(
-              index: 3,
-              child: _isLoading
-                  ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  )
-                  : PressableScale(
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.textBlack,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
+                  FadeSlideIn(
+                    index: 2,
+                    child: Column(
+                      children: [
+                        CustomTextField(hint: 'Email', controller: _emailCtrl),
+                        const SizedBox(height: 16),
+                        CustomTextField(
+                          hint: 'Contraseña',
+                          obscure: true,
+                          controller: _passwordCtrl,
                         ),
-                        onPressed: _onLoginPressed,
-                        child: Text('Iniciar sesión', style: TextStyles.buttons),
-                      ),
+                      ],
                     ),
                   ),
+
+                  const SizedBox(height: 24),
+
+                  FadeSlideIn(index: 3, child: _buildLoginButton()),
+                ],
+              ),
             ),
 
             const SizedBox(height: 90),

@@ -14,6 +14,7 @@ import 'package:pingpro_front/core/services/auth_service.dart';
 import 'package:pingpro_front/widgets/custom_text_field.dart';
 import 'package:pingpro_front/widgets/fade_slide_in.dart';
 import 'package:pingpro_front/widgets/pressable_scale.dart';
+import 'package:pingpro_front/widgets/shake_on_error.dart';
 
 class PingproRegisterScreen extends StatefulWidget {
   const PingproRegisterScreen({super.key});
@@ -27,6 +28,15 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _isLoading = false;
+  int _errorCount = 0;
+
+  void _showError(String message) {
+    if (!mounted) return;
+    setState(() => _errorCount++);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
 
   Future<void> _showRegisterSuccessDialog() async {
     await showDialog<void>(
@@ -84,15 +94,11 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
     final password = _passwordCtrl.text;
 
     if (displayName.isEmpty || email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Todos los campos son obligatorios')),
-      );
+      _showError('Todos los campos son obligatorios');
       return;
     }
     if (!isValidEmail(email)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Email no válido')));
+      _showError('Email no válido');
       return;
     }
 
@@ -111,13 +117,35 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
       if (!mounted) return;
       Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al registrar: $e')),
-      );
+      _showError('Error al registrar: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Widget _buildRegisterButton() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+    return PressableScale(
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.textBlack,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          onPressed: _onRegisterPressed,
+          child: Text('Crear cuenta', style: TextStyles.buttons),
+        ),
+      ),
+    );
   }
 
   @override
@@ -159,51 +187,35 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
 
             const SizedBox(height: 32),
 
-            FadeSlideIn(
-              index: 2,
+            ShakeOnError(
+              errorCount: _errorCount,
               child: Column(
                 children: [
-                  CustomTextField(
-                    hint: 'Nombre de Usuario',
-                    controller: _displayNameCtrl,
+                  FadeSlideIn(
+                    index: 2,
+                    child: Column(
+                      children: [
+                        CustomTextField(
+                          hint: 'Nombre de Usuario',
+                          controller: _displayNameCtrl,
+                        ),
+                        const SizedBox(height: 16),
+                        CustomTextField(hint: 'Email', controller: _emailCtrl),
+                        const SizedBox(height: 16),
+                        CustomTextField(
+                          hint: 'Contraseña',
+                          obscure: true,
+                          controller: _passwordCtrl,
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  CustomTextField(hint: 'Email', controller: _emailCtrl),
-                  const SizedBox(height: 16),
-                  CustomTextField(
-                    hint: 'Contraseña',
-                    obscure: true,
-                    controller: _passwordCtrl,
-                  ),
+
+                  const SizedBox(height: 24),
+
+                  FadeSlideIn(index: 3, child: _buildRegisterButton()),
                 ],
               ),
-            ),
-
-            const SizedBox(height: 24),
-
-            FadeSlideIn(
-              index: 3,
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: AppColors.primary),
-                    )
-                  : PressableScale(
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: AppColors.textBlack,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          onPressed: _onRegisterPressed,
-                          child: Text('Crear cuenta', style: TextStyles.buttons),
-                        ),
-                      ),
-                    ),
             ),
 
             const SizedBox(height: 32),
