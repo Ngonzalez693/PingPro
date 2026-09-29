@@ -17,6 +17,7 @@ import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
 import 'package:pingpro_front/widgets/exercise_card_skeleton.dart';
 import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
+import 'package:pingpro_front/widgets/staggered_entrance.dart';
 
 class PingproExercisesScreen extends StatefulWidget {
   const PingproExercisesScreen({super.key});
@@ -170,22 +171,25 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
                   itemCount: filtered.length,
                   itemBuilder: (context, i) {
                     final ex = filtered[i];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: ExerciseCard(
-                        exercise: ex,
-                        showTopDivider: i != 0,
-                        onFavoritePressed: () => _toggleFavorite(ex.id),
-                        onViewPressed: () {
-                          Navigator.pushNamed(
-                            context,
-                            '/exerciseDetail',
-                            arguments: {
-                              'exercise': ex,
-                              'returnRoute': '/exercises',
-                            },
-                          );
-                        },
+                    return StaggeredEntrance(
+                      index: i,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: ExerciseCard(
+                          exercise: ex,
+                          showTopDivider: i != 0,
+                          onFavoritePressed: () => _toggleFavorite(ex.id),
+                          onViewPressed: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/exerciseDetail',
+                              arguments: {
+                                'exercise': ex,
+                                'returnRoute': '/exercises',
+                              },
+                            );
+                          },
+                        ),
                       ),
                     );
                   },
