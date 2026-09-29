@@ -8,6 +8,7 @@ import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
+import 'package:pingpro_front/widgets/staggered_entrance.dart';
 import 'package:pingpro_front/widgets/training_card.dart';
 import 'package:pingpro_front/widgets/training_card_skeleton.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
@@ -126,11 +127,14 @@ class _PingproTrainingsScreenState extends State<PingproTrainingsScreen> {
       gridDelegate: _gridDelegate,
       itemBuilder: (context, i) {
         final t = trainings[i];
-        return TrainingCard(
-          training: t,
-          onTap: () {
-            Navigator.pushNamed(context, '/trainingDetail', arguments: t);
-          },
+        return StaggeredEntrance(
+          index: i,
+          child: TrainingCard(
+            training: t,
+            onTap: () {
+              Navigator.pushNamed(context, '/trainingDetail', arguments: t);
+            },
+          ),
         );
       },
     );

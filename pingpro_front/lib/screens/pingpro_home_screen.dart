@@ -22,6 +22,7 @@ import 'package:pingpro_front/widgets/exercise_card_skeleton.dart';
 import 'package:pingpro_front/widgets/image_banner_carousel.dart';
 import 'package:pingpro_front/widgets/skeleton_box.dart';
 import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
+import 'package:pingpro_front/widgets/staggered_entrance.dart';
 import 'package:pingpro_front/widgets/statistics_chart.dart';
 import 'package:pingpro_front/widgets/training_card.dart';
 import 'package:pingpro_front/widgets/training_card_skeleton.dart';
@@ -137,17 +138,20 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
                     separatorBuilder: (_, __) => const SizedBox(width: 12),
                     itemBuilder: (_, i) {
                       final t = trainings[i];
-                      return SizedBox(
-                        width: 120,
-                        child: TrainingCard(
-                          training: t,
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/trainingDetail',
-                              arguments: t,
-                            );
-                          },
+                      return StaggeredEntrance(
+                        index: i,
+                        child: SizedBox(
+                          width: 120,
+                          child: TrainingCard(
+                            training: t,
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/trainingDetail',
+                                arguments: t,
+                              );
+                            },
+                          ),
                         ),
                       );
                     },
@@ -189,25 +193,28 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
 
                 return Column(
                   children: [
-                    for (final ex in exercises)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: ExerciseCard(
-                          exercise: ex,
-                          onFavoritePressed: () => _toggleFavorite(ex.id),
-                          onViewPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => PingproExerciseDetailScreen(
-                                      exercise:
-                                          ex, // puedes seguir pasando el objeto
-                                      returnRoute: '/home',
-                                    ),
-                              ),
-                            );
-                          },
+                    for (final (i, ex) in exercises.indexed)
+                      StaggeredEntrance(
+                        index: i,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: ExerciseCard(
+                            exercise: ex,
+                            onFavoritePressed: () => _toggleFavorite(ex.id),
+                            onViewPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => PingproExerciseDetailScreen(
+                                        exercise:
+                                            ex, // puedes seguir pasando el objeto
+                                        returnRoute: '/home',
+                                      ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                   ],

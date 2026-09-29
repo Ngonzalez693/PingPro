@@ -22,6 +22,7 @@ import 'package:pingpro_front/widgets/exercise_card.dart';
 import 'package:pingpro_front/widgets/exercise_card_skeleton.dart';
 import 'package:pingpro_front/widgets/skeleton_box.dart';
 import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
+import 'package:pingpro_front/widgets/staggered_entrance.dart';
 import 'package:pingpro_front/widgets/summary_icon.dart';
 import 'package:pingpro_front/widgets/training_card.dart';
 import 'package:pingpro_front/widgets/training_card_skeleton.dart';
@@ -286,27 +287,31 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                       child: Column(
                         children: [
                           for (int i = 0; i < recentExercises.length; i++)
-                            Padding(
-                              padding: EdgeInsets.only(
-                                bottom:
-                                    i == recentExercises.length - 1 ? 0 : 12,
-                              ),
-                              child: ExerciseCard(
-                                exercise: recentExercises[i],
-                                showTopDivider: i != 0,
-                                onFavoritePressed:
-                                    () =>
-                                        _toggleFavorite(recentExercises[i].id),
-                                onViewPressed: () async {
-                                  await Navigator.pushNamed(
-                                    context,
-                                    '/exerciseDetail',
-                                    arguments: {
-                                      'exercise': recentExercises[i],
-                                      'returnRoute': '/profile',
-                                    },
-                                  );
-                                },
+                            StaggeredEntrance(
+                              index: i,
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  bottom:
+                                      i == recentExercises.length - 1 ? 0 : 12,
+                                ),
+                                child: ExerciseCard(
+                                  exercise: recentExercises[i],
+                                  showTopDivider: i != 0,
+                                  onFavoritePressed:
+                                      () => _toggleFavorite(
+                                        recentExercises[i].id,
+                                      ),
+                                  onViewPressed: () async {
+                                    await Navigator.pushNamed(
+                                      context,
+                                      '/exerciseDetail',
+                                      arguments: {
+                                        'exercise': recentExercises[i],
+                                        'returnRoute': '/profile',
+                                      },
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                         ],
@@ -361,17 +366,20 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                         separatorBuilder: (_, __) => const SizedBox(width: 12),
                         itemBuilder: (_, i) {
                           final t = recentTrainings[i];
-                          return SizedBox(
-                            width: 120,
-                            child: TrainingCard(
-                              training: t,
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  '/trainingDetail',
-                                  arguments: t,
-                                );
-                              },
+                          return StaggeredEntrance(
+                            index: i,
+                            child: SizedBox(
+                              width: 120,
+                              child: TrainingCard(
+                                training: t,
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/trainingDetail',
+                                    arguments: t,
+                                  );
+                                },
+                              ),
                             ),
                           );
                         },

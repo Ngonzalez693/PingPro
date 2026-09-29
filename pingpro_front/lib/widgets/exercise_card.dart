@@ -15,6 +15,7 @@ import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
+import 'package:pingpro_front/widgets/pressable_scale.dart';
 
 class ExerciseCard extends StatelessWidget {
   final ExerciseModel exercise;
@@ -120,12 +121,21 @@ class ExerciseCard extends StatelessWidget {
                     ),
                     child: IconButton(
                       onPressed: onFavoritePressed,
-                      icon: Icon(
-                        exercise.isFavorite
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        color: AppColors.primary,
-                        size: 20,
+                      // La key cambia con el estado, así AnimatedSwitcher
+                      // hace el "pop" al marcar y al desmarcar.
+                      icon: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        switchInCurve: Curves.easeOutBack,
+                        transitionBuilder: (child, animation) =>
+                            ScaleTransition(scale: animation, child: child),
+                        child: Icon(
+                          exercise.isFavorite
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          key: ValueKey(exercise.isFavorite),
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
                       ),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -135,23 +145,25 @@ class ExerciseCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   
                   // Botón ver
-                  GestureDetector(
-                    onTap: onViewPressed ?? () => _navigateToDetail(context),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.textGray,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'Ver',
-                        style: TextStyle(
-                          color: AppColors.textWhite,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                  PressableScale(
+                    child: GestureDetector(
+                      onTap: onViewPressed ?? () => _navigateToDetail(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.textGray,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'Ver',
+                          style: TextStyle(
+                            color: AppColors.textWhite,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
