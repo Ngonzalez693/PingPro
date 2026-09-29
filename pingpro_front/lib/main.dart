@@ -162,13 +162,17 @@ class _AuthWrapperState extends State<AuthWrapper> {
 /// Usa IndexedStack en vez de cambiar el body: mantiene vivas las cinco
 /// pantallas, así que el scroll y el estado de cada pestaña sobreviven al
 /// cambiar de tab y no se vuelve a llamar initState (ni a recargar datos).
+///
+/// El fundido al cambiar de pestaña va sobre el IndexedStack entero: solo se
+/// ve la pestaña activa, así que animar el conjunto equivale a animar esa.
 class HomeNavigation extends StatefulWidget {
   const HomeNavigation({super.key});
   @override
   State<HomeNavigation> createState() => _HomeNavigationState();
 }
 
-class _HomeNavigationState extends State<HomeNavigation> {
+class _HomeNavigationState extends State<HomeNavigation>
+    with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   final List<Widget> _pages = const [
     PingproHomeScreen(),
@@ -177,12 +181,38 @@ class _HomeNavigationState extends State<HomeNavigation> {
     PingproTrainingsScreen(),
     PingproProfileScreen(),
   ];
-  void _onNavTap(int index) => setState(() => _currentIndex = index);
+
+  // Arranca completo: la primera pestaña no se funde al entrar a la app.
+  late final AnimationController _fade = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 200),
+    value: 1,
+  );
+  late final Animation<double> _opacity = CurvedAnimation(
+    parent: _fade,
+    curve: Curves.easeOut,
+  );
+
+  void _onNavTap(int index) {
+    if (index == _currentIndex) return;
+    setState(() => _currentIndex = index);
+    if (MediaQuery.of(context).disableAnimations) return;
+    _fade.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: FadeTransition(
+        opacity: _opacity,
+        child: IndexedStack(index: _currentIndex, children: _pages),
+      ),
       bottomNavigationBar: CustomBottomNavigation(
         currentIndex: _currentIndex,
         onTap: _onNavTap,
