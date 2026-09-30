@@ -54,10 +54,6 @@ class StatisticsChart extends StatelessWidget {
               barWidth: 3,
               color: AppColors.primary,
               dotData: const FlDotData(show: true),
-              belowBarData: BarAreaData(
-                show: true,
-                color: AppColors.primary,
-              ),
             ),
           ],
           titlesData: FlTitlesData(
