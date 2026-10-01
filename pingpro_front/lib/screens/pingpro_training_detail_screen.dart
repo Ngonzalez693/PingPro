@@ -35,7 +35,9 @@ import 'package:pingpro_front/core/services/trainings_state.dart';
 import 'package:pingpro_front/screens/pingpro_edit_training_screen.dart';
 import 'package:pingpro_front/widgets/confirm_delete_dialog.dart';
 import 'package:pingpro_front/widgets/content_actions_menu.dart';
+import 'package:pingpro_front/widgets/fade_slide_in.dart';
 import 'package:pingpro_front/widgets/session_selector.dart';
+import 'package:pingpro_front/widgets/staggered_entrance.dart';
 
 class PingproTrainingDetailScreen extends StatefulWidget {
   final TrainingModel training;
@@ -137,6 +139,110 @@ class _PingproTrainingDetailScreenState
     }
   }
 
+  Widget _buildSummary(TrainingModel training, int totalDuration, int perExercise) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Descripción del Entrenamiento', style: TextStyles.titleBlack),
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 2,
+              child: Text(training.description, style: TextStyles.paragraphBlack),
+            ),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Categoría:', style: TextStyles.buttons),
+                Text(
+                  _categoryDescriptions[training.category] ?? training.category,
+                  style: TextStyles.paragraphBlack,
+                ),
+                const SizedBox(height: 8),
+                Text('Duración:', style: TextStyles.buttons),
+                Text(
+                  '$totalDuration min ($perExercise min por ejercicio)',
+                  style: TextStyles.paragraphBlack,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProgress(double progress, int doneCount, int total) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Progreso del entrenamiento', style: TextStyles.subTitleBlack),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 10,
+            backgroundColor: AppColors.widgetGrayBackground,
+            color: AppColors.primary,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '$doneCount de $total ejercicios completados',
+          style: TextStyles.paragraphBlack,
+        ),
+      ],
+    );
+  }
+
+  // Recuadro del siguiente ejercicio y botón
+  Widget _buildNext(
+    ExerciseModel next,
+    bool allDone,
+    List<ExerciseModel> exercises,
+    List<bool> done,
+  ) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 60,
+            decoration: BoxDecoration(
+              color: AppColors.widgetGrayBackground,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              next.name,
+              style: TextStyles.subTitleBlack,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+          onPressed: () => _onNextPressed(exercises, done),
+          child: Text(
+            allDone ? 'Completado' : 'Realizar siguiente',
+            style: TextStyles.buttons,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -207,161 +313,77 @@ class _PingproTrainingDetailScreenState
             return Column(
               children: [
                 // Header
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
-                        onPressed: _onBackPressed,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(training.name, style: TextStyles.title),
-                      ),
-                      if (canManage(isOwn: training.isOwn, isAdmin: _isAdmin))
-                        ContentActionsMenu(
-                          onEdit: () => _onEditPressed(training),
-                          onDelete: () => _onDeletePressed(training),
-                        ),
-                    ],
-                  ),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  child: SessionSelector(
-                    selected: session,
-                    onSelected: CurrentSession.instance.choose,
-                  ),
-                ),
-
-                // Cuadro superior con info + PROGRESO
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.widgetBackground,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                FadeSlideIn(
+                  index: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
                       children: [
-                        Text('Descripción del Entrenamiento',
-                            style: TextStyles.titleBlack),
-                        const SizedBox(height: 8),
-
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                training.description,
-                                style: TextStyles.paragraphBlack,
-                              ),
-                            ),
-
-                            const SizedBox(width: 16),
-
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Categoría:', style: TextStyles.buttons),
-                                Text(
-                                  _categoryDescriptions[training.category] ?? training.category,
-                                  style: TextStyles.paragraphBlack,
-                                ),
-
-                                const SizedBox(height: 8),
-
-                                Text('Duración:', style: TextStyles.buttons),
-                                Text(
-                                  '$totalDuration min ($perExercise min por ejercicio)',
-                                  style: TextStyles.paragraphBlack,
-                                ),
-                              ],
-                            ),
-                          ],
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
+                          onPressed: _onBackPressed,
                         ),
-
-                        const SizedBox(height: 16),
-
-                        // ---- Barra de progreso ----
-                        Text('Progreso del entrenamiento',
-                            style: TextStyles.subTitleBlack),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: LinearProgressIndicator(
-                            value: progress,
-                            minHeight: 10,
-                            backgroundColor: AppColors.widgetGrayBackground,
-                            color: AppColors.primary,
-                          ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(training.name, style: TextStyles.title),
                         ),
-
-                        const SizedBox(height: 6),
-
-                        Text(
-                          '$doneCount de $total ejercicios completados',
-                          style: TextStyles.paragraphBlack,
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Recuadro del siguiente ejercicio y botón
-                        if (next != null)
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  height: 60,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.widgetGrayBackground,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    next.name,
-                                    style: TextStyles.subTitleBlack,
-                                    textAlign: TextAlign.center,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(width: 12),
-                              
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                ),
-                                onPressed: () => _onNextPressed(exercises, done),
-                                child: Text(
-                                  nextIdx == -1 ? 'Completado' : 'Realizar siguiente',
-                                  style: TextStyles.buttons,
-                                ),
-                              ),
-                            ],
+                        if (canManage(isOwn: training.isOwn, isAdmin: _isAdmin))
+                          ContentActionsMenu(
+                            onEdit: () => _onEditPressed(training),
+                            onDelete: () => _onDeletePressed(training),
                           ),
                       ],
                     ),
                   ),
                 ),
 
+                FadeSlideIn(
+                  index: 1,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: SessionSelector(
+                      selected: session,
+                      onSelected: CurrentSession.instance.choose,
+                    ),
+                  ),
+                ),
+
+                // Cuadro superior con info + PROGRESO
+                FadeSlideIn(
+                  index: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.widgetBackground,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSummary(training, totalDuration, perExercise),
+                          const SizedBox(height: 16),
+                          _buildProgress(progress, doneCount, total),
+                          const SizedBox(height: 16),
+                          if (next != null)
+                            _buildNext(next, nextIdx == -1, exercises, done),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 16),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('Ejercicios', style: TextStyles.subTitle),
+                FadeSlideIn(
+                  index: 3,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Ejercicios', style: TextStyles.subTitle),
+                    ),
                   ),
                 ),
 
@@ -374,24 +396,29 @@ class _PingproTrainingDetailScreenState
                     itemCount: exercises.length,
                     itemBuilder: (ctx, i) {
                       final ex = exercises[i];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: ExerciseCard(
-                          exercise: ex,
-                          showTopDivider: i != 0,
-                          onFavoritePressed: () =>
-                              ExercisesState.instance.toggleFavorite(ex.id),
-                          onViewPressed: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/exerciseDetail',
-                              arguments: {
-                                'exercise': ex,
-                                'returnRoute': '/trainings',
-                              },
-                            );
-                          },
-                          done: done[i],
+                      // startIndex 4: continúa tras los bloques de arriba.
+                      return StaggeredEntrance(
+                        index: i,
+                        startIndex: 4,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: ExerciseCard(
+                            exercise: ex,
+                            showTopDivider: i != 0,
+                            onFavoritePressed: () =>
+                                ExercisesState.instance.toggleFavorite(ex.id),
+                            onViewPressed: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/exerciseDetail',
+                                arguments: {
+                                  'exercise': ex,
+                                  'returnRoute': '/trainings',
+                                },
+                              );
+                            },
+                            done: done[i],
+                          ),
                         ),
                       );
                     },
