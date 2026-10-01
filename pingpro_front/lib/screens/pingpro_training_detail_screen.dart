@@ -182,19 +182,32 @@ class _PingproTrainingDetailScreenState
       children: [
         Text('Progreso del entrenamiento', style: TextStyles.subTitleBlack),
         const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 10,
-            backgroundColor: AppColors.widgetGrayBackground,
-            color: AppColors.primary,
+        // `begin` solo se usa la primera vez: al entrar se llena desde 0 y,
+        // en los cambios siguientes, avanza desde donde estaba.
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: progress),
+          duration: MediaQuery.of(context).disableAnimations
+              ? Duration.zero
+              : const Duration(milliseconds: 600),
+          curve: Curves.easeOutCubic,
+          builder: (_, value, __) => ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: value,
+              minHeight: 10,
+              backgroundColor: AppColors.widgetGrayBackground,
+              color: AppColors.primary,
+            ),
           ),
         ),
         const SizedBox(height: 6),
-        Text(
-          '$doneCount de $total ejercicios completados',
-          style: TextStyles.paragraphBlack,
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          child: Text(
+            '$doneCount de $total ejercicios completados',
+            key: ValueKey(doneCount),
+            style: TextStyles.paragraphBlack,
+          ),
         ),
       ],
     );
@@ -217,12 +230,26 @@ class _PingproTrainingDetailScreenState
               borderRadius: BorderRadius.circular(8),
             ),
             alignment: Alignment.center,
-            child: Text(
-              next.name,
-              style: TextStyles.subTitleBlack,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween(
+                    begin: const Offset(0.15, 0),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              ),
+              child: Text(
+                next.name,
+                key: ValueKey(next.id),
+                style: TextStyles.subTitleBlack,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
         ),
