@@ -32,6 +32,9 @@ import 'package:pingpro_front/screens/pingpro_edit_exercise_screen.dart';
 import 'package:pingpro_front/widgets/confirm_delete_dialog.dart';
 import 'package:pingpro_front/widgets/content_actions_menu.dart';
 import 'package:pingpro_front/widgets/exercise_done.dart';
+import 'package:pingpro_front/widgets/fade_slide_in.dart';
+import 'package:pingpro_front/widgets/favorite_icon.dart';
+import 'package:pingpro_front/widgets/pressable_scale.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/session_roles.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
@@ -203,6 +206,130 @@ class _PingproExerciseDetailScreenState
     }
   }
 
+  // Descripción paso a paso
+  Widget _buildDescription(ExerciseModel ex) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Container(
+          height: 200,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Descripción del ejercicio', style: TextStyles.subTitle),
+              const SizedBox(height: 8),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(ex.description, style: TextStyles.paragraph),
+                      const SizedBox(height: 16),
+                      Text('Pasos:', style: TextStyles.subTitle),
+                      const SizedBox(height: 8),
+                      Text(
+                        _buildSequenceDescription(ex),
+                        style: TextStyles.paragraph.copyWith(height: 1.5),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Favorito, "Hecho" (completed sólo aquí) y "Deshacer"
+  Widget _buildActions(
+    ExerciseModel ex, {
+    required int session,
+    required bool isCompleted,
+    required bool canUndo,
+  }) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        PressableScale(
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.widgetGrayBackground,
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              onPressed: () => _onFavoritePressed(ex.id, ex.isFavorite),
+              icon: FavoriteIcon(isFavorite: ex.isFavorite, size: 24),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        PressableScale(
+          child: GestureDetector(
+            onTap: _onDonePressed,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: _buildDoneLabel(isCompleted),
+            ),
+          ),
+        ),
+        _buildUndo(canUndo, session),
+      ],
+    );
+  }
+
+  Widget _buildDoneLabel(bool isCompleted) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      switchInCurve: Curves.easeOutBack,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: ScaleTransition(scale: animation, child: child),
+      ),
+      child: Text(
+        isCompleted ? '¡Listo!' : 'Hecho',
+        key: ValueKey(isCompleted),
+        style: TextStyles.buttons,
+      ),
+    );
+  }
+
+  // Entra y sale con fundido y cambio de alto: sin el SizeTransition los
+  // botones de arriba saltarían de golpe al aparecer o desaparecer.
+  Widget _buildUndo(bool canUndo, int session) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SizeTransition(sizeFactor: animation, child: child),
+      ),
+      child: canUndo
+          ? TextButton(
+              key: const ValueKey('undo'),
+              onPressed: () => _onUndoPressed(session),
+              child: Text(
+                'Deshacer',
+                style: TextStyles.paragraph.copyWith(
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            )
+          : const SizedBox.shrink(key: ValueKey('no-undo')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Usamos AnimatedBuilder para leer el ejercicio vivo del store
@@ -220,7 +347,6 @@ class _PingproExerciseDetailScreenState
         if (live != null) _lastLive = live;
         final ex = live ?? _lastLive ?? widget.exercise;
 
-        final isFavorite = ex.isFavorite;
         final events = StatsState.instance.events;
         final session = CurrentSession.instance.sessionFor(events);
         final isCompleted = isExerciseDoneInSession(ex.id, events, session);
@@ -232,36 +358,42 @@ class _PingproExerciseDetailScreenState
             child: Column(
               children: [
                 // Header con botón de regreso y nombre
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: _onBackPressed,
-                        icon: const Icon(
-                          Icons.arrow_back,
-                          color: AppColors.textWhite,
+                FadeSlideIn(
+                  index: 0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: _onBackPressed,
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: AppColors.textWhite,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(child: Text(ex.name, style: TextStyles.title)),
-                      if (canManage(isOwn: ex.isOwn, isAdmin: _isAdmin))
-                        ContentActionsMenu(
-                          onEdit: () => _onEditPressed(ex),
-                          onDelete: () => _onDeletePressed(ex),
-                        ),
-                    ],
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(ex.name, style: TextStyles.title)),
+                        if (canManage(isOwn: ex.isOwn, isAdmin: _isAdmin))
+                          ContentActionsMenu(
+                            onEdit: () => _onEditPressed(ex),
+                            onDelete: () => _onDeletePressed(ex),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
 
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: SessionSelector(
-                    selected: session,
-                    onSelected: CurrentSession.instance.choose,
+                FadeSlideIn(
+                  index: 1,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: SessionSelector(
+                      selected: session,
+                      onSelected: CurrentSession.instance.choose,
+                    ),
                   ),
                 ),
 
@@ -271,129 +403,32 @@ class _PingproExerciseDetailScreenState
                 // rehace con la secuencia nueva.
                 Expanded(
                   flex: 2,
-                  child: ExerciseAnimationView(key: ObjectKey(ex.sequence), exercise: ex),
+                  child: FadeSlideIn(
+                    index: 2,
+                    child: ExerciseAnimationView(key: ObjectKey(ex.sequence), exercise: ex),
+                  ),
                 ),
 
                 // Sección inferior con descripción y botones
                 Expanded(
                   flex: 1,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        // Descripción paso a paso
-                        Expanded(
-                          flex: 2,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Container(
-                                height: 200,
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: AppColors.background,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Descripción del ejercicio',
-                                      style: TextStyles.subTitle,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Expanded(
-                                      child: SingleChildScrollView(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              ex.description,
-                                              style: TextStyles.paragraph,
-                                            ),
-                                            const SizedBox(height: 16),
-                                            Text(
-                                              'Pasos:',
-                                              style: TextStyles.subTitle,
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              _buildSequenceDescription(ex),
-                                              style: TextStyles.paragraph
-                                                  .copyWith(height: 1.5),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                  child: FadeSlideIn(
+                    index: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(flex: 2, child: _buildDescription(ex)),
+                          const SizedBox(width: 14),
+                          _buildActions(
+                            ex,
+                            session: session,
+                            isCompleted: isCompleted,
+                            canUndo: canUndo,
                           ),
-                        ),
-
-                        const SizedBox(width: 14),
-
-                        // Botones
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            // Botón favorito
-                            Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: AppColors.widgetGrayBackground,
-                                shape: BoxShape.circle,
-                              ),
-                              child: IconButton(
-                                onPressed:
-                                    () => _onFavoritePressed(ex.id, isFavorite),
-                                icon: Icon(
-                                  isFavorite
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  color: AppColors.primary,
-                                  size: 24,
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 16),
-
-                            // Botón "Hecho" (completed sólo aquí)
-                            GestureDetector(
-                              onTap: _onDonePressed,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  isCompleted ? '¡Listo!' : 'Hecho',
-                                  style: TextStyles.buttons,
-                                ),
-                              ),
-                            ),
-
-                            if (canUndo)
-                              TextButton(
-                                onPressed: () => _onUndoPressed(session),
-                                child: Text(
-                                  'Deshacer',
-                                  style: TextStyles.paragraph.copyWith(decoration: TextDecoration.underline),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

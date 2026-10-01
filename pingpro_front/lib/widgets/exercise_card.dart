@@ -15,6 +15,7 @@ import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
+import 'package:pingpro_front/widgets/favorite_icon.dart';
 import 'package:pingpro_front/widgets/pressable_scale.dart';
 
 class ExerciseCard extends StatelessWidget {
@@ -121,21 +122,9 @@ class ExerciseCard extends StatelessWidget {
                     ),
                     child: IconButton(
                       onPressed: onFavoritePressed,
-                      // La key cambia con el estado, así AnimatedSwitcher
-                      // hace el "pop" al marcar y al desmarcar.
-                      icon: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 250),
-                        switchInCurve: Curves.easeOutBack,
-                        transitionBuilder: (child, animation) =>
-                            ScaleTransition(scale: animation, child: child),
-                        child: Icon(
-                          exercise.isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          key: ValueKey(exercise.isFavorite),
-                          color: AppColors.primary,
-                          size: 20,
-                        ),
+                      icon: FavoriteIcon(
+                        isFavorite: exercise.isFavorite,
+                        size: 20,
                       ),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
