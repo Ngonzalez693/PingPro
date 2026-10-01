@@ -33,6 +33,8 @@ import 'package:pingpro_front/widgets/confirm_delete_dialog.dart';
 import 'package:pingpro_front/widgets/content_actions_menu.dart';
 import 'package:pingpro_front/widgets/exercise_done.dart';
 import 'package:pingpro_front/widgets/fade_slide_in.dart';
+import 'package:pingpro_front/widgets/favorite_icon.dart';
+import 'package:pingpro_front/widgets/pressable_scale.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/session_roles.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
@@ -255,48 +257,76 @@ class _PingproExerciseDetailScreenState
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: AppColors.widgetGrayBackground,
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            onPressed: () => _onFavoritePressed(ex.id, ex.isFavorite),
-            icon: Icon(
-              ex.isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: AppColors.primary,
-              size: 24,
+        PressableScale(
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.widgetGrayBackground,
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              onPressed: () => _onFavoritePressed(ex.id, ex.isFavorite),
+              icon: FavoriteIcon(isFavorite: ex.isFavorite, size: 24),
             ),
           ),
         ),
         const SizedBox(height: 16),
-        GestureDetector(
-          onTap: _onDonePressed,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              isCompleted ? '¡Listo!' : 'Hecho',
-              style: TextStyles.buttons,
+        PressableScale(
+          child: GestureDetector(
+            onTap: _onDonePressed,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: _buildDoneLabel(isCompleted),
             ),
           ),
         ),
-        if (canUndo)
-          TextButton(
-            onPressed: () => _onUndoPressed(session),
-            child: Text(
-              'Deshacer',
-              style: TextStyles.paragraph.copyWith(
-                decoration: TextDecoration.underline,
-              ),
-            ),
-          ),
+        _buildUndo(canUndo, session),
       ],
+    );
+  }
+
+  Widget _buildDoneLabel(bool isCompleted) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      switchInCurve: Curves.easeOutBack,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: ScaleTransition(scale: animation, child: child),
+      ),
+      child: Text(
+        isCompleted ? '¡Listo!' : 'Hecho',
+        key: ValueKey(isCompleted),
+        style: TextStyles.buttons,
+      ),
+    );
+  }
+
+  // Entra y sale con fundido y cambio de alto: sin el SizeTransition los
+  // botones de arriba saltarían de golpe al aparecer o desaparecer.
+  Widget _buildUndo(bool canUndo, int session) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SizeTransition(sizeFactor: animation, child: child),
+      ),
+      child: canUndo
+          ? TextButton(
+              key: const ValueKey('undo'),
+              onPressed: () => _onUndoPressed(session),
+              child: Text(
+                'Deshacer',
+                style: TextStyles.paragraph.copyWith(
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            )
+          : const SizedBox.shrink(key: ValueKey('no-undo')),
     );
   }
 
