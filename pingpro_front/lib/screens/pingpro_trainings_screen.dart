@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/training_model.dart';
+import 'package:pingpro_front/widgets/choice_pill.dart';
 import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
 import 'package:pingpro_front/widgets/staggered_entrance.dart';
 import 'package:pingpro_front/widgets/training_card.dart';
@@ -152,25 +153,18 @@ class _PingproTrainingsScreenState extends State<PingproTrainingsScreen> {
   }
 
   Widget _buildTab(String label, int index) {
-    final selected = _selectedTab == index;
-    return GestureDetector(
+    return ChoicePill(
+      label: label,
+      selected: _selectedTab == index,
       onTap: () => _onTabSelected(index),
-      child: Container(
-        width: 80,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.secundary,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            color: AppColors.textBlack,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+      width: 80,
+      textStyle: _tabTextStyle,
     );
   }
+
+  // Más chico que TextStyles.buttons: con 16 px "Estructura" no entra en 80.
+  static const _tabTextStyle = TextStyle(
+    color: AppColors.textBlack,
+    fontWeight: FontWeight.bold,
+  );
 }
