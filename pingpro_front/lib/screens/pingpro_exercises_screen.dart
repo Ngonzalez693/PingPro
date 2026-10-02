@@ -14,6 +14,7 @@ import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
+import 'package:pingpro_front/widgets/choice_pill.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
 import 'package:pingpro_front/widgets/exercise_card_skeleton.dart';
 import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
@@ -203,25 +204,18 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
   }
 
   Widget _buildTab(String label, int index) {
-    final selected = _selectedTab == index;
-    return GestureDetector(
+    return ChoicePill(
+      label: label,
+      selected: _selectedTab == index,
       onTap: () => _onTabSelected(index),
-      child: Container(
-        width: 100,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.secundary,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            color: AppColors.textBlack,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+      width: 100,
+      textStyle: _tabTextStyle,
     );
   }
+
+  // Más chico que TextStyles.buttons: con 16 px no entran en el ancho fijo.
+  static const _tabTextStyle = TextStyle(
+    color: AppColors.textBlack,
+    fontWeight: FontWeight.bold,
+  );
 }
