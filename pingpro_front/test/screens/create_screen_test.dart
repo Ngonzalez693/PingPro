@@ -30,12 +30,24 @@ void main() {
 
     await tester.enterText(find.widgetWithText(TextField, 'Nombre del ejercicio'), 'Saque corto');
     await tester.tap(find.text('Entrenamientos'));
-    await tester.pump();
+    await tester.pumpAndSettle();
     // .first: el formulario de entrenamientos, que sigue construido, también
     // tiene un título "Ejercicios"; la pestaña es la primera.
     await tester.tap(find.text('Ejercicios').first);
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.text('Saque corto'), findsOneWidget);
+  });
+
+  testWidgets('deslizar a la izquierda lleva al formulario de entrenamientos', (tester) async {
+    await open(tester, const PingproCreateScreen());
+    final trainingName = find.widgetWithText(TextField, 'Nombre del entrenamiento');
+    final screenWidth = tester.view.physicalSize.width / tester.view.devicePixelRatio;
+
+    await tester.drag(find.byType(PageView), const Offset(-300, 0));
+    await tester.pumpAndSettle();
+
+    final left = tester.getTopLeft(trainingName).dx;
+    expect(left, inInclusiveRange(0, screenWidth - 1));
   });
 }
