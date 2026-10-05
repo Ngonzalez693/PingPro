@@ -6,6 +6,8 @@
  *   server.ts → app.ts → routes/ → middlewares/ → controllers/ → services/
  *   → repositories/ → Firestore
  */
+// Primero: comprueba la versión de Node antes de cargar firebase-admin.
+import './config/nodeVersionCheck';
 import app from './app';
 
 const PORT = process.env.PORT || 3000;
