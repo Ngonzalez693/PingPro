@@ -105,6 +105,34 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
     );
   }
 
+  void _openProfile() => Navigator.pushNamed(context, '/editProfile');
+
+  // Foto, nombre y "Ver perfil" son una sola zona tocable.
+  Widget _buildProfileLink(String name) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _openProfile,
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 24,
+            backgroundImage: AssetImage('assets/images/avatar_placeholder.png'),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: TextStyles.title),
+                Text('Ver perfil', style: TextStyles.paragraph),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _toggleFavorite(String id) async {
     try {
       await ExercisesState.instance.toggleFavorite(id);
@@ -163,30 +191,16 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                     ),
                     child: Row(
                       children: [
-                        const CircleAvatar(
-                          radius: 24,
-                          backgroundImage: AssetImage(
-                            'assets/images/avatar_placeholder.png',
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(name, style: TextStyles.title),
-                              Text('Ver perfil', style: TextStyles.paragraph),
-                            ],
-                          ),
-                        ),
+                        Expanded(child: _buildProfileLink(name)),
+                        // Por ahora también abre el perfil. Queda reservada
+                        // para la futura pantalla de configuración: entonces
+                        // solo cambia esta ruta.
                         IconButton(
                           icon: const Icon(
                             Icons.settings,
                             color: AppColors.textWhite,
                           ),
-                          onPressed:
-                              () =>
-                                  Navigator.pushNamed(context, '/editProfile'),
+                          onPressed: _openProfile,
                         ),
                       ],
                     ),
