@@ -5,14 +5,14 @@ import { Response } from 'express';
 describe('apiResponse', () => {
   it('success devuelve data correcto', () => {
     const json = jest.fn();
-    const res = { status: () => ({ json }) } as any;
+    const res = { status: () => ({ json }) } as unknown as Response;
     success(res, { foo: 'bar' }, HTTP_STATUS.CREATED);
     expect(json).toHaveBeenCalledWith({ success: true, data: { foo: 'bar' } });
   });
 
   it('error devuelve mensaje correcto', () => {
     const json = jest.fn();
-    const res = { status: () => ({ json }) } as any;
+    const res = { status: () => ({ json }) } as unknown as Response;
     error(res, 'fail', HTTP_STATUS.BAD_REQUEST);
     expect(json).toHaveBeenCalledWith({ success: false, message: 'fail' });
   });

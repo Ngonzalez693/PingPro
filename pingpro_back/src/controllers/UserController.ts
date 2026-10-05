@@ -22,7 +22,7 @@ export default class UserController {
     }
   }
 
-  static async create(req: Request, res: Response, next: NextFunction) {
+  static async create(req: Request, res: Response) {
     return error(res, "Use AuthController for user creation", HTTP_STATUS.BAD_REQUEST);
   }
 
