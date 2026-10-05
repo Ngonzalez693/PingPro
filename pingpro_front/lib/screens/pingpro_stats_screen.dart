@@ -97,7 +97,9 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                  Text(statPeriodCaption(_period), style: TextStyles.caption),
+                  const SizedBox(height: 8),
 
                   // ===== Gráfico principal (línea) =====
                   Padding(

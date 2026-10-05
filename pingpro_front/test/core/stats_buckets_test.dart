@@ -145,4 +145,26 @@ void main() {
       expect(labelFor(DateTime(2026, 12, 1), StatPeriod.monthly), 'Dic');
     });
   });
+
+  group('statPeriodCaption', () {
+    test('describe cada periodo en palabras', () {
+      expect(statPeriodCaption(StatPeriod.daily), 'Actividad por día · últimos 7 días');
+      expect(statPeriodCaption(StatPeriod.weekly), 'Actividad por semana · últimas 8 semanas');
+      expect(statPeriodCaption(StatPeriod.monthly), 'Actividad por mes · últimos 6 meses');
+    });
+
+    test('el resumen de Home y Perfil dice qué suma la gráfica', () {
+      expect(
+        recentActivityCaption(),
+        'Tu actividad de los últimos 7 días: ejercicios, entrenamientos y creados',
+      );
+    });
+
+    test('la cantidad coincide con los cubos que pinta la gráfica', () {
+      for (final period in StatPeriod.values) {
+        final count = dateRange(period, now: wednesday).length;
+        expect(statPeriodCaption(period), contains(' $count '));
+      }
+    });
+  });
 }

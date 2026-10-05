@@ -198,7 +198,14 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                   const SizedBox(height: 12),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('Estadísticas', style: TextStyles.subTitle),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Estadísticas', style: TextStyles.subTitle),
+                        const SizedBox(height: 4),
+                        Text(recentActivityCaption(), style: TextStyles.caption),
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: 8),

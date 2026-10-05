@@ -43,6 +43,9 @@ class TextStyles {
 
   static const aditional = TextStyle(color: AppColors.textBlack, fontSize: 14);
 
+  // Subtítulo gris bajo un título, p. ej. qué muestra una gráfica.
+  static const caption = TextStyle(color: AppColors.textGray, fontSize: 14);
+
   // Solo para el nombre de la app: Anta es la tipografía de marca, no de UI.
   static const brandTitle = TextStyle(
     fontFamily: 'Anta',

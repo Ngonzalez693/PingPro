@@ -226,6 +226,8 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
 
             // Estadísticas
             Text('Estadísticas', style: TextStyles.subTitle),
+            const SizedBox(height: 4),
+            Text(recentActivityCaption(), style: TextStyles.caption),
             const SizedBox(height: 16),
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, '/stats'),
