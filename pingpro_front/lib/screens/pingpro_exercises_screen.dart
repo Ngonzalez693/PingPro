@@ -7,8 +7,6 @@
 // FRÁGIL: las categorías se comparan como texto literal ('Footwork',
 // 'Técnico', 'Táctico', 'Estrategia') contra el campo `category` de Firestore.
 // Un cambio de nombre o una tilde distinta deja la pestaña vacía sin avisar.
-// Además las etiquetas visibles no coinciden con lo que se compara
-// ('Técnicos' se muestra pero se filtra por 'Técnico').
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
@@ -120,13 +118,13 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildTab('All', 0),
+                  _buildTab('Todos', 0),
                   const SizedBox(width: 8),
                   _buildTab('Footwork', 1),
                   const SizedBox(width: 8),
-                  _buildTab('Técnicos', 2),
+                  _buildTab('Técnico', 2),
                   const SizedBox(width: 8),
-                  _buildTab('Tácticos', 3),
+                  _buildTab('Táctico', 3),
                   const SizedBox(width: 8),
                   _buildTab('Estrategia', 4),
                 ],

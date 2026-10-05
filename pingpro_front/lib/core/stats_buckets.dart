@@ -33,6 +33,26 @@ const _bucketCount = {
   StatPeriod.monthly: 6,
 };
 
+/// Subtítulo de la gráfica para el periodo. La cantidad sale de
+/// _bucketCount para que no se desincronice si cambia la ventana.
+String statPeriodCaption(StatPeriod period) {
+  final count = _bucketCount[period]!;
+  switch (period) {
+    case StatPeriod.daily:
+      return 'Actividad por día · últimos $count días';
+    case StatPeriod.weekly:
+      return 'Actividad por semana · últimas $count semanas';
+    case StatPeriod.monthly:
+      return 'Actividad por mes · últimos $count meses';
+  }
+}
+
+/// Subtítulo de la gráfica semanal de Home y Perfil (periodo diario).
+String recentActivityCaption() {
+  final days = _bucketCount[StatPeriod.daily]!;
+  return 'Tu actividad de los últimos $days días: ejercicios, entrenamientos y creados';
+}
+
 /// Inicios de cubo en orden cronológico: el más viejo primero y el actual al
 /// final, que es como se leen las gráficas de izquierda a derecha.
 List<DateTime> dateRange(StatPeriod period, {DateTime? now}) {

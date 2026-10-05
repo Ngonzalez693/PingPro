@@ -78,7 +78,7 @@ class _PingproTrainingsScreenState extends State<PingproTrainingsScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildTab('All', 0),
+                      _buildTab('Todos', 0),
                       const SizedBox(width: 8),
                       _buildTab('Grado', 1),
                       const SizedBox(width: 8),
