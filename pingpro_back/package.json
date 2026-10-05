@@ -6,7 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "node dist/server.js",
-    "dev": "nodemon",
+    "dev": "node --watch-path=src --require ts-node/register src/server.ts",
     "build": "tsc",
     "build:watch": "tsc --watch",
     "clean": "rimraf dist",
@@ -61,7 +61,6 @@
     "eslint": "^8.56.0",
     "firebase-tools": "^13.35.1",
     "jest": "^30.5.2",
-    "nodemon": "^3.1.10",
     "prettier": "^3.2.4",
     "rimraf": "^5.0.10",
     "supertest": "^7.1.4",
