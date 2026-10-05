@@ -47,7 +47,7 @@ export default class AuthController {
     }
   }
 
-  static async verifyToken(req: Request, res: Response, next: NextFunction) {
+  static async verifyToken(req: Request, res: Response) {
     try {
       const authHeader = req.headers.authorization || '';
       const [, idToken] = authHeader.split(' ');

@@ -9,20 +9,20 @@ describe('config/firebase', () => {
     process.env.FIRESTORE_EMULATOR_HOST = emulatorHost;
   });
 
-  it('se niega a arrancar en tests si no hay emulador configurado', () => {
+  it('se niega a arrancar en tests si no hay emulador configurado', async () => {
     delete process.env.FIRESTORE_EMULATOR_HOST;
 
-    expect(() => {
-      jest.isolateModules(() => {
-        require('../../../src/config/firebase');
-      });
-    }).toThrow('Tests must run against the Firebase emulators');
+    await expect(
+      jest.isolateModulesAsync(async () => {
+        await import('../../../src/config/firebase');
+      }),
+    ).rejects.toThrow('Tests must run against the Firebase emulators');
   });
 
-  it('con emulador arranca contra el proyecto demo y sin la clave de servicio', () => {
-    jest.isolateModules(() => {
-      require('../../../src/config/firebase');
-      const { getApp } = require('firebase-admin/app') as typeof import('firebase-admin/app');
+  it('con emulador arranca contra el proyecto demo y sin la clave de servicio', async () => {
+    await jest.isolateModulesAsync(async () => {
+      await import('../../../src/config/firebase');
+      const { getApp } = await import('firebase-admin/app');
 
       expect(getApp().options.projectId).toBe('demo-pingpro');
       // cert() deja la clave privada en la credencial. Si firebase-admin pone

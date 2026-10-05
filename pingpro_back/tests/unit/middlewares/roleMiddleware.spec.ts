@@ -31,7 +31,7 @@ function mockRes() {
     res.body = payload;
     return res as Response;
   });
-  return res as Response & { statusCode?: number; body?: any };
+  return res as Response & { statusCode?: number; body?: unknown };
 }
 
 function mockReq(uid?: string, paramId?: string) {
