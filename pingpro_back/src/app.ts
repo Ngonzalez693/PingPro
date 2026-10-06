@@ -12,6 +12,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import routes from './routes/index';
+import privacyRoutes from './routes/privacyRoutes';
 import { errorHandler } from './middlewares/index';
 import { TRUST_PROXY_HOPS } from './utils/constants';
 
@@ -35,6 +36,9 @@ app.use(helmet());         // Protect HTTP headers
 app.use(cors());           // Enable CORS for all routes
 app.use(express.json());   // JSON automatic parsing
 app.use(morgan('dev'));    // Logging of petitions
+
+// Política de privacidad pública, fuera de /api (ver routes/privacyRoutes.ts).
+app.use('/privacy', privacyRoutes);
 
 // Prefix for all API routes
 // Todo cuelga de /api: /api/exercises, /api/trainings, /api/users, /api/auth

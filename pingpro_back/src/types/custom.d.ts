@@ -18,6 +18,7 @@ declare namespace NodeJS {
     FIREBASE_MESSAGING_SENDER_ID: string;
     FIREBASE_APP_ID: string;
     FIREBASE_MEASUREMENT_ID: string;
+    SUPPORT_EMAIL?: string; // contacto de GET /privacy; vacío = sin correo
     // other env vars
   }
 }
