@@ -24,15 +24,19 @@ const STYLE = `
 
 const BODY = `
   <h1>Política de privacidad de PingPro</h1>
+  <p>Última actualización: 5 de octubre de 2026.</p>
   <h2>Qué datos guardamos</h2>
   <p>Tu correo y tu nombre de usuario, los ejercicios y entrenamientos que creas,
   tus favoritos y el historial de ejercicios y entrenamientos que completas.</p>
   <h2>Para qué los usamos</h2>
   <p>Solo para que la app funcione y para mostrarte tus estadísticas. No
-  mostramos publicidad ni compartimos tus datos con terceros.</p>
+  mostramos publicidad. No vendemos tus datos ni los compartimos con terceros,
+  salvo con los proveedores que hacen funcionar el servicio (ver abajo).</p>
   <h2>Dónde se guardan</h2>
-  <p>La cuenta (correo y contraseña) en Firebase Authentication; el resto en la
-  base de datos del servidor de PingPro.</p>
+  <p>La cuenta (correo y contraseña) en Firebase Authentication, de Google. El
+  resto, en una base de datos PostgreSQL alojada en Supabase, a la que accede el
+  servidor de PingPro, alojado en Hostinger. Estos proveedores solo procesan los
+  datos para prestar el servicio.</p>
   <h2>Cuánto tiempo</h2>
   <p>Mientras tengas la cuenta. Al eliminarla se borran todos tus datos.</p>
 `;
