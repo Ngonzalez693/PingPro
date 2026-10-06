@@ -16,6 +16,8 @@ dependencies:
   http: ^1.5.0
   fl_chart: ^0.66.2
   model_viewer_plus: ^1.9.3
+  package_info_plus: ^9.0.1
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
@@ -27,6 +29,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/fonts/OFL.txt
     - .env
   fonts:
     - family: Anta

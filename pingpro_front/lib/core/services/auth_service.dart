@@ -39,6 +39,35 @@ String passwordResetErrorMessage(String code) {
   }
 }
 
+/// Mensaje para el usuario según el código de FirebaseAuthException que lanza
+/// [AuthService.changePassword]. Firebase devuelve 'invalid-credential' en vez
+/// de 'wrong-password' cuando la protección de enumeración está activa.
+String passwordChangeErrorMessage(String code) {
+  switch (code) {
+    case 'wrong-password':
+    case 'invalid-credential':
+      return 'La contraseña actual no es correcta';
+    case 'weak-password':
+      return 'La nueva contraseña es demasiado débil';
+    case 'too-many-requests':
+      return 'Demasiados intentos, prueba más tarde';
+    case 'network-request-failed':
+      return 'Sin conexión, revisa tu red';
+    default:
+      return 'No se pudo cambiar la contraseña, inténtalo de nuevo';
+  }
+}
+
+/// Validación local antes de llamar a Firebase; null si es válida. El mínimo
+/// de 6 es el que impone Firebase Auth.
+String? validateNewPassword(String newPassword, String repeat) {
+  if (newPassword.length < 6) {
+    return 'La nueva contraseña debe tener al menos 6 caracteres';
+  }
+  if (newPassword != repeat) return 'Las contraseñas no coinciden';
+  return null;
+}
+
 class AuthService {
   final _auth = FirebaseAuth.instance;
   final String _baseUrl = dotenv.env['API_BASE_URL']!;
@@ -122,6 +151,22 @@ class AuthService {
       if (e.code == 'user-not-found') return;
       rethrow;
     }
+  }
+
+  /// Re-autentica con la contraseña actual y cambia a la nueva.
+  ///
+  /// Re-autenticar siempre evita el 'requires-recent-login' que Firebase lanza
+  /// si la sesión es vieja, y confirma que quien la cambia conoce la actual.
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _auth.currentUser;
+    final email = user?.email;
+    if (user == null || email == null) throw StateError('No hay sesión iniciada');
+    final credential = EmailAuthProvider.credential(email: email, password: currentPassword);
+    await user.reauthenticateWithCredential(credential);
+    await user.updatePassword(newPassword);
   }
 
   Future<void> logout() async {

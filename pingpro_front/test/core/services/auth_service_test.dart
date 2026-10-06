@@ -43,4 +43,38 @@ void main() {
       );
     });
   });
+
+  group('passwordChangeErrorMessage', () {
+    test('la contraseña actual incorrecta se explica igual en ambos códigos', () {
+      expect(passwordChangeErrorMessage('wrong-password'), 'La contraseña actual no es correcta');
+      expect(passwordChangeErrorMessage('invalid-credential'), 'La contraseña actual no es correcta');
+    });
+
+    test('traduce los demás errores que el usuario puede resolver', () {
+      expect(passwordChangeErrorMessage('weak-password'), 'La nueva contraseña es demasiado débil');
+      expect(passwordChangeErrorMessage('too-many-requests'), 'Demasiados intentos, prueba más tarde');
+      expect(passwordChangeErrorMessage('network-request-failed'), 'Sin conexión, revisa tu red');
+    });
+
+    test('cualquier otro código cae en un mensaje genérico', () {
+      expect(
+        passwordChangeErrorMessage('internal-error'),
+        'No se pudo cambiar la contraseña, inténtalo de nuevo',
+      );
+    });
+  });
+
+  group('validateNewPassword', () {
+    test('acepta una contraseña de 6 o más caracteres repetida igual', () {
+      expect(validateNewPassword('abc123', 'abc123'), isNull);
+    });
+
+    test('rechaza menos de 6 caracteres', () {
+      expect(validateNewPassword('abc12', 'abc12'), 'La nueva contraseña debe tener al menos 6 caracteres');
+    });
+
+    test('rechaza si la repetición no coincide', () {
+      expect(validateNewPassword('abc123', 'abc124'), 'Las contraseñas no coinciden');
+    });
+  });
 }

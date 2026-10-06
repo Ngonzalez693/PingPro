@@ -21,6 +21,7 @@ import 'package:pingpro_front/screens/pingpro_edit_profile_screen.dart';
 import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
 import 'package:pingpro_front/screens/pingpro_login_screen.dart';
 import 'package:pingpro_front/screens/pingpro_register_screen.dart';
+import 'package:pingpro_front/screens/pingpro_settings_screen.dart';
 import 'package:pingpro_front/screens/pingpro_splash_screen.dart';
 import 'package:pingpro_front/screens/pingpro_stats_detail_screen.dart';
 import 'package:pingpro_front/screens/pingpro_stats_screen.dart';
@@ -33,6 +34,7 @@ import 'package:pingpro_front/screens/pingpro_trainings_screen.dart';
 import 'package:pingpro_front/screens/pingpro_profile_screen.dart';
 import 'package:pingpro_front/widgets/custom_bottom_navigation.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_licenses.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
 import 'package:pingpro_front/core/services/session_roles.dart';
@@ -43,6 +45,7 @@ void main() async {
   // ensureInitialized() debe ir primero: dotenv y Firebase necesitan el binding
   // de plataforma listo antes de que exista el árbol de widgets.
   WidgetsFlutterBinding.ensureInitialized();
+  registerAppLicenses();
   // Solo vertical, aunque el móvil tenga el giro automático activado: la mesa
   // del editor y el visor 3D están diseñados en vertical. También se fija en
   // AndroidManifest.xml e Info.plist, que valen desde la pantalla de arranque,
@@ -93,6 +96,7 @@ class MainApp extends StatelessWidget {
         },
         '/profile': (ctx) => const PingproProfileScreen(),
         '/editProfile': (ctx) => const PingproEditProfileScreen(),
+        '/settings': (ctx) => const PingproSettingsScreen(),
         '/stats': (ctx) => const PingproStatsScreen(),
         '/statsDetail': (ctx) => const PingproStatsDetailScreen(),
       },
