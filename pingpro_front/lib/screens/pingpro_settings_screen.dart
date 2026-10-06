@@ -30,9 +30,17 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
   @override
   void initState() {
     super.initState();
-    PackageInfo.fromPlatform().then((info) {
+    _loadVersion();
+  }
+
+  // Si falla solo se registra: la versión es informativa y la fila se queda en '…'.
+  Future<void> _loadVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
       if (mounted) setState(() => _version = '${info.version} (${info.buildNumber})');
-    });
+    } catch (e) {
+      debugPrint('PackageInfo error: $e');
+    }
   }
 
   void _showMessage(String message) {
