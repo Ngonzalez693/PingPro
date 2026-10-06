@@ -192,15 +192,12 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                     child: Row(
                       children: [
                         Expanded(child: _buildProfileLink(name)),
-                        // Por ahora también abre el perfil. Queda reservada
-                        // para la futura pantalla de configuración: entonces
-                        // solo cambia esta ruta.
                         IconButton(
                           icon: const Icon(
                             Icons.settings,
                             color: AppColors.textWhite,
                           ),
-                          onPressed: _openProfile,
+                          onPressed: () => Navigator.pushNamed(context, '/settings'),
                         ),
                       ],
                     ),

@@ -21,6 +21,7 @@ import 'package:pingpro_front/screens/pingpro_edit_profile_screen.dart';
 import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
 import 'package:pingpro_front/screens/pingpro_login_screen.dart';
 import 'package:pingpro_front/screens/pingpro_register_screen.dart';
+import 'package:pingpro_front/screens/pingpro_settings_screen.dart';
 import 'package:pingpro_front/screens/pingpro_splash_screen.dart';
 import 'package:pingpro_front/screens/pingpro_stats_detail_screen.dart';
 import 'package:pingpro_front/screens/pingpro_stats_screen.dart';
@@ -95,6 +96,7 @@ class MainApp extends StatelessWidget {
         },
         '/profile': (ctx) => const PingproProfileScreen(),
         '/editProfile': (ctx) => const PingproEditProfileScreen(),
+        '/settings': (ctx) => const PingproSettingsScreen(),
         '/stats': (ctx) => const PingproStatsScreen(),
         '/statsDetail': (ctx) => const PingproStatsDetailScreen(),
       },
