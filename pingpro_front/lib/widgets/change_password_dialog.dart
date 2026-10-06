@@ -12,6 +12,7 @@ import 'package:pingpro_front/core/text_styles.dart';
 Future<bool> showChangePasswordDialog(BuildContext context) async {
   final changed = await showDialog<bool>(
     context: context,
+    barrierDismissible: false,
     builder: (_) => const ChangePasswordDialog(),
   );
   return changed ?? false;
@@ -84,36 +85,39 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppColors.widgetBackground,
-      title: const Text('Cambiar contraseña', style: TextStyles.subTitleBlack),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildField(_currentCtrl, 'Contraseña actual'),
-          const SizedBox(height: 8),
-          _buildField(_newCtrl, 'Nueva contraseña'),
-          const SizedBox(height: 8),
-          _buildField(_repeatCtrl, 'Repetir nueva contraseña', errorText: _error),
+    return PopScope(
+      canPop: !_isSaving,
+      child: AlertDialog(
+        backgroundColor: AppColors.widgetBackground,
+        title: const Text('Cambiar contraseña', style: TextStyles.subTitleBlack),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildField(_currentCtrl, 'Contraseña actual'),
+            const SizedBox(height: 8),
+            _buildField(_newCtrl, 'Nueva contraseña'),
+            const SizedBox(height: 8),
+            _buildField(_repeatCtrl, 'Repetir nueva contraseña', errorText: _error),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar', style: TextStyles.paragraphBlack),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            onPressed: _isSaving ? null : _onSavePressed,
+            child: _isSaving
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textBlack),
+                  )
+                : const Text('Guardar', style: TextStyles.buttons),
+          ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Cancelar', style: TextStyles.paragraphBlack),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-          onPressed: _isSaving ? null : _onSavePressed,
-          child: _isSaving
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textBlack),
-                )
-              : const Text('Guardar', style: TextStyles.buttons),
-        ),
-      ],
     );
   }
 }
