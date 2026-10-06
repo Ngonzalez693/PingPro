@@ -7,7 +7,6 @@
 // Cambiar la foto está desactivado hasta tener Supabase Storage: el bucket de
 // Firebase Storage nunca existió (pide el plan Blaze). El avatar muestra la
 // foto si el perfil ya tiene una.
-// ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
