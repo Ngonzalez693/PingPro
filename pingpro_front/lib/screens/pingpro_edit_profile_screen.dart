@@ -1,16 +1,12 @@
-// Edición de perfil: nombre, contraseña y cierre de sesión.
+// Edición de perfil: nombre (y foto cuando haya Storage).
+// La contraseña y el cierre de sesión están en Configuración.
 //
 // El nombre se guarda en el backend (PUT /api/users/{uid}, vía AuthService) y
-// además en Firebase Auth. La contraseña sigue cambiándose con el SDK de
-// Firebase Auth en el cliente: Auth se queda en Firebase en la migración.
+// además en Firebase Auth.
 //
 // Cambiar la foto está desactivado hasta tener Supabase Storage: el bucket de
 // Firebase Storage nunca existió (pide el plan Blaze). El avatar muestra la
 // foto si el perfil ya tiene una.
-//
-// PENDIENTE: cambiar la contraseña puede fallar con 'requires-recent-login' si
-// la sesión es vieja. Hoy solo se muestra un aviso; falta el flujo de
-// reautenticación.
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/foundation.dart';
@@ -35,11 +31,9 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
   String? _imageUrl;
 
   bool _editingName = false;
-  bool _editingPassword = false;
   bool _isEditing = false;
 
   final TextEditingController _nameEditCtrl = TextEditingController();
-  final TextEditingController _passwordEditCtrl = TextEditingController();
 
   bool _loading = true;     // pantalla cargando
   bool _saving = false;     // guardando cambios
@@ -85,7 +79,6 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
 
     final user = FirebaseAuth.instance.currentUser!;
     final newName = _nameEditCtrl.text.trim();
-    final newPass = _passwordEditCtrl.text.trim();
 
     try {
       // Nombre: primero el backend (users/{uid}) y después Firebase Auth, para
@@ -94,33 +87,6 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
         await _authService.updateProfile(displayName: newName);
         await user.updateDisplayName(newName);
         _userName = newName;
-      }
-
-      // Actualizar password (si el usuario escribió algo)
-      if (newPass.isNotEmpty) {
-        if (newPass.length < 6) {
-          throw FirebaseAuthException(
-            code: 'weak-password',
-            message: 'La contraseña debe tener al menos 6 caracteres',
-          );
-        }
-        try {
-          await user.updatePassword(newPass);
-          _passwordEditCtrl.clear();
-        } on FirebaseAuthException catch (e) {
-          // Requiere reautenticación reciente
-          if (e.code == 'requires-recent-login') {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Por seguridad debes iniciar sesión de nuevo para cambiar la contraseña.',
-                ),
-              ),
-            );
-          } else {
-            rethrow;
-          }
-        }
       }
 
       if (mounted) {
@@ -218,39 +184,6 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
                   const SizedBox(height: 12),
                   Text('Correo: $_userEmail', style: TextStyles.paragraph),
 
-                  const SizedBox(height: 12),
-
-                  // Contraseña
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _editingPassword
-                          ? SizedBox(
-                              width: 220,
-                              child: TextField(
-                                controller: _passwordEditCtrl,
-                                obscureText: true,
-                                style: TextStyles.paragraph,
-                                decoration: const InputDecoration(
-                                  hintText: 'Nueva contraseña',
-                                ),
-                              ),
-                            )
-                          : Text('Contraseña: ••••••••', style: TextStyles.paragraph),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: _isEditing
-                            ? () => setState(() => _editingPassword = !_editingPassword)
-                            : null,
-                        child: Icon(
-                          Icons.edit,
-                          size: 20,
-                          color: _isEditing ? AppColors.primary : Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-
                   const SizedBox(height: 48),
 
                   // Botón editar/guardar
@@ -271,113 +204,15 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
                           setState(() {
                             _isEditing = false;
                             _editingName = false;
-                            _editingPassword = false;
                           });
                         } else {
                           setState(() {
                             _isEditing = true;
                             _editingName = true;
-                            _editingPassword = true;
                           });
                         }
                       },
                       child: Text(buttonLabel, style: TextStyles.buttons),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Cerrar sesión
-                  SizedBox(
-                    width: 220,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.secundary,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      onPressed: () async {
-                        final shouldLogout = await showDialog<bool>(
-                          context: context,
-                          builder: (_) => AlertDialog(
-                            backgroundColor: AppColors.widgetGrayBackground,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            contentPadding: const EdgeInsets.all(24),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text(
-                                  '¿Quieres cerrar sesión?',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyles.paragraphBlack,
-                                ),
-                                const SizedBox(height: 24),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.primary,
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(25),
-                                      ),
-                                    ),
-                                    onPressed: () => Navigator.pop(context, true),
-                                    child: const Text(
-                                      'Sí, salir',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.widgetGrayBackground,
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(25),
-                                      ),
-                                    ),
-                                    onPressed: () => Navigator.pop(context, false),
-                                    child: const Text('Volver',
-                                        style: TextStyles.paragraphBlack),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                        if (shouldLogout == true) {
-                          try {
-                            await _authService.logout();
-                            if (!mounted) return;
-                            // Login encima de la raíz, no en lugar de ella: la
-                            // raíz es AuthWrapper y es quien vacía los stores
-                            // al cambiar el uid. Si la quitáramos de la pila,
-                            // los datos del usuario anterior seguirían vivos.
-                            Navigator.of(context).pushNamedAndRemoveUntil(
-                              '/login',
-                              (route) => route.isFirst,
-                            );
-                          } catch (e) {
-                            if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: $e')),
-                            );
-                          }
-                        }
-                      },
-                      child: Text("Cerrar sesión", style: TextStyles.buttons),
                     ),
                   ),
                 ],
