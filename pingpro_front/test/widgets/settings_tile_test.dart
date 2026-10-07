@@ -41,4 +41,19 @@ void main() {
     expect(tester.widget<Text>(find.text('Eliminar cuenta')).style?.color, AppColors.danger);
     expect(tester.widget<Icon>(find.byIcon(Icons.delete_forever)).color, AppColors.danger);
   });
+
+  testWidgets('un trailing propio reemplaza a la flecha', (tester) async {
+    await pump(
+      tester,
+      SettingsTile(
+        icon: Icons.motion_photos_off_outlined,
+        title: 'Reducir animaciones',
+        trailing: Switch(value: false, onChanged: (_) {}),
+        onTap: () {},
+      ),
+    );
+
+    expect(find.byType(Switch), findsOneWidget);
+    expect(find.byIcon(Icons.chevron_right), findsNothing);
+  });
 }

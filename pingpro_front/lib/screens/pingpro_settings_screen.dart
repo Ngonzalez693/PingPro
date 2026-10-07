@@ -1,13 +1,14 @@
 // Configuración: la abre la tuerca del perfil.
 //
-// Cada etapa del plan agrega su sección cuando funciona (Notificaciones y
-// Apariencia llegan después): nunca se muestra una opción que todavía no
-// hace nada. Ver los docs del diseño de Configuración.
+// Cada etapa del plan agrega su sección cuando funciona (Notificaciones llega
+// después): nunca se muestra una opción que todavía no hace nada. Ver los
+// docs del diseño de Configuración.
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/services/app_preferences.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
 import 'package:pingpro_front/core/support_mail.dart';
 import 'package:pingpro_front/core/text_styles.dart';
@@ -113,6 +114,7 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
           children: [
             _buildHeader(),
             ..._buildAccountSection(),
+            ..._buildAppearanceSection(),
             ..._buildAboutSection(),
           ],
         ),
@@ -152,6 +154,28 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
         title: 'Eliminar cuenta',
         destructive: true,
         onTap: _onDeleteAccount,
+      ),
+    ];
+  }
+
+  // Escucha a AppPreferences para que el interruptor siga al valor guardado.
+  List<Widget> _buildAppearanceSection() {
+    final prefs = AppPreferences.instance;
+    return [
+      const SettingsSectionHeader(title: 'Apariencia y accesibilidad'),
+      ListenableBuilder(
+        listenable: prefs,
+        builder: (context, _) => SettingsTile(
+          icon: Icons.motion_photos_off_outlined,
+          title: 'Reducir animaciones',
+          subtitle: 'Desactiva las transiciones y los efectos de entrada',
+          trailing: Switch(
+            value: prefs.reduceMotion,
+            onChanged: prefs.setReduceMotion,
+            activeColor: AppColors.primary,
+          ),
+          onTap: () => prefs.setReduceMotion(!prefs.reduceMotion),
+        ),
       ),
     ];
   }
