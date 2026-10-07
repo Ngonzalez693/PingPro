@@ -30,6 +30,7 @@ class PingproSettingsScreen extends StatefulWidget {
 
 class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
   String? _version;
+  bool _reminderBusy = false;
 
   @override
   void initState() {
@@ -82,6 +83,10 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
   }
 
   Future<void> _onReminderToggled(bool enabled) async {
+    // Un doble toque rápido lanzaría dos peticiones de permiso a la vez y la
+    // segunda mostraría un error falso: se ignora mientras la anterior corre.
+    if (_reminderBusy) return;
+    _reminderBusy = true;
     try {
       final result = await DailyReminder.instance.setEnabled(enabled);
       if (result == ReminderToggle.permissionDenied && mounted) {
@@ -90,6 +95,8 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
     } catch (e) {
       debugPrint('reminder toggle error: $e');
       if (mounted) _showMessage('No se pudo cambiar el recordatorio');
+    } finally {
+      _reminderBusy = false;
     }
   }
 
@@ -97,6 +104,14 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
     final picked = await showTimePicker(
       context: context,
       initialTime: AppPreferences.instance.reminderTime,
+      // La app no tiene delegados de localización, así que los textos del
+      // selector saldrían en inglés.
+      helpText: 'Hora del recordatorio',
+      cancelText: 'Cancelar',
+      confirmText: 'Aceptar',
+      hourLabelText: 'Hora',
+      minuteLabelText: 'Minuto',
+      errorInvalidText: 'Hora no válida',
       // 24 h, igual que se muestra la hora en la fila.
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
