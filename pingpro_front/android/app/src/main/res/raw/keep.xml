@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- El icono del recordatorio solo se nombra desde Dart: sin esto, el shrinker
+     de las builds release puede quitarlo y la notificación no se muestra. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_reminder" />
