@@ -4,8 +4,10 @@
 // Al llegar a esa copia se salta con jumpToPage(0), que no anima, de modo que
 // el ciclo se ve continuo en vez de retroceder por todas las páginas.
 // Por eso los indicadores se generan sobre `length - 1`: la copia no cuenta.
+// Con animaciones reducidas no avanza solo.
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:pingpro_front/core/motion.dart';
 
 class ImageBannerCarousel extends StatefulWidget {
   const ImageBannerCarousel({super.key});
@@ -32,15 +34,26 @@ class _ImageBannerCarouselState extends State<ImageBannerCarousel> {
 
     _bannerImages = [...originalBanners, originalBanners[0]];
     _pageController = PageController();
-    _startAutoSlide();
   }
 
-  void _startAutoSlide() {
-    _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      int nextPage = _currentPage + 1;
+  // Con animaciones reducidas no avanza solo (se sigue pudiendo deslizar a
+  // mano). Aquí y no en initState para reaccionar si el ajuste cambia con la
+  // portada abierta.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _timer?.cancel();
+      _timer = null;
+    } else {
+      _timer ??= _startAutoSlide();
+    }
+  }
 
+  Timer _startAutoSlide() {
+    return Timer.periodic(const Duration(seconds: 4), (timer) {
       _pageController.animateToPage(
-        nextPage,
+        _currentPage + 1,
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
@@ -112,7 +125,7 @@ class _ImageBannerCarouselState extends State<ImageBannerCarousel> {
       bool isActive = _currentPage % totalIndicators == index;
 
       return AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+        duration: motionDuration(context, const Duration(milliseconds: 300)),
         margin: const EdgeInsets.symmetric(horizontal: 4),
         width: isActive ? 12 : 8,
         height: 8,
