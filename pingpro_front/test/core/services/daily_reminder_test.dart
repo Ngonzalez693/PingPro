@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class FakeScheduler implements ReminderScheduler {
   bool grantPermission = true;
   bool failToSchedule = false;
+  bool failToCancel = false;
   final List<TimeOfDay> scheduled = [];
   int cancels = 0;
 
@@ -21,7 +22,10 @@ class FakeScheduler implements ReminderScheduler {
   }
 
   @override
-  Future<void> cancel() async => cancels++;
+  Future<void> cancel() async {
+    if (failToCancel) throw StateError('plugin roto');
+    cancels++;
+  }
 }
 
 void main() {
@@ -53,6 +57,14 @@ void main() {
 
     expect(result, ReminderToggle.permissionDenied);
     expect(scheduler.scheduled, isEmpty);
+    expect(reminder.preferences.reminderEnabled, isFalse);
+  });
+
+  test('si programar falla al encenderlo, el error sube y no se enciende', () async {
+    final reminder = await reminderWith({});
+    scheduler.failToSchedule = true;
+
+    await expectLater(reminder.setEnabled(true), throwsStateError);
     expect(reminder.preferences.reminderEnabled, isFalse);
   });
 
@@ -103,5 +115,12 @@ void main() {
     final off = await reminderWith({});
     await off.stop();
     expect(scheduler.cancels, 0);
+  });
+
+  test('si cancelar falla al cerrar sesión, no rompe el cierre', () async {
+    final reminder = await reminderWith({'reminderEnabled': true});
+    scheduler.failToCancel = true;
+
+    await expectLater(reminder.stop(), completes);
   });
 }
