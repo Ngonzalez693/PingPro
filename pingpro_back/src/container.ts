@@ -58,9 +58,13 @@ function createPostgresRepositories(pool: Pool): Repositories {
 const pool = createPool();
 const repositories = createPostgresRepositories(pool);
 
+// Una sola instancia: la usan el registro (services.auth) y la eliminación de
+// cuentas (services.users).
+const authService = new AuthService();
+
 export const services = {
-  auth: new AuthService(),
-  users: new UserService(repositories.users),
+  auth: authService,
+  users: new UserService(repositories.users, authService),
   exercises: new ExerciseService(repositories.exercises, repositories.exerciseStates),
   trainings: new TrainingService(repositories.trainings, repositories.trainingStates, repositories.exercises),
   models3d: new Model3DService(repositories.models3d),

@@ -8,10 +8,19 @@
 import { IUser } from '../interfaces/models/IUser';
 import type { IUserRepository } from '../interfaces/repositories/IUserRepository';
 import { HttpError } from '../utils/httpError';
+import type { AuthService } from './AuthService';
+
+// De Auth solo hace falta borrar la cuenta. Pick en vez de la clase entera:
+// los tests pasan un falso sin arrancar firebase-admin, y `import type` no
+// carga config/firebase.
+type AccountDeleter = Pick<AuthService, 'deleteUser'>;
 
 export class UserService {
-  // Lo recibe de src/container.ts: el servicio solo conoce la interfaz.
-  constructor(private readonly repo: IUserRepository) {}
+  // Los recibe de src/container.ts: el servicio solo conoce las interfaces.
+  constructor(
+    private readonly repo: IUserRepository,
+    private readonly accounts: AccountDeleter,
+  ) {}
 
   async getById(id: string): Promise<IUser> {
     const user = await this.repo.getById(id);
@@ -32,5 +41,20 @@ export class UserService {
   async delete(id: string): Promise<void> {
     await this.getById(id); // validar existencia
     await this.repo.delete(id);
+  }
+
+  /**
+   * Elimina la cuenta entera: primero la fila de users (todo lo que cuelga de
+   * ella se borra en cascada; el catálogo, sin dueño, no se toca) y después la
+   * cuenta de Firebase Auth.
+   *
+   * En ese orden a propósito: si falla Auth, el usuario todavía puede entrar
+   * (ya sin datos) y reintentar; al revés quedarían datos que nadie puede
+   * borrar. Por eso tampoco se valida que la fila exista: un reintento llega
+   * sin ella y tiene que seguir hasta Auth.
+   */
+  async deleteAccount(uid: string): Promise<void> {
+    await this.repo.delete(uid);
+    await this.accounts.deleteUser(uid);
   }
 }
