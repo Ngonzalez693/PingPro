@@ -61,10 +61,14 @@ void main() async {
   // Antes de runApp: la primera pantalla ya tiene que respetar "Reducir
   // animaciones".
   await AppPreferences.instance.load();
-  // Sin await: reprogramarlo no tiene por qué retrasar la primera pantalla.
-  unawaited(DailyReminder.instance.restore());
 
   runApp(const MainApp());
+  // Tras el primer frame: restore() corre síncrono hasta su primer await y
+  // cargar la base de zonas horarias es costoso, así que antes de runApp
+  // retrasaría la primera pantalla.
+  WidgetsBinding.instance.addPostFrameCallback(
+    (_) => unawaited(DailyReminder.instance.restore()),
+  );
 }
 
 class MainApp extends StatelessWidget {
@@ -151,7 +155,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
     // Cerrar sesión o eliminar la cuenta apaga el recordatorio. Después del
     // frame: apagarlo avisa a AppPreferences y aquí estamos en mitad de un build.
     if (signedOut) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => DailyReminder.instance.stop());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => unawaited(DailyReminder.instance.stop()),
+      );
     }
   }
 
