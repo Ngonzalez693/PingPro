@@ -1,15 +1,16 @@
 // Configuración: la abre la tuerca del perfil.
 //
-// Cada etapa del plan agrega su sección cuando funciona (Notificaciones llega
-// después): nunca se muestra una opción que todavía no hace nada. Ver los
-// docs del diseño de Configuración.
+// Cada sección entró cuando funcionaba: nunca se muestra una opción que
+// todavía no hace nada. Ver los docs del diseño de Configuración.
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/reminder_time.dart';
 import 'package:pingpro_front/core/services/app_preferences.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
+import 'package:pingpro_front/core/services/daily_reminder.dart';
 import 'package:pingpro_front/core/support_mail.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/widgets/change_password_dialog.dart';
@@ -80,6 +81,37 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
     messenger.showSnackBar(const SnackBar(content: Text('Tu cuenta fue eliminada')));
   }
 
+  Future<void> _onReminderToggled(bool enabled) async {
+    try {
+      final result = await DailyReminder.instance.setEnabled(enabled);
+      if (result == ReminderToggle.permissionDenied && mounted) {
+        _showMessage('Activa las notificaciones de PingPro en los ajustes del teléfono');
+      }
+    } catch (e) {
+      debugPrint('reminder toggle error: $e');
+      if (mounted) _showMessage('No se pudo cambiar el recordatorio');
+    }
+  }
+
+  Future<void> _onPickReminderTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: AppPreferences.instance.reminderTime,
+      // 24 h, igual que se muestra la hora en la fila.
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+        child: child!,
+      ),
+    );
+    if (picked == null) return;
+    try {
+      await DailyReminder.instance.setTime(picked);
+    } catch (e) {
+      debugPrint('reminder time error: $e');
+      if (mounted) _showMessage('No se pudo cambiar la hora del recordatorio');
+    }
+  }
+
   Future<void> _open(Uri uri) async {
     try {
       final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -115,6 +147,7 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
           children: [
             _buildHeader(),
             ..._buildAccountSection(),
+            ..._buildNotificationsSection(),
             ..._buildAppearanceSection(),
             ..._buildAboutSection(),
           ],
@@ -155,6 +188,34 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
         title: 'Eliminar cuenta',
         destructive: true,
         onTap: _onDeleteAccount,
+      ),
+    ];
+  }
+
+  // La fila de la hora solo aparece con el recordatorio encendido.
+  List<Widget> _buildNotificationsSection() {
+    final prefs = AppPreferences.instance;
+    return [
+      const SettingsSectionHeader(title: 'Notificaciones'),
+      ListenableBuilder(
+        listenable: prefs,
+        builder: (context, _) => Column(
+          children: [
+            SettingsSwitchTile(
+              icon: Icons.notifications_outlined,
+              title: 'Recordatorio diario',
+              value: prefs.reminderEnabled,
+              onChanged: _onReminderToggled,
+            ),
+            if (prefs.reminderEnabled)
+              SettingsTile(
+                icon: Icons.schedule,
+                title: 'Hora',
+                subtitle: formatReminderTime(prefs.reminderTime),
+                onTap: _onPickReminderTime,
+              ),
+          ],
+        ),
       ),
     ];
   }

@@ -11,6 +11,8 @@
 //   core/services/ → stores en memoria (ExercisesState, TrainingsState) y
 //                    clientes HTTP contra pingpro_back
 //   models/   → objetos de datos con fromJson/toJson
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -37,6 +39,7 @@ import 'package:pingpro_front/widgets/reduce_motion_scope.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/app_licenses.dart';
 import 'package:pingpro_front/core/services/app_preferences.dart';
+import 'package:pingpro_front/core/services/daily_reminder.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
 import 'package:pingpro_front/core/services/session_roles.dart';
@@ -58,6 +61,8 @@ void main() async {
   // Antes de runApp: la primera pantalla ya tiene que respetar "Reducir
   // animaciones".
   await AppPreferences.instance.load();
+  // Sin await: reprogramarlo no tiene por qué retrasar la primera pantalla.
+  unawaited(DailyReminder.instance.restore());
 
   runApp(const MainApp());
 }
@@ -136,12 +141,18 @@ class _AuthWrapperState extends State<AuthWrapper> {
   // árbol en caliente: reset() de los stores ya difiere la notificación.
   void _resetStoresIfUserChanged(String? uid) {
     if (uid == _lastUid) return;
+    final signedOut = _lastUid != null && uid == null;
     _lastUid = uid;
     ExercisesState.instance.reset();
     TrainingsState.instance.reset();
     StatsState.instance.reset();
     CurrentSession.instance.reset();
     SessionRoles.instance.reset();
+    // Cerrar sesión o eliminar la cuenta apaga el recordatorio. Después del
+    // frame: apagarlo avisa a AppPreferences y aquí estamos en mitad de un build.
+    if (signedOut) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => DailyReminder.instance.stop());
+    }
   }
 
   @override
