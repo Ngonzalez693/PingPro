@@ -165,16 +165,21 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
       const SettingsSectionHeader(title: 'Apariencia y accesibilidad'),
       ListenableBuilder(
         listenable: prefs,
-        builder: (context, _) => SettingsTile(
-          icon: Icons.motion_photos_off_outlined,
-          title: 'Reducir animaciones',
-          subtitle: 'Desactiva las transiciones y los efectos de entrada',
-          trailing: Switch(
-            value: prefs.reduceMotion,
-            onChanged: prefs.setReduceMotion,
-            activeColor: AppColors.primary,
+        // MergeSemantics funde la fila y el Switch en un solo nodo, como hace
+        // SwitchListTile: así el lector de pantalla anuncia el estado (activado
+        // o no) y no deja dos paradas de foco para el mismo control.
+        builder: (context, _) => MergeSemantics(
+          child: SettingsTile(
+            icon: Icons.motion_photos_off_outlined,
+            title: 'Reducir animaciones',
+            subtitle: 'Desactiva las transiciones y los efectos de entrada',
+            trailing: Switch(
+              value: prefs.reduceMotion,
+              onChanged: prefs.setReduceMotion,
+              activeColor: AppColors.primary,
+            ),
+            onTap: () => prefs.setReduceMotion(!prefs.reduceMotion),
           ),
-          onTap: () => prefs.setReduceMotion(!prefs.reduceMotion),
         ),
       ),
     ];
