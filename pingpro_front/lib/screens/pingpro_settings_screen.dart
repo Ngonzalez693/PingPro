@@ -1,8 +1,8 @@
 // Configuración: la abre la tuerca del perfil.
 //
 // Cada etapa del plan agrega su sección cuando funciona (Notificaciones y
-// Apariencia llegan después): nunca se muestra una opción
-// que todavía no hace nada. Ver docs del diseño de Configuración.
+// Apariencia llegan después): nunca se muestra una opción que todavía no
+// hace nada. Ver los docs del diseño de Configuración.
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
