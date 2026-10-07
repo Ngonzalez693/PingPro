@@ -12,6 +12,9 @@ android {
     ndkVersion = "27.0.12077973"
 
     compileOptions {
+        // flutter_local_notifications usa APIs de java.time también en
+        // Android viejos: el desugaring las incluye en la app.
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -56,4 +59,7 @@ dependencies {
 
   // Add the dependencies for any other desired Firebase products
   // https://firebase.google.com/docs/android/setup#available-libraries
+
+  // Lo exige isCoreLibraryDesugaringEnabled (flutter_local_notifications).
+  coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

@@ -1,21 +1,23 @@
 // Configuración: la abre la tuerca del perfil.
 //
-// Cada etapa del plan agrega su sección cuando funciona (Notificaciones llega
-// después): nunca se muestra una opción que todavía no hace nada. Ver los
-// docs del diseño de Configuración.
+// Cada sección entró cuando funcionaba: nunca se muestra una opción que
+// todavía no hace nada. Ver los docs del diseño de Configuración.
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/reminder_time.dart';
 import 'package:pingpro_front/core/services/app_preferences.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
+import 'package:pingpro_front/core/services/daily_reminder.dart';
 import 'package:pingpro_front/core/support_mail.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/widgets/change_password_dialog.dart';
 import 'package:pingpro_front/widgets/delete_account_dialog.dart';
 import 'package:pingpro_front/widgets/logout_dialog.dart';
 import 'package:pingpro_front/widgets/settings_section_header.dart';
+import 'package:pingpro_front/widgets/settings_switch_tile.dart';
 import 'package:pingpro_front/widgets/settings_tile.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -28,6 +30,7 @@ class PingproSettingsScreen extends StatefulWidget {
 
 class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
   String? _version;
+  bool _reminderBusy = false;
 
   @override
   void initState() {
@@ -79,6 +82,51 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
     messenger.showSnackBar(const SnackBar(content: Text('Tu cuenta fue eliminada')));
   }
 
+  Future<void> _onReminderToggled(bool enabled) async {
+    // Un doble toque rápido lanzaría dos peticiones de permiso a la vez y la
+    // segunda mostraría un error falso: se ignora mientras la anterior corre.
+    if (_reminderBusy) return;
+    _reminderBusy = true;
+    try {
+      final result = await DailyReminder.instance.setEnabled(enabled);
+      if (result == ReminderToggle.permissionDenied && mounted) {
+        _showMessage('Activa las notificaciones de PingPro en los ajustes del teléfono');
+      }
+    } catch (e) {
+      debugPrint('reminder toggle error: $e');
+      if (mounted) _showMessage('No se pudo cambiar el recordatorio');
+    } finally {
+      _reminderBusy = false;
+    }
+  }
+
+  Future<void> _onPickReminderTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: AppPreferences.instance.reminderTime,
+      // La app no tiene delegados de localización, así que los textos del
+      // selector saldrían en inglés.
+      helpText: 'Hora del recordatorio',
+      cancelText: 'Cancelar',
+      confirmText: 'Aceptar',
+      hourLabelText: 'Hora',
+      minuteLabelText: 'Minuto',
+      errorInvalidText: 'Hora no válida',
+      // 24 h, igual que se muestra la hora en la fila.
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+        child: child!,
+      ),
+    );
+    if (picked == null) return;
+    try {
+      await DailyReminder.instance.setTime(picked);
+    } catch (e) {
+      debugPrint('reminder time error: $e');
+      if (mounted) _showMessage('No se pudo cambiar la hora del recordatorio');
+    }
+  }
+
   Future<void> _open(Uri uri) async {
     try {
       final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -114,6 +162,7 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
           children: [
             _buildHeader(),
             ..._buildAccountSection(),
+            ..._buildNotificationsSection(),
             ..._buildAppearanceSection(),
             ..._buildAboutSection(),
           ],
@@ -158,6 +207,34 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
     ];
   }
 
+  // La fila de la hora solo aparece con el recordatorio encendido.
+  List<Widget> _buildNotificationsSection() {
+    final prefs = AppPreferences.instance;
+    return [
+      const SettingsSectionHeader(title: 'Notificaciones'),
+      ListenableBuilder(
+        listenable: prefs,
+        builder: (context, _) => Column(
+          children: [
+            SettingsSwitchTile(
+              icon: Icons.notifications_outlined,
+              title: 'Recordatorio diario',
+              value: prefs.reminderEnabled,
+              onChanged: _onReminderToggled,
+            ),
+            if (prefs.reminderEnabled)
+              SettingsTile(
+                icon: Icons.schedule,
+                title: 'Hora',
+                subtitle: formatReminderTime(prefs.reminderTime),
+                onTap: _onPickReminderTime,
+              ),
+          ],
+        ),
+      ),
+    ];
+  }
+
   // Escucha a AppPreferences para que el interruptor siga al valor guardado.
   List<Widget> _buildAppearanceSection() {
     final prefs = AppPreferences.instance;
@@ -165,21 +242,12 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
       const SettingsSectionHeader(title: 'Apariencia y accesibilidad'),
       ListenableBuilder(
         listenable: prefs,
-        // MergeSemantics funde la fila y el Switch en un solo nodo, como hace
-        // SwitchListTile: así el lector de pantalla anuncia el estado (activado
-        // o no) y no deja dos paradas de foco para el mismo control.
-        builder: (context, _) => MergeSemantics(
-          child: SettingsTile(
-            icon: Icons.motion_photos_off_outlined,
-            title: 'Reducir animaciones',
-            subtitle: 'Desactiva las transiciones y los efectos de entrada',
-            trailing: Switch(
-              value: prefs.reduceMotion,
-              onChanged: prefs.setReduceMotion,
-              activeColor: AppColors.primary,
-            ),
-            onTap: () => prefs.setReduceMotion(!prefs.reduceMotion),
-          ),
+        builder: (context, _) => SettingsSwitchTile(
+          icon: Icons.motion_photos_off_outlined,
+          title: 'Reducir animaciones',
+          subtitle: 'Desactiva las transiciones y los efectos de entrada',
+          value: prefs.reduceMotion,
+          onChanged: prefs.setReduceMotion,
         ),
       ),
     ];
