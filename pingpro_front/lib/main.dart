@@ -33,8 +33,10 @@ import 'package:pingpro_front/screens/pingpro_create_screen.dart';
 import 'package:pingpro_front/screens/pingpro_trainings_screen.dart';
 import 'package:pingpro_front/screens/pingpro_profile_screen.dart';
 import 'package:pingpro_front/widgets/custom_bottom_navigation.dart';
+import 'package:pingpro_front/widgets/reduce_motion_scope.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/app_licenses.dart';
+import 'package:pingpro_front/core/services/app_preferences.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
 import 'package:pingpro_front/core/services/session_roles.dart';
@@ -53,6 +55,9 @@ void main() async {
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await dotenv.load();          // API_BASE_URL, declarado como asset en pubspec.yaml
   await Firebase.initializeApp();
+  // Antes de runApp: la primera pantalla ya tiene que respetar "Reducir
+  // animaciones".
+  await AppPreferences.instance.load();
 
   runApp(const MainApp());
 }
@@ -66,6 +71,8 @@ class MainApp extends StatelessWidget {
       title: 'PingPro',
       theme: ThemeData(scaffoldBackgroundColor: AppColors.background),
       debugShowCheckedModeBanner: false,
+      builder: (context, child) =>
+          ReduceMotionScope(preferences: AppPreferences.instance, child: child!),
       // Sin `initialRoute`: con él, Navigator construía la pila ['/', '/welcome']
       // y el onboarding tapaba a AuthWrapper, así que una sesión abierta
       // terminaba igualmente en Welcome. Quien decide al arrancar es AuthWrapper.
