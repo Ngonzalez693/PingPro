@@ -16,6 +16,7 @@ import 'package:pingpro_front/widgets/change_password_dialog.dart';
 import 'package:pingpro_front/widgets/delete_account_dialog.dart';
 import 'package:pingpro_front/widgets/logout_dialog.dart';
 import 'package:pingpro_front/widgets/settings_section_header.dart';
+import 'package:pingpro_front/widgets/settings_switch_tile.dart';
 import 'package:pingpro_front/widgets/settings_tile.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -165,21 +166,12 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
       const SettingsSectionHeader(title: 'Apariencia y accesibilidad'),
       ListenableBuilder(
         listenable: prefs,
-        // MergeSemantics funde la fila y el Switch en un solo nodo, como hace
-        // SwitchListTile: así el lector de pantalla anuncia el estado (activado
-        // o no) y no deja dos paradas de foco para el mismo control.
-        builder: (context, _) => MergeSemantics(
-          child: SettingsTile(
-            icon: Icons.motion_photos_off_outlined,
-            title: 'Reducir animaciones',
-            subtitle: 'Desactiva las transiciones y los efectos de entrada',
-            trailing: Switch(
-              value: prefs.reduceMotion,
-              onChanged: prefs.setReduceMotion,
-              activeColor: AppColors.primary,
-            ),
-            onTap: () => prefs.setReduceMotion(!prefs.reduceMotion),
-          ),
+        builder: (context, _) => SettingsSwitchTile(
+          icon: Icons.motion_photos_off_outlined,
+          title: 'Reducir animaciones',
+          subtitle: 'Desactiva las transiciones y los efectos de entrada',
+          value: prefs.reduceMotion,
+          onChanged: prefs.setReduceMotion,
         ),
       ),
     ];
