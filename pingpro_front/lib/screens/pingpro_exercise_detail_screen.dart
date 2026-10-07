@@ -25,6 +25,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/motion.dart';
 import 'package:pingpro_front/core/stroke_codes.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
@@ -292,7 +293,7 @@ class _PingproExerciseDetailScreenState
 
   Widget _buildDoneLabel(bool isCompleted) {
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 250),
+      duration: motionDuration(context, const Duration(milliseconds: 250)),
       switchInCurve: Curves.easeOutBack,
       transitionBuilder: (child, animation) => FadeTransition(
         opacity: animation,
@@ -310,7 +311,7 @@ class _PingproExerciseDetailScreenState
   // botones de arriba saltarían de golpe al aparecer o desaparecer.
   Widget _buildUndo(bool canUndo, int session) {
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 250),
+      duration: motionDuration(context, const Duration(milliseconds: 250)),
       transitionBuilder: (child, animation) => FadeTransition(
         opacity: animation,
         child: SizeTransition(sizeFactor: animation, child: child),

@@ -5,6 +5,7 @@
 // transición al marcar y al desmarcar.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/motion.dart';
 
 class FavoriteIcon extends StatelessWidget {
   final bool isFavorite;
@@ -15,7 +16,7 @@ class FavoriteIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 250),
+      duration: motionDuration(context, const Duration(milliseconds: 250)),
       switchInCurve: Curves.easeOutBack,
       transitionBuilder: (child, animation) =>
           ScaleTransition(scale: animation, child: child),

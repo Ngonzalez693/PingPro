@@ -2,6 +2,7 @@
 //
 // Un solo AnimationController por grupo de skeletons: así todas las cajas
 // brillan sincronizadas, como si fueran una sola superficie.
+// Con animaciones reducidas no brilla: queda el gris de las cajas.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 
@@ -19,7 +20,19 @@ class _SkeletonShimmerState extends State<SkeletonShimmer>
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1400),
-  )..repeat();
+  );
+
+  // Con animaciones reducidas el skeleton queda gris y quieto. Se decide aquí
+  // y no en initState para reaccionar si el ajuste cambia con él a la vista.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.stop();
+    } else if (!_controller.isAnimating) {
+      _controller.repeat();
+    }
+  }
 
   @override
   void dispose() {
@@ -29,6 +42,10 @@ class _SkeletonShimmerState extends State<SkeletonShimmer>
 
   @override
   Widget build(BuildContext context) {
+    if (MediaQuery.disableAnimationsOf(context)) {
+      // Las cajas ya son grises (SkeletonBox): sin el degradado no hay brillo.
+      return Semantics(label: 'Cargando', child: widget.child);
+    }
     return Semantics(
       label: 'Cargando',
       child: AnimatedBuilder(

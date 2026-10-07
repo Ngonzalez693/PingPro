@@ -41,4 +41,51 @@ void main() {
     expect(tester.widget<Text>(find.text('Eliminar cuenta')).style?.color, AppColors.danger);
     expect(tester.widget<Icon>(find.byIcon(Icons.delete_forever)).color, AppColors.danger);
   });
+
+  testWidgets('un trailing propio reemplaza a la flecha', (tester) async {
+    await pump(
+      tester,
+      SettingsTile(
+        icon: Icons.motion_photos_off_outlined,
+        title: 'Reducir animaciones',
+        trailing: Switch(value: false, onChanged: (_) {}),
+        onTap: () {},
+      ),
+    );
+
+    expect(find.byType(Switch), findsOneWidget);
+    expect(find.byIcon(Icons.chevron_right), findsNothing);
+  });
+
+  testWidgets('con MergeSemantics, fila y Switch son un solo nodo con estado', (tester) async {
+    final handle = tester.ensureSemantics();
+    await pump(
+      tester,
+      MergeSemantics(
+        child: SettingsTile(
+          icon: Icons.motion_photos_off_outlined,
+          title: 'Reducir animaciones',
+          subtitle: 'Desactiva las transiciones',
+          trailing: Switch(value: false, onChanged: (_) {}),
+          onTap: () {},
+        ),
+      ),
+    );
+
+    expect(
+      tester.getSemantics(find.byType(MergeSemantics)),
+      matchesSemantics(
+        label: 'Reducir animaciones\nDesactiva las transiciones',
+        hasToggledState: true,
+        isToggled: false,
+        hasEnabledState: true,
+        isEnabled: true,
+        isFocusable: true,
+        isButton: true,
+        hasTapAction: true,
+        hasFocusAction: true,
+      ),
+    );
+    handle.dispose();
+  });
 }

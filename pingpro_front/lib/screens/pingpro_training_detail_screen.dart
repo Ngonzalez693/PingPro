@@ -22,6 +22,7 @@
 // elimina; mientras se elimina, las acciones quedan bloqueadas.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/motion.dart';
 import 'package:pingpro_front/core/session_progress.dart';
 import 'package:pingpro_front/core/services/current_session.dart';
 import 'package:pingpro_front/core/services/stats_state.dart';
@@ -186,9 +187,7 @@ class _PingproTrainingDetailScreenState
         // en los cambios siguientes, avanza desde donde estaba.
         TweenAnimationBuilder<double>(
           tween: Tween(begin: 0, end: progress),
-          duration: MediaQuery.of(context).disableAnimations
-              ? Duration.zero
-              : const Duration(milliseconds: 600),
+          duration: motionDuration(context, const Duration(milliseconds: 600)),
           curve: Curves.easeOutCubic,
           builder: (_, value, __) => ClipRRect(
             borderRadius: BorderRadius.circular(8),
@@ -202,7 +201,7 @@ class _PingproTrainingDetailScreenState
         ),
         const SizedBox(height: 6),
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 250),
+          duration: motionDuration(context, const Duration(milliseconds: 250)),
           child: Text(
             '$doneCount de $total ejercicios completados',
             key: ValueKey(doneCount),
@@ -231,7 +230,10 @@ class _PingproTrainingDetailScreenState
             ),
             alignment: Alignment.center,
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
+              duration: motionDuration(
+                context,
+                const Duration(milliseconds: 300),
+              ),
               transitionBuilder: (child, animation) => FadeTransition(
                 opacity: animation,
                 child: SlideTransition(
