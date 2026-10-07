@@ -110,9 +110,9 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              'Se borrarán tus ejercicios y entrenamientos, tus favoritos y tu '
-              'historial de estadísticas. El catálogo de PingPro no se toca. '
-              'Esta acción no se puede deshacer.',
+              'Se borrarán tu cuenta, tus ejercicios y entrenamientos, tus '
+              'favoritos y tu historial de estadísticas. El catálogo de PingPro '
+              'no se toca. Esta acción no se puede deshacer.',
               style: TextStyles.paragraphBlack,
             ),
             const SizedBox(height: 16),
