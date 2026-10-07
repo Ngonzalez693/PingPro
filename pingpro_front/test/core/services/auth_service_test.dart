@@ -77,4 +77,30 @@ void main() {
       expect(validateNewPassword('abc123', 'abc124'), 'Las contraseñas no coinciden');
     });
   });
+
+  group('accountDeletionErrorMessage', () {
+    test('la contraseña incorrecta se explica igual en ambos códigos', () {
+      expect(accountDeletionErrorMessage('wrong-password'), 'La contraseña actual no es correcta');
+      expect(accountDeletionErrorMessage('invalid-credential'), 'La contraseña actual no es correcta');
+    });
+
+    test('comparte con cambiar contraseña los mensajes de intentos y de red', () {
+      expect(accountDeletionErrorMessage('too-many-requests'), 'Demasiados intentos, prueba más tarde');
+      expect(accountDeletionErrorMessage('network-request-failed'), 'Sin conexión, revisa tu red');
+    });
+
+    test('weak-password no aplica al eliminar: cae en el genérico', () {
+      expect(
+        accountDeletionErrorMessage('weak-password'),
+        'No se pudo eliminar la cuenta, inténtalo de nuevo',
+      );
+    });
+
+    test('cualquier otro código cae en el genérico', () {
+      expect(
+        accountDeletionErrorMessage('internal-error'),
+        'No se pudo eliminar la cuenta, inténtalo de nuevo',
+      );
+    });
+  });
 }
