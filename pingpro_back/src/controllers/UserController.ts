@@ -58,4 +58,19 @@ export default class UserController {
     }
   }
 
+  // Elimina la cuenta de quien llama: perfil, datos privados y cuenta de Auth
+  // (ver UserService.deleteAccount). Es idempotente: un reintento tras un
+  // borrado a medias también responde 200.
+  static async deleteMe(req: Request, res: Response, next: NextFunction) {
+    try {
+      const uid = req.user?.uid;
+      if (!uid) return error(res, "Unauthorized", HTTP_STATUS.UNAUTHORIZED);
+
+      await service.deleteAccount(uid);
+      return success(res, null, HTTP_STATUS.OK);
+    } catch (err) {
+      return next(err);
+    }
+  }
+
 }

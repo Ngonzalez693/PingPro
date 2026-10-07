@@ -20,6 +20,8 @@ router.use(authMiddleware);
 // Debe ir ANTES que '/:id': Express resuelve en orden de declaración y si no,
 // /api/users/me entra por getById con id="me".
 router.get('/me', UserController.getMe);
+// Igual que GET /me, antes que '/:id'.
+router.delete('/me', UserController.deleteMe);
 
 // No existe un listado de usuarios a propósito: exponía el correo de todos.
 // Si algún día hace falta un panel de administración, se reañade con
