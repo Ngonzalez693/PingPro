@@ -19,4 +19,15 @@ export class AuthService {
     const decoded = await auth.verifyIdToken(idToken);
     return decoded.uid;
   }
+
+  // Idempotente: si la cuenta ya no existe (reintento tras un borrado a
+  // medias) el objetivo ya se cumplió, no es un error.
+  async deleteUser(uid: string): Promise<void> {
+    try {
+      await auth.deleteUser(uid);
+    } catch (err) {
+      if ((err as { code?: unknown } | null)?.code === 'auth/user-not-found') return;
+      throw err;
+    }
+  }
 }
