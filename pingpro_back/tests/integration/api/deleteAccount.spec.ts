@@ -90,7 +90,8 @@ const NOTHING_LEFT = {
   training_completions: 0,
 };
 
-// Cuatro registros como mucho: por debajo del rate limit (20 cada 15 min).
+// Cuatro registros como mucho en todo el archivo: por debajo del rate limit
+// (20 cada 15 min).
 describe('DELETE /api/users/me (emulador de Auth + Postgres)', () => {
   const pool: Pool = createPool();
 
@@ -110,7 +111,7 @@ describe('DELETE /api/users/me (emulador de Auth + Postgres)', () => {
     const ana = await registerUser('ana@test.dev');
     await seedOwnData(ana.token);
     const before = await rowsOf(pool, ana.uid);
-    expect(before).toMatchObject({ users: 1, exercises: 1, trainings: 1, exercise_completions: 1, training_completions: 1 });
+    expect(before).toMatchObject({ users: 1, exercises: 1, trainings: 1, exercise_completions: 1, training_states: 1, training_completions: 1 });
     expect(before.exercise_states).toBeGreaterThan(0);
 
     const res = await deleteMe(ana.token);
@@ -136,9 +137,11 @@ describe('DELETE /api/users/me (emulador de Auth + Postgres)', () => {
     await expect(auth.getUser(ben.uid)).resolves.toMatchObject({ uid: ben.uid });
   });
 
-  // Un token de una cuenta ya borrada lo rechaza authMiddleware, así que el
-  // cliente solo puede reintentar mientras la cuenta de Auth todavía existe:
-  // por eso se simula el borrado a medias (fila borrada, Auth intacto).
+  // Se simula el borrado a medias (fila borrada, Auth intacto). Que el token
+  // de una cuenta ya borrada se rechace es comportamiento del emulador: en
+  // producción verifyIdToken, sin checkRevoked, lo acepta hasta que caduque.
+  // El cliente solo reintenta con Auth vivo porque la app se reautentica antes
+  // de cada borrado.
   it('tras un borrado a medias (sin fila, con cuenta de Auth) termina de borrar', async () => {
     const ana = await registerUser('ana@test.dev');
     await pool.query('DELETE FROM users WHERE id = $1', [ana.uid]);
