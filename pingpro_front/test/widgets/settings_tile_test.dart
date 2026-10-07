@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/widgets/settings_tile.dart';
 
 void main() {
@@ -29,5 +30,15 @@ void main() {
     await pump(tester, const SettingsTile(icon: Icons.info, title: 'Versión', subtitle: '0.1.0'));
 
     expect(find.byIcon(Icons.chevron_right), findsNothing);
+  });
+
+  testWidgets('una fila destructiva pinta ícono y título de rojo', (tester) async {
+    await pump(
+      tester,
+      SettingsTile(icon: Icons.delete_forever, title: 'Eliminar cuenta', destructive: true, onTap: () {}),
+    );
+
+    expect(tester.widget<Text>(find.text('Eliminar cuenta')).style?.color, AppColors.danger);
+    expect(tester.widget<Icon>(find.byIcon(Icons.delete_forever)).color, AppColors.danger);
   });
 }

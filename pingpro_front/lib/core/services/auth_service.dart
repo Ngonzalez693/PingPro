@@ -39,24 +39,34 @@ String passwordResetErrorMessage(String code) {
   }
 }
 
-/// Mensaje para el usuario según el código de FirebaseAuthException que lanza
-/// [AuthService.changePassword]. Firebase devuelve 'invalid-credential' en vez
-/// de 'wrong-password' cuando la protección de enumeración está activa.
-String passwordChangeErrorMessage(String code) {
+/// Mensajes de los errores de re-autenticación, comunes a cambiar la
+/// contraseña y a eliminar la cuenta; null si [code] no es uno de ellos.
+/// Firebase devuelve 'invalid-credential' en vez de 'wrong-password' cuando la
+/// protección de enumeración está activa.
+String? _reauthErrorMessage(String code) {
   switch (code) {
     case 'wrong-password':
     case 'invalid-credential':
       return 'La contraseña actual no es correcta';
-    case 'weak-password':
-      return 'La nueva contraseña es demasiado débil';
     case 'too-many-requests':
       return 'Demasiados intentos, prueba más tarde';
     case 'network-request-failed':
       return 'Sin conexión, revisa tu red';
     default:
-      return 'No se pudo cambiar la contraseña, inténtalo de nuevo';
+      return null;
   }
 }
+
+/// Mensaje para el usuario según el código de FirebaseAuthException que lanza
+/// [AuthService.changePassword].
+String passwordChangeErrorMessage(String code) {
+  if (code == 'weak-password') return 'La nueva contraseña es demasiado débil';
+  return _reauthErrorMessage(code) ?? 'No se pudo cambiar la contraseña, inténtalo de nuevo';
+}
+
+/// Lo mismo para [AuthService.deleteAccount].
+String accountDeletionErrorMessage(String code) =>
+    _reauthErrorMessage(code) ?? 'No se pudo eliminar la cuenta, inténtalo de nuevo';
 
 /// Validación local antes de llamar a Firebase; null si es válida. El mínimo
 /// de 6 es el que impone Firebase Auth.
@@ -153,20 +163,44 @@ class AuthService {
     }
   }
 
+  // Re-autenticar antes de una operación sensible evita el
+  // 'requires-recent-login' que Firebase lanza si la sesión es vieja, y
+  // confirma que quien la hace conoce la contraseña.
+  Future<User> _reauthenticate(String password) async {
+    final user = _auth.currentUser;
+    final email = user?.email;
+    if (user == null || email == null) throw StateError('No hay sesión iniciada');
+    final credential = EmailAuthProvider.credential(email: email, password: password);
+    await user.reauthenticateWithCredential(credential);
+    return user;
+  }
+
   /// Re-autentica con la contraseña actual y cambia a la nueva.
-  ///
-  /// Re-autenticar siempre evita el 'requires-recent-login' que Firebase lanza
-  /// si la sesión es vieja, y confirma que quien la cambia conoce la actual.
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
   }) async {
-    final user = _auth.currentUser;
-    final email = user?.email;
-    if (user == null || email == null) throw StateError('No hay sesión iniciada');
-    final credential = EmailAuthProvider.credential(email: email, password: currentPassword);
-    await user.reauthenticateWithCredential(credential);
+    final user = await _reauthenticate(currentPassword);
     await user.updatePassword(newPassword);
+  }
+
+  /// Elimina la cuenta: re-autentica, pide al backend que borre el perfil, los
+  /// datos y la cuenta de Auth (DELETE /api/users/me) y cierra la sesión.
+  ///
+  /// Lo borra el backend y no user.delete(): así datos y cuenta se van juntos
+  /// y en el orden seguro (ver UserService.deleteAccount en el backend). Al
+  /// cerrar sesión, AuthWrapper vacía los stores porque cambia el uid.
+  Future<void> deleteAccount(String password) async {
+    final user = await _reauthenticate(password);
+    final token = await user.getIdToken();
+    final resp = await http.delete(
+      _u('/api/users/me'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (resp.statusCode != 200) {
+      throw Exception('DELETE /api/users/me → ${resp.statusCode}: ${resp.body}');
+    }
+    await logout();
   }
 
   Future<void> logout() async {

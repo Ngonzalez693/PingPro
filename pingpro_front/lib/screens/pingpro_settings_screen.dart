@@ -1,8 +1,8 @@
 // Configuración: la abre la tuerca del perfil.
 //
-// Cada etapa del plan agrega su sección cuando funciona (Notificaciones,
-// Apariencia y Eliminar cuenta llegan después): nunca se muestra una opción
-// que todavía no hace nada. Ver docs del diseño de Configuración.
+// Cada etapa del plan agrega su sección cuando funciona (Notificaciones y
+// Apariencia llegan después): nunca se muestra una opción que todavía no
+// hace nada. Ver los docs del diseño de Configuración.
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -12,6 +12,7 @@ import 'package:pingpro_front/core/services/auth_service.dart';
 import 'package:pingpro_front/core/support_mail.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/widgets/change_password_dialog.dart';
+import 'package:pingpro_front/widgets/delete_account_dialog.dart';
 import 'package:pingpro_front/widgets/logout_dialog.dart';
 import 'package:pingpro_front/widgets/settings_section_header.dart';
 import 'package:pingpro_front/widgets/settings_tile.dart';
@@ -63,6 +64,18 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
     } catch (e) {
       if (mounted) _showMessage('Error: $e');
     }
+  }
+
+  Future<void> _onDeleteAccount() async {
+    // Se toma antes: al volver a la raíz esta pantalla sale de la pila y su
+    // context ya no sirve para mostrar el aviso en la bienvenida.
+    final messenger = ScaffoldMessenger.of(context);
+    if (!await showDeleteAccountDialog(context)) return;
+    if (!mounted) return;
+    // La raíz es AuthWrapper: con la sesión ya cerrada muestra la bienvenida y
+    // vacía los stores al cambiar el uid.
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    messenger.showSnackBar(const SnackBar(content: Text('Tu cuenta fue eliminada')));
   }
 
   Future<void> _open(Uri uri) async {
@@ -132,6 +145,14 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
       ),
       SettingsTile(icon: Icons.lock_outline, title: 'Cambiar contraseña', onTap: _onChangePassword),
       SettingsTile(icon: Icons.logout, title: 'Cerrar sesión', onTap: _onLogout),
+      // Separada y en rojo: es la única acción de Configuración que no se deshace.
+      const Divider(color: AppColors.textGray, indent: 16, endIndent: 16),
+      SettingsTile(
+        icon: Icons.delete_forever_outlined,
+        title: 'Eliminar cuenta',
+        destructive: true,
+        onTap: _onDeleteAccount,
+      ),
     ];
   }
 
