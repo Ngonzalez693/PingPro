@@ -5,6 +5,7 @@
 // la imagen. Al terminar pasa al splash, que a su vez lleva al login.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/motion.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/screens/pingpro_splash_screen.dart';
 
@@ -45,10 +46,15 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
 
   void _onButtonPressed() {
     if (_currentPage < _pages.length - 1) {
-      _imageController.nextPage(
-        duration: Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
-      );
+      // Con animaciones reducidas la imagen cambia sin deslizarse.
+      if (MediaQuery.disableAnimationsOf(context)) {
+        _imageController.jumpToPage(_currentPage + 1);
+      } else {
+        _imageController.nextPage(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
     } else {
       Navigator.push(
         context,
@@ -94,7 +100,10 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
                 vertical: 32.0,
               ),
               child: AnimatedSwitcher(
-                duration: Duration(milliseconds: 400),
+                duration: motionDuration(
+                  context,
+                  const Duration(milliseconds: 400),
+                ),
                 transitionBuilder:
                     (child, animation) =>
                         FadeTransition(opacity: animation, child: child),

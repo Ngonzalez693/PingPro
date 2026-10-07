@@ -10,6 +10,7 @@
 // Sin estado propio: `currentIndex` y `onTap` los controla HomeNavigation.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/motion.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 /// Alto de la barra. Es también el alto del área pulsable de cada pestaña.
@@ -46,26 +47,31 @@ class CustomBottomNavigation extends StatelessWidget {
         child: Row(
           children: [
             _buildNavItem(
+              context,
               'assets/icons/home_unselected.svg',
               'assets/icons/home_selected.svg',
               0,
             ),
             _buildNavItem(
+              context,
               'assets/icons/exercise_unselected.svg',
               'assets/icons/exercise_selected.svg',
               1,
             ),
             _buildNavItem(
+              context,
               'assets/icons/create_unselected.svg',
               'assets/icons/create_selected.svg',
               2,
             ),
             _buildNavItem(
+              context,
               'assets/icons/training_unselected.svg',
               'assets/icons/training_selected.svg',
               3,
             ),
             _buildNavItem(
+              context,
               'assets/icons/profile_unselected.svg',
               'assets/icons/profile_selected.svg',
               4,
@@ -77,6 +83,7 @@ class CustomBottomNavigation extends StatelessWidget {
   }
 
   Widget _buildNavItem(
+    BuildContext context,
     String assetUnselected,
     String assetSelected,
     int index,
@@ -98,13 +105,13 @@ class CustomBottomNavigation extends StatelessWidget {
             // easeOutBack hace que suba un poco de más y se asiente.
             child: TweenAnimationBuilder<double>(
               tween: Tween(end: isSelected ? -8 : 0),
-              duration: _iconAnimation,
+              duration: motionDuration(context, _iconAnimation),
               curve: Curves.easeOutBack,
               builder: (_, dy, child) =>
                   Transform.translate(offset: Offset(0, dy), child: child),
               child: AnimatedScale(
                 scale: isSelected ? 1.1 : 1,
-                duration: _iconAnimation,
+                duration: motionDuration(context, _iconAnimation),
                 curve: Curves.easeOutBack,
                 child: SvgPicture.asset(
                   isSelected ? assetSelected : assetUnselected,
