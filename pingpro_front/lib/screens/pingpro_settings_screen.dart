@@ -48,11 +48,12 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
     if (mounted) setState(() => _isAdmin = isAdmin);
   }
 
+  // Solo X.Y.Z: el número de build existe para Google Play, no para el usuario.
   // Si falla solo se registra: la versión es informativa y la fila se queda en '…'.
   Future<void> _loadVersion() async {
     try {
       final info = await PackageInfo.fromPlatform();
-      if (mounted) setState(() => _version = '${info.version} (${info.buildNumber})');
+      if (mounted) setState(() => _version = info.version);
     } catch (e) {
       debugPrint('PackageInfo error: $e');
     }
