@@ -11,6 +11,7 @@ import 'package:pingpro_front/core/reminder_time.dart';
 import 'package:pingpro_front/core/services/app_preferences.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
 import 'package:pingpro_front/core/services/daily_reminder.dart';
+import 'package:pingpro_front/core/services/session_roles.dart';
 import 'package:pingpro_front/core/support_mail.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/widgets/change_password_dialog.dart';
@@ -31,18 +32,28 @@ class PingproSettingsScreen extends StatefulWidget {
 class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
   String? _version;
   bool _reminderBusy = false;
+  bool _isAdmin = false;
 
   @override
   void initState() {
     super.initState();
     _loadVersion();
+    _loadRole();
   }
 
+  // Las licencias solo se enseñan a los admins. SessionRoles ya devuelve false
+  // ante cualquier fallo, así que la fila simplemente no aparece.
+  Future<void> _loadRole() async {
+    final isAdmin = await SessionRoles.instance.isAdmin();
+    if (mounted) setState(() => _isAdmin = isAdmin);
+  }
+
+  // Solo X.Y.Z: el número de build existe para Google Play, no para el usuario.
   // Si falla solo se registra: la versión es informativa y la fila se queda en '…'.
   Future<void> _loadVersion() async {
     try {
       final info = await PackageInfo.fromPlatform();
-      if (mounted) setState(() => _version = '${info.version} (${info.buildNumber})');
+      if (mounted) setState(() => _version = info.version);
     } catch (e) {
       debugPrint('PackageInfo error: $e');
     }
@@ -273,11 +284,12 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
           title: 'Reportar un problema',
           onTap: () => _open(mailUri),
         ),
-      SettingsTile(
-        icon: Icons.description_outlined,
-        title: 'Licencias de código abierto',
-        onTap: _openLicenses,
-      ),
+      if (_isAdmin)
+        SettingsTile(
+          icon: Icons.description_outlined,
+          title: 'Licencias de código abierto',
+          onTap: _openLicenses,
+        ),
     ];
   }
 }
