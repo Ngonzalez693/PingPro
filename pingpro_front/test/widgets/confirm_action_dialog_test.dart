@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pingpro_front/widgets/confirm_delete_dialog.dart';
+import 'package:pingpro_front/widgets/confirm_action_dialog.dart';
 
 void main() {
   Future<bool?> answer(WidgetTester tester, String button) async {
@@ -8,7 +8,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       home: Builder(
         builder: (context) => ElevatedButton(
-          onPressed: () async => result = await confirmDelete(context, message: '¿Eliminar «Saque»?'),
+          onPressed: () async => result = await confirmAction(context, message: '¿Eliminar «Saque»?', confirmLabel: 'Eliminar'),
           child: const Text('abrir'),
         ),
       ),

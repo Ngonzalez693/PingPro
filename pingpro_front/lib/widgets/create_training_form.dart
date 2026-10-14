@@ -25,7 +25,7 @@ import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/training_draft_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
-import 'package:pingpro_front/widgets/confirm_delete_dialog.dart';
+import 'package:pingpro_front/widgets/confirm_action_dialog.dart';
 import 'package:pingpro_front/widgets/dragged_row_decorator.dart';
 import 'package:pingpro_front/widgets/exercise_picker_sheet.dart';
 import 'package:pingpro_front/widgets/image_option_picker.dart';
@@ -164,7 +164,7 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
     if (draft.isEdit) return true;
     final match = findSameTraining(draft.exerciseIds, TrainingsState.instance.all);
     if (match == null) return true;
-    return confirmDelete(context, message: sameTrainingMessage(match), confirmLabel: 'Crear igual');
+    return confirmAction(context, message: sameTrainingMessage(match), confirmLabel: 'Crear igual');
   }
 
   Future<void> _saveNew(TrainingDraft draft) async {

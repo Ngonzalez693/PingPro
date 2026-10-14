@@ -1,17 +1,17 @@
-// Confirmación antes de borrar algo que no se puede recuperar desde la app:
-// un ejercicio, un entrenamiento o una repetición ya hecha. También confirma
-// repetir un ejercicio ya hecho en la sesión y crear un ejercicio o un
-// entrenamiento igual a uno que ya existe, acciones poco habituales.
+// Confirmación antes de una acción que no se puede deshacer o que es poco
+// habitual: borrar, deshacer una repetición, repetir un ejercicio o crear uno
+// igual a otro.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 
 /// Devuelve true solo si el usuario pulsa el botón de confirmar
-/// (`confirmLabel`, "Eliminar" por defecto).
-Future<bool> confirmDelete(
+/// (`confirmLabel`). Sin valor por defecto: el botón tiene que nombrar la
+/// acción concreta.
+Future<bool> confirmAction(
   BuildContext context, {
   required String message,
-  String confirmLabel = 'Eliminar',
+  required String confirmLabel,
 }) async {
   final confirmed = await showDialog<bool>(
     context: context,

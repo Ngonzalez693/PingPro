@@ -34,7 +34,7 @@ import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/session_roles.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
 import 'package:pingpro_front/screens/pingpro_edit_training_screen.dart';
-import 'package:pingpro_front/widgets/confirm_delete_dialog.dart';
+import 'package:pingpro_front/widgets/confirm_action_dialog.dart';
 import 'package:pingpro_front/widgets/content_actions_menu.dart';
 import 'package:pingpro_front/widgets/fade_slide_in.dart';
 import 'package:pingpro_front/widgets/pressable_scale.dart';
@@ -126,7 +126,11 @@ class _PingproTrainingDetailScreenState
 
   Future<void> _onDeletePressed(TrainingModel training) async {
     if (_actionLoading) return;
-    final confirmed = await confirmDelete(context, message: '¿Eliminar «${training.name}»?');
+    final confirmed = await confirmAction(
+      context,
+      message: '¿Eliminar «${training.name}»?',
+      confirmLabel: 'Eliminar',
+    );
     if (!confirmed || !mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _actionLoading = true);
