@@ -7,11 +7,15 @@
 //
 // El tiempo se pide por ejercicio; la duración total (la que guarda el
 // backend) sale de multiplicarlo por la cantidad de ejercicios.
+//
+// Al crear, si ya hay un entrenamiento con los mismos ejercicios en el mismo
+// orden (propio o del catálogo) se pide confirmar antes de guardarlo.
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/duplicate_content.dart';
 import 'package:pingpro_front/core/form_styles.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
@@ -21,6 +25,7 @@ import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/training_draft_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
+import 'package:pingpro_front/widgets/confirm_delete_dialog.dart';
 import 'package:pingpro_front/widgets/dragged_row_decorator.dart';
 import 'package:pingpro_front/widgets/exercise_picker_sheet.dart';
 import 'package:pingpro_front/widgets/image_option_picker.dart';
@@ -143,6 +148,7 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
       editingId: widget.initial?.id,
     );
     _dropFocus();
+    if (!await _confirmIfDuplicate(draft) || !mounted) return;
     setState(() => _saving = true);
     try {
       await (draft.isEdit ? _saveEdit(draft) : _saveNew(draft));
@@ -151,6 +157,14 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  // Al editar no se avisa: solo interesa no crear sin querer una copia.
+  Future<bool> _confirmIfDuplicate(TrainingDraft draft) async {
+    if (draft.isEdit) return true;
+    final match = findSameTraining(draft.exerciseIds, TrainingsState.instance.all);
+    if (match == null) return true;
+    return confirmDelete(context, message: sameTrainingMessage(match), confirmLabel: 'Crear igual');
   }
 
   Future<void> _saveNew(TrainingDraft draft) async {
