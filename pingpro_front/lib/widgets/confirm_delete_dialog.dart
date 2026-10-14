@@ -1,5 +1,6 @@
 // Confirmación antes de borrar algo que no se puede recuperar desde la app:
-// un ejercicio, un entrenamiento o una repetición ya hecha.
+// un ejercicio, un entrenamiento o una repetición ya hecha. También confirma
+// repetir un ejercicio ya hecho en la sesión, otra acción poco habitual.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
