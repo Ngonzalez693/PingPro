@@ -7,7 +7,8 @@
 //   - El botón "Hecho" es el ÚNICO sitio de la app que marca un ejercicio como
 //     completado, y por tanto el que alimenta todas las estadísticas. Envía la
 //     sesión del día elegida arriba y se puede pulsar más veces (cada vez es
-//     una repetición). "¡Listo!" significa hecho HOY en esa sesión. Tras
+//     una repetición). "¡Listo!" significa hecho HOY en esa sesión, y pulsar
+//     "Hecho" otra vez pide confirmar la repetición antes de seguir. Tras
 //     "Hecho" un SnackBar permite deshacer, y "Deshacer" bajo el botón lo
 //     permite después, mientras la última repetición sea de hoy y de esa
 //     sesión (core/session_progress.dart).
@@ -130,7 +131,7 @@ class _PingproExerciseDetailScreenState
     }
   }
 
-  void _onDonePressed() {
+  Future<void> _onDonePressed() async {
     if (_actionLoading) return;
     // Sin el historial la sesión por defecto sería la 1 aunque hoy ya se haya
     // usado otra. Si la primera carga falló sí se deja completar (con la
@@ -142,6 +143,7 @@ class _PingproExerciseDetailScreenState
       );
       return;
     }
+    if (!await _confirmRepeatIfDone(stats) || !mounted) return;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -152,6 +154,18 @@ class _PingproExerciseDetailScreenState
               _handleFinalize();
             },
           ),
+    );
+  }
+
+  // Repetir un ejercicio en la misma sesión es raro: lo normal es un toque de
+  // más, así que se pide confirmación antes de sumar otra repetición.
+  Future<bool> _confirmRepeatIfDone(StatsState stats) async {
+    final session = CurrentSession.instance.sessionFor(stats.events);
+    if (!isExerciseDoneInSession(widget.exercise.id, stats.events, session)) return true;
+    return confirmDelete(
+      context,
+      message: 'Ya hiciste este ejercicio en la sesión $session. ¿Registrar otra repetición?',
+      confirmLabel: 'Repetir',
     );
   }
 
