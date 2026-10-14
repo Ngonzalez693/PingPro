@@ -4,13 +4,16 @@
 // Se abre encima del editor de secuencias. "Volver a editar" cierra solo esta
 // pantalla y deja el editor con sus flechas. "Crear" (o "Guardar", al editar)
 // lo guarda en el backend y devuelve true, que es la señal para que el editor
-// también se cierre.
+// también se cierre. Al crear, si ya hay un ejercicio con los mismos golpes
+// (propio o del catálogo) se pide confirmar antes de guardarlo.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/duplicate_content.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/stroke_codes.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
+import 'package:pingpro_front/widgets/confirm_delete_dialog.dart';
 import 'package:pingpro_front/widgets/exercise_animation_view.dart';
 
 class PingproExercisePreviewScreen extends StatefulWidget {
@@ -26,6 +29,7 @@ class _PingproExercisePreviewScreenState extends State<PingproExercisePreviewScr
   bool _saving = false;
 
   Future<void> _save() async {
+    if (!await _confirmIfDuplicate() || !mounted) return;
     setState(() => _saving = true);
     try {
       final exercises = ExercisesState.instance;
@@ -38,6 +42,15 @@ class _PingproExercisePreviewScreenState extends State<PingproExercisePreviewScr
       final message = e.toString().replaceFirst('Exception: ', '');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     }
+  }
+
+  // Al editar no se avisa: solo interesa no crear sin querer una copia.
+  Future<bool> _confirmIfDuplicate() async {
+    final draft = widget.draft;
+    if (draft.isEdit) return true;
+    final match = findSameExercise(draft.sequence, ExercisesState.instance.all);
+    if (match == null) return true;
+    return confirmDelete(context, message: sameExerciseMessage(match), confirmLabel: 'Crear igual');
   }
 
   @override
