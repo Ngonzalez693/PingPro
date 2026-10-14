@@ -13,7 +13,7 @@ import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/stroke_codes.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
-import 'package:pingpro_front/widgets/confirm_delete_dialog.dart';
+import 'package:pingpro_front/widgets/confirm_action_dialog.dart';
 import 'package:pingpro_front/widgets/exercise_animation_view.dart';
 
 class PingproExercisePreviewScreen extends StatefulWidget {
@@ -50,7 +50,7 @@ class _PingproExercisePreviewScreenState extends State<PingproExercisePreviewScr
     if (draft.isEdit) return true;
     final match = findSameExercise(draft.sequence, ExercisesState.instance.all);
     if (match == null) return true;
-    return confirmDelete(context, message: sameExerciseMessage(match), confirmLabel: 'Crear igual');
+    return confirmAction(context, message: sameExerciseMessage(match), confirmLabel: 'Crear igual');
   }
 
   @override

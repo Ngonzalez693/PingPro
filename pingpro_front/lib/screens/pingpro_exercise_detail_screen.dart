@@ -31,7 +31,7 @@ import 'package:pingpro_front/core/stroke_codes.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/screens/pingpro_edit_exercise_screen.dart';
-import 'package:pingpro_front/widgets/confirm_delete_dialog.dart';
+import 'package:pingpro_front/widgets/confirm_action_dialog.dart';
 import 'package:pingpro_front/widgets/content_actions_menu.dart';
 import 'package:pingpro_front/widgets/exercise_done.dart';
 import 'package:pingpro_front/widgets/fade_slide_in.dart';
@@ -108,9 +108,10 @@ class _PingproExerciseDetailScreenState
 
   Future<void> _onDeletePressed(ExerciseModel ex) async {
     if (_actionLoading) return;
-    final confirmed = await confirmDelete(
+    final confirmed = await confirmAction(
       context,
       message: '¿Eliminar «${ex.name}»? También se quitará de los entrenamientos que lo usen.',
+      confirmLabel: 'Eliminar',
     );
     if (!confirmed || !mounted) return;
     final messenger = ScaffoldMessenger.of(context);
@@ -162,7 +163,7 @@ class _PingproExerciseDetailScreenState
   Future<bool> _confirmRepeatIfDone(StatsState stats) async {
     final session = CurrentSession.instance.sessionFor(stats.events);
     if (!isExerciseDoneInSession(widget.exercise.id, stats.events, session)) return true;
-    return confirmDelete(
+    return confirmAction(
       context,
       message: 'Ya hiciste este ejercicio en la sesión $session. ¿Registrar otra repetición?',
       confirmLabel: 'Repetir',
@@ -199,7 +200,7 @@ class _PingproExerciseDetailScreenState
   Future<void> _onUndoPressed(int session) async {
     if (_actionLoading) return;
     final messenger = ScaffoldMessenger.of(context);
-    final confirmed = await confirmDelete(
+    final confirmed = await confirmAction(
       context,
       message: '¿Deshacer la última repetición de esta sesión?',
       confirmLabel: 'Deshacer',
