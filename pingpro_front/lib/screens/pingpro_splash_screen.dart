@@ -2,11 +2,12 @@
 //
 // Es puramente visual: espera 3 segundos fijos y navega, no aguarda a que
 // termine ninguna carga real (Firebase y dotenv ya se inicializan en main()).
+// El arranque con sesión abierta usa otro splash (StartupSplash) con la misma
+// cara (SplashView), que sí espera a los datos.
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-import 'package:pingpro_front/core/text_styles.dart';
-import 'package:pingpro_front/widgets/bouncing_ball_indicator.dart';
+import 'package:pingpro_front/widgets/splash_view.dart';
 
 class PingproSplashScreen extends StatefulWidget {
   const PingproSplashScreen({super.key});
@@ -35,24 +36,5 @@ class _PingproSplashScreenState extends State<PingproSplashScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset('assets/images/LogoInv_PingPro.png', height: 180),
-            const SizedBox(height: 16),
-            Text(
-              'PingPro',
-              style: TextStyles.brandTitle.copyWith(fontSize: 40),
-            ),
-            const SizedBox(height: 32),
-            const BouncingBallIndicator(),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const SplashView();
 }
