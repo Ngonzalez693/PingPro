@@ -36,8 +36,11 @@ import 'package:pingpro_front/screens/pingpro_trainings_screen.dart';
 import 'package:pingpro_front/screens/pingpro_profile_screen.dart';
 import 'package:pingpro_front/widgets/custom_bottom_navigation.dart';
 import 'package:pingpro_front/widgets/reduce_motion_scope.dart';
+import 'package:pingpro_front/widgets/splash_view.dart';
+import 'package:pingpro_front/widgets/startup_splash.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/app_licenses.dart';
+import 'package:pingpro_front/core/motion.dart';
 import 'package:pingpro_front/core/services/app_preferences.dart';
 import 'package:pingpro_front/core/services/daily_reminder.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
@@ -131,6 +134,11 @@ class MainApp extends StatelessWidget {
 /// datos sobreviven al cierre de sesión; vaciarlos aquí cubre todas las salidas
 /// (logout, el signOut previo al registro, un token revocado) en vez de tener
 /// que acordarse en cada una.
+///
+/// Al abrir la app con la sesión ya iniciada muestra el splash mientras cargan
+/// los datos (StartupSplash) y luego funde a Home. Solo en el arranque: tras
+/// iniciar sesión desde Login se va directo a Home, porque el camino hasta
+/// Login ya pasó por el splash.
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
@@ -139,6 +147,10 @@ class AuthWrapper extends StatefulWidget {
 }
 
 class _AuthWrapperState extends State<AuthWrapper> {
+  // Estático: el login vuelve a '/' con pushNamedAndRemoveUntil, que crea un
+  // AuthWrapper nuevo, y ese no debe volver a mostrar el splash del arranque.
+  static bool _startupDone = false;
+
   String? _lastUid;
 
   // Se llama desde el builder del StreamBuilder, así que no puede tocar el
@@ -161,26 +173,39 @@ class _AuthWrapperState extends State<AuthWrapper> {
     }
   }
 
+  Future<void> _loadStores() => Future.wait([
+    ExercisesState.instance.load(),
+    TrainingsState.instance.load(),
+    StatsState.instance.load(),
+  ]);
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            backgroundColor: AppColors.background,
-            body: Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ),
-          );
-        }
-        final user = snapshot.data;
-        _resetStoresIfUserChanged(user?.uid);
-        if (user != null) {
-          return const HomeNavigation();
-        }
-        return const PingproWelcomeScreen();
-      },
+      builder: (context, snapshot) => AnimatedSwitcher(
+        duration: motionDuration(context, const Duration(milliseconds: 400)),
+        child: _screenFor(snapshot),
+      ),
+    );
+  }
+
+  // Mientras Firebase recupera la sesión se ve ya la cara del splash: con
+  // sesión, el paso a StartupSplash no se nota.
+  Widget _screenFor(AsyncSnapshot<User?> snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const SplashView();
+    }
+    final user = snapshot.data;
+    _resetStoresIfUserChanged(user?.uid);
+    if (user == null) {
+      _startupDone = true;
+      return const PingproWelcomeScreen();
+    }
+    if (_startupDone) return const HomeNavigation();
+    return StartupSplash(
+      load: _loadStores,
+      onReady: () => setState(() => _startupDone = true),
     );
   }
 }
