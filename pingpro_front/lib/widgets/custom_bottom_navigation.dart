@@ -2,7 +2,8 @@
 //
 // Hecha a mano en vez de con BottomNavigationBar para poder usar los SVG de
 // assets/icons/ (cada pestaña tiene versión seleccionada y sin seleccionar) y
-// elevar el icono activo 8 px, con una transición en vez de un salto.
+// elevar el icono activo 8 px, con una transición en vez de un salto. Bajo
+// cada icono va su nombre, en el color principal si es la pestaña activa.
 //
 // Cada pestaña ocupa un quinto del ancho y todo el alto de la barra, y esa
 // celda entera es el área pulsable.
@@ -17,6 +18,16 @@ import 'package:flutter_svg/flutter_svg.dart';
 const double _barHeight = 70;
 
 const Duration _iconAnimation = Duration(milliseconds: 250);
+
+// En el orden de HomeNavigation. `icon` es el prefijo de los SVG
+// assets/icons/<icon>_selected.svg y <icon>_unselected.svg.
+const _tabs = [
+  (icon: 'home', label: 'Inicio'),
+  (icon: 'exercise', label: 'Ejercicios'),
+  (icon: 'create', label: 'Crear'),
+  (icon: 'training', label: 'Entrenamientos'),
+  (icon: 'profile', label: 'Perfil'),
+];
 
 class CustomBottomNavigation extends StatelessWidget {
   final int currentIndex;
@@ -46,48 +57,15 @@ class CustomBottomNavigation extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _buildNavItem(
-              context,
-              'assets/icons/home_unselected.svg',
-              'assets/icons/home_selected.svg',
-              0,
-            ),
-            _buildNavItem(
-              context,
-              'assets/icons/exercise_unselected.svg',
-              'assets/icons/exercise_selected.svg',
-              1,
-            ),
-            _buildNavItem(
-              context,
-              'assets/icons/create_unselected.svg',
-              'assets/icons/create_selected.svg',
-              2,
-            ),
-            _buildNavItem(
-              context,
-              'assets/icons/training_unselected.svg',
-              'assets/icons/training_selected.svg',
-              3,
-            ),
-            _buildNavItem(
-              context,
-              'assets/icons/profile_unselected.svg',
-              'assets/icons/profile_selected.svg',
-              4,
-            ),
+            for (var i = 0; i < _tabs.length; i++) _buildNavItem(context, i),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(
-    BuildContext context,
-    String assetUnselected,
-    String assetSelected,
-    int index,
-  ) {
+  Widget _buildNavItem(BuildContext context, int index) {
+    final tab = _tabs[index];
     final isSelected = currentIndex == index;
     // El área pulsable es la celda entera (alto completo de la barra), no el
     // icono: con `opaque` el GestureDetector responde también donde no hay
@@ -99,28 +77,53 @@ class CustomBottomNavigation extends StatelessWidget {
         onTap: () => onTap(index),
         child: SizedBox(
           height: _barHeight,
-          child: Center(
-            // El desplazamiento del icono activo es solo visual: queda dentro
-            // de la celda, que sigue siendo pulsable de arriba abajo.
-            // easeOutBack hace que suba un poco de más y se asiente.
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(end: isSelected ? -8 : 0),
-              duration: motionDuration(context, _iconAnimation),
-              curve: Curves.easeOutBack,
-              builder: (_, dy, child) =>
-                  Transform.translate(offset: Offset(0, dy), child: child),
-              child: AnimatedScale(
-                scale: isSelected ? 1.1 : 1,
-                duration: motionDuration(context, _iconAnimation),
-                curve: Curves.easeOutBack,
-                child: SvgPicture.asset(
-                  isSelected ? assetSelected : assetUnselected,
-                  height: 26,
-                ),
-              ),
-            ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildIcon(context, tab.icon, isSelected),
+              const SizedBox(height: 4),
+              _buildLabel(context, tab.label, isSelected),
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  // El desplazamiento del icono activo es solo visual: queda dentro de la
+  // celda, que sigue siendo pulsable de arriba abajo. easeOutBack hace que
+  // suba un poco de más y se asiente.
+  Widget _buildIcon(BuildContext context, String icon, bool isSelected) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: isSelected ? -8 : 0),
+      duration: motionDuration(context, _iconAnimation),
+      curve: Curves.easeOutBack,
+      builder: (_, dy, child) =>
+          Transform.translate(offset: Offset(0, dy), child: child),
+      child: AnimatedScale(
+        scale: isSelected ? 1.1 : 1,
+        duration: motionDuration(context, _iconAnimation),
+        curve: Curves.easeOutBack,
+        child: SvgPicture.asset(
+          'assets/icons/${icon}_${isSelected ? 'selected' : 'unselected'}.svg',
+          height: 26,
+        ),
+      ),
+    );
+  }
+
+  // "Entrenamientos" no cabe en un quinto de algunas pantallas estrechas: en
+  // vez de cortarse, el texto se encoge lo justo para entrar.
+  Widget _buildLabel(BuildContext context, String label, bool isSelected) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: AnimatedDefaultTextStyle(
+        duration: motionDuration(context, _iconAnimation),
+        style: TextStyle(
+          fontSize: 11,
+          color: isSelected ? AppColors.primary : AppColors.textWhite,
+        ),
+        child: Text(label, maxLines: 1),
       ),
     );
   }
