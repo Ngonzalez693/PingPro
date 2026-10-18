@@ -13,6 +13,7 @@
 //   models/   → objetos de datos con fromJson/toJson
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -53,6 +54,10 @@ void main() async {
   // ensureInitialized() debe ir primero: dotenv y Firebase necesitan el binding
   // de plataforma listo antes de que exista el árbol de widgets.
   WidgetsFlutterBinding.ensureInitialized();
+  // debugPrint, a diferencia de lo que sugiere su nombre, también escribe en
+  // el log del sistema en release, que otras herramientas pueden leer. Los
+  // errores que registra la app solo sirven al desarrollar.
+  if (kReleaseMode) debugPrint = (String? message, {int? wrapWidth}) {};
   registerAppLicenses();
   // Solo vertical, aunque el móvil tenga el giro automático activado: la mesa
   // del editor y el visor 3D están diseñados en vertical. También se fija en
