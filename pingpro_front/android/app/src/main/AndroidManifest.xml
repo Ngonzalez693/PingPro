@@ -4,13 +4,18 @@
          de flutter_local_notifications lo vuelve a programar. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
+    <!-- allowBackup="false": la copia de seguridad en la nube incluiría la
+         sesión de Firebase guardada en los datos de la app.
+         Sin usesCleartextTraffic: el HTTP sin cifrar lo decide solo
+         network_security_config (localhost); ese atributo lo abría a todos
+         los servidores en Android 6, donde no existe esa configuración. -->
     <application
         android:label="Ping Pro"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true"
         android:hardwareAccelerated="true"
-        android:usesCleartextTraffic="true"
+        android:allowBackup="false"
         android:networkSecurityConfig="@xml/network_security_config">
 
         <activity
