@@ -48,17 +48,11 @@ flutter {
 }
 
 dependencies {
-  // Import the Firebase BoM
+  // Fija las versiones de las librerías nativas de Firebase que traen los
+  // plugins (firebase_core, firebase_auth). Sin productos propios: la app no
+  // usa Analytics, que añadía permisos de ID de publicidad, mandaba eventos de
+  // uso a Google y arrastraba un Guava con vulnerabilidades conocidas.
   implementation(platform("com.google.firebase:firebase-bom:34.2.0"))
-
-
-  // TODO: Add the dependencies for Firebase products you want to use
-  // When using the BoM, don't specify versions in Firebase dependencies
-  implementation("com.google.firebase:firebase-analytics")
-
-
-  // Add the dependencies for any other desired Firebase products
-  // https://firebase.google.com/docs/android/setup#available-libraries
 
   // Lo exige isCoreLibraryDesugaringEnabled (flutter_local_notifications).
   coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
