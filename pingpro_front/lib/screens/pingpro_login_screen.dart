@@ -55,7 +55,7 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
       // instancias vivas, la del wrapper y la empujada encima.
       Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
     } catch (e) {
-      _showError('Error al iniciar sesión: $e');
+      _showError(loginErrorMessage(e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
