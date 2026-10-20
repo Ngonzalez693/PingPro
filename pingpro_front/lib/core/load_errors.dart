@@ -14,11 +14,11 @@ const loadFailedMessage = 'No se pudo cargar. Inténtalo de nuevo en un momento.
 /// Si el fallo es de no poder llegar al servidor, no del servidor en sí.
 /// http envuelve los SocketException en ClientException; IOException cubre
 /// el resto de fallos de red (socket, TLS).
-bool _isConnectionError(Object error) =>
+bool isConnectionError(Object error) =>
     error is IOException ||
     error is http.ClientException ||
     error is TimeoutException ||
     (error is FirebaseAuthException && error.code == 'network-request-failed');
 
 String loadErrorMessage(Object error) =>
-    _isConnectionError(error) ? noConnectionMessage : loadFailedMessage;
+    isConnectionError(error) ? noConnectionMessage : loadFailedMessage;

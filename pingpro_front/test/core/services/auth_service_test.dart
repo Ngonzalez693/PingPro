@@ -1,5 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:pingpro_front/core/load_errors.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
+
+FirebaseAuthException _auth(String code) => FirebaseAuthException(code: code);
 
 void main() {
   group('hasAdminRole', () {
@@ -32,7 +37,7 @@ void main() {
       );
       expect(
         passwordResetErrorMessage('network-request-failed'),
-        'Sin conexión, revisa tu red',
+        noConnectionMessage,
       );
     });
 
@@ -53,7 +58,7 @@ void main() {
     test('traduce los demás errores que el usuario puede resolver', () {
       expect(passwordChangeErrorMessage('weak-password'), 'La nueva contraseña es demasiado débil');
       expect(passwordChangeErrorMessage('too-many-requests'), 'Demasiados intentos, prueba más tarde');
-      expect(passwordChangeErrorMessage('network-request-failed'), 'Sin conexión, revisa tu red');
+      expect(passwordChangeErrorMessage('network-request-failed'), noConnectionMessage);
     });
 
     test('cualquier otro código cae en un mensaje genérico', () {
@@ -86,7 +91,7 @@ void main() {
 
     test('comparte con cambiar contraseña los mensajes de intentos y de red', () {
       expect(accountDeletionErrorMessage('too-many-requests'), 'Demasiados intentos, prueba más tarde');
-      expect(accountDeletionErrorMessage('network-request-failed'), 'Sin conexión, revisa tu red');
+      expect(accountDeletionErrorMessage('network-request-failed'), noConnectionMessage);
     });
 
     test('weak-password no aplica al eliminar: cae en el genérico', () {
@@ -101,6 +106,62 @@ void main() {
         accountDeletionErrorMessage('internal-error'),
         'No se pudo eliminar la cuenta, inténtalo de nuevo',
       );
+    });
+  });
+
+  group('loginErrorMessage', () {
+    test('sin red es el mensaje de sin conexión', () {
+      expect(loginErrorMessage(_auth('network-request-failed')), noConnectionMessage);
+    });
+
+    // Con la protección de enumeración Firebase devuelve invalid-credential
+    // en vez de decir cuál de los dos está mal.
+    test('email o contraseña incorrectos, sea cual sea el código', () {
+      for (final code in ['invalid-credential', 'wrong-password', 'user-not-found']) {
+        expect(loginErrorMessage(_auth(code)), 'Email o contraseña incorrectos');
+      }
+    });
+
+    test('demasiados intentos', () {
+      expect(loginErrorMessage(_auth('too-many-requests')), 'Demasiados intentos, prueba más tarde');
+    });
+
+    test('cualquier otro error cae en el genérico, nunca en el texto de Firebase', () {
+      expect(loginErrorMessage(_auth('internal-error')), 'No se pudo iniciar sesión, inténtalo de nuevo');
+      expect(loginErrorMessage(Exception('boom')), 'No se pudo iniciar sesión, inténtalo de nuevo');
+    });
+  });
+
+  group('registerErrorMessage', () {
+    test('sin red, al llamar al backend o a Firebase, es el mensaje de sin conexión', () {
+      expect(registerErrorMessage(http.ClientException('Failed host lookup')), noConnectionMessage);
+      expect(registerErrorMessage(_auth('network-request-failed')), noConnectionMessage);
+    });
+
+    // Si el email ya existía, el registro intenta iniciar sesión con él; que
+    // la contraseña no encaje significa que la cuenta es de antes.
+    test('un email con cuenta y otra contraseña lo explica', () {
+      expect(
+        registerErrorMessage(_auth('invalid-credential')),
+        'Ese email ya tiene una cuenta. Inicia sesión o recupera tu contraseña.',
+      );
+    });
+
+    test('el texto en inglés del servidor nunca llega al usuario', () {
+      expect(
+        registerErrorMessage(Exception('The password must be a string with at least 6 characters.')),
+        'No se pudo crear la cuenta, inténtalo de nuevo',
+      );
+    });
+  });
+
+  group('validateSignupPassword', () {
+    test('acepta 6 o más caracteres', () {
+      expect(validateSignupPassword('123456'), isNull);
+    });
+
+    test('rechaza menos de 6, el mínimo de Firebase', () {
+      expect(validateSignupPassword('12345'), 'La contraseña debe tener al menos 6 caracteres');
     });
   });
 }

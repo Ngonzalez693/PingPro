@@ -12,6 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:pingpro_front/core/load_errors.dart';
 import 'package:pingpro_front/core/services/api_errors.dart';
 
 /// Si el perfil de GET /api/users/me tiene el rol admin.
@@ -31,9 +32,9 @@ String passwordResetErrorMessage(String code) {
     case 'invalid-email':
       return 'Email no válido';
     case 'too-many-requests':
-      return 'Demasiados intentos, prueba más tarde';
+      return _tooManyAttemptsMessage;
     case 'network-request-failed':
-      return 'Sin conexión, revisa tu red';
+      return noConnectionMessage;
     default:
       return 'No se pudo enviar el correo, inténtalo de nuevo';
   }
@@ -49,9 +50,9 @@ String? _reauthErrorMessage(String code) {
     case 'invalid-credential':
       return 'La contraseña actual no es correcta';
     case 'too-many-requests':
-      return 'Demasiados intentos, prueba más tarde';
+      return _tooManyAttemptsMessage;
     case 'network-request-failed':
-      return 'Sin conexión, revisa tu red';
+      return noConnectionMessage;
     default:
       return null;
   }
@@ -67,6 +68,49 @@ String passwordChangeErrorMessage(String code) {
 /// Lo mismo para [AuthService.deleteAccount].
 String accountDeletionErrorMessage(String code) =>
     _reauthErrorMessage(code) ?? 'No se pudo eliminar la cuenta, inténtalo de nuevo';
+
+const _tooManyAttemptsMessage = 'Demasiados intentos, prueba más tarde';
+
+/// Mensaje para el usuario si falla [AuthService.login]. Firebase, con la
+/// protección de enumeración activa, devuelve 'invalid-credential' sin decir
+/// si falla el email o la contraseña; los demás códigos dicen lo mismo.
+String loginErrorMessage(Object error) {
+  if (isConnectionError(error)) return noConnectionMessage;
+  if (error is! FirebaseAuthException) return 'No se pudo iniciar sesión, inténtalo de nuevo';
+  switch (error.code) {
+    case 'invalid-credential':
+    case 'wrong-password':
+    case 'user-not-found':
+      return 'Email o contraseña incorrectos';
+    case 'too-many-requests':
+      return _tooManyAttemptsMessage;
+    default:
+      return 'No se pudo iniciar sesión, inténtalo de nuevo';
+  }
+}
+
+/// Mensaje para el usuario si falla [AuthService.signupViaBackend]. El backend
+/// devuelve el texto de firebase-admin, en inglés, así que no se enseña: si el
+/// email ya existía el registro intenta iniciar sesión con él, y que la
+/// contraseña no encaje es lo único que vale la pena explicar.
+String registerErrorMessage(Object error) {
+  if (isConnectionError(error)) return noConnectionMessage;
+  if (error is FirebaseAuthException) {
+    switch (error.code) {
+      case 'invalid-credential':
+      case 'wrong-password':
+        return 'Ese email ya tiene una cuenta. Inicia sesión o recupera tu contraseña.';
+      case 'too-many-requests':
+        return _tooManyAttemptsMessage;
+    }
+  }
+  return 'No se pudo crear la cuenta, inténtalo de nuevo';
+}
+
+/// Validación local antes de registrar; null si es válida. Sin ella el aviso
+/// llegaría del backend, en inglés.
+String? validateSignupPassword(String password) =>
+    password.length < 6 ? 'La contraseña debe tener al menos 6 caracteres' : null;
 
 /// Validación local antes de llamar a Firebase; null si es válida. El mínimo
 /// de 6 es el que impone Firebase Auth.
@@ -130,23 +174,13 @@ class AuthService {
       return cred;
     }
 
-    // Parsear error del backend
-    String msg = 'Error al registrar usuario en backend';
-    try {
-      final data = jsonDecode(resp.body);
-      msg = data['message']?.toString() ?? msg;
-
-      // Si ya existía, probamos iniciar sesión
-      if (msg.toLowerCase().contains('already in use')) {
-        final cred = await _auth.signInWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
-        return cred;
-      }
-    } catch (_) {}
-
-    throw Exception('$msg: ${resp.body}');
+    // Si ya existía, probamos iniciar sesión. El mensaje es de firebase-admin
+    // y no se enseña al usuario (registerErrorMessage).
+    final msg = backendErrorMessage(resp.body, 'Error al registrar usuario en backend');
+    if (msg.toLowerCase().contains('already in use')) {
+      return _auth.signInWithEmailAndPassword(email: email, password: password);
+    }
+    throw Exception(msg);
   }
 
   /// Pide a Firebase el correo con el enlace para elegir una contraseña nueva.

@@ -101,6 +101,11 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
       _showError('Email no válido');
       return;
     }
+    final passwordError = validateSignupPassword(password);
+    if (passwordError != null) {
+      _showError(passwordError);
+      return;
+    }
 
     setState(() => _isLoading = true);
     try {
@@ -117,7 +122,7 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
       if (!mounted) return;
       Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
     } catch (e) {
-      _showError('Error al registrar: $e');
+      _showError(registerErrorMessage(e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
