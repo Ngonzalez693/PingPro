@@ -174,23 +174,13 @@ class AuthService {
       return cred;
     }
 
-    // Parsear error del backend
-    String msg = 'Error al registrar usuario en backend';
-    try {
-      final data = jsonDecode(resp.body);
-      msg = data['message']?.toString() ?? msg;
-
-      // Si ya existía, probamos iniciar sesión
-      if (msg.toLowerCase().contains('already in use')) {
-        final cred = await _auth.signInWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
-        return cred;
-      }
-    } catch (_) {}
-
-    throw Exception('$msg: ${resp.body}');
+    // Si ya existía, probamos iniciar sesión. El mensaje es de firebase-admin
+    // y no se enseña al usuario (registerErrorMessage).
+    final msg = backendErrorMessage(resp.body, 'Error al registrar usuario en backend');
+    if (msg.toLowerCase().contains('already in use')) {
+      return _auth.signInWithEmailAndPassword(email: email, password: password);
+    }
+    throw Exception(msg);
   }
 
   /// Pide a Firebase el correo con el enlace para elegir una contraseña nueva.
