@@ -10,6 +10,7 @@ import 'package:pingpro_front/core/stat_type.dart';
 import 'package:pingpro_front/core/stats_buckets.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/widgets/labeled_tabs.dart';
+import 'package:pingpro_front/widgets/load_error_view.dart';
 import 'package:pingpro_front/widgets/statistics_chart.dart';
 import 'package:pingpro_front/widgets/statistics_secundary_cart.dart';
 import 'package:pingpro_front/widgets/summary_icon_row.dart';
@@ -167,14 +168,8 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                     ),
-                  if (stats.error != null && !stats.loadedOnce)
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        'No se pudieron cargar las estadísticas',
-                        style: TextStyles.paragraph,
-                      ),
-                    ),
+                  if (stats.error case final error? when !stats.loadedOnce)
+                    LoadErrorView(message: error, onRetry: stats.refresh),
                 ],
               ),
             );

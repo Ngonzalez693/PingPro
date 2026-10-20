@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:pingpro_front/core/load_errors.dart';
 import 'package:pingpro_front/core/services/safe_notify.dart';
 import 'package:pingpro_front/core/services/stats_service.dart';
 import 'package:pingpro_front/core/stats_series.dart';
@@ -57,7 +58,8 @@ class StatsState extends ChangeNotifier with SafeNotify {
       _loadedOnce = true;
     } catch (e) {
       if (generation != _generation) return;
-      _error = e.toString();
+      debugPrint('StatsState.load: $e');
+      _error = loadErrorMessage(e);
     } finally {
       // Si cambió la generación (reset() de por medio), esta carga ya es
       // ajena: no toca _isLoading ni notifica, para no pisar el estado de la

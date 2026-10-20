@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:pingpro_front/core/load_errors.dart';
 import 'package:pingpro_front/core/services/stats_state.dart';
 import 'package:pingpro_front/core/stats_series.dart';
 import 'package:pingpro_front/models/stats_events_model.dart';
@@ -64,14 +66,22 @@ void main() {
     expect(calls, 1);
   });
 
-  test('si falla guarda el error y sigue sin marcar como cargado', () async {
-    final state = StatsState.withFetcher((_) async => throw Exception('sin red'));
+  test('si falla guarda un mensaje amable y sigue sin marcar como cargado', () async {
+    final state = StatsState.withFetcher((_) async => throw Exception('500 del servidor'));
 
     await state.load();
 
-    expect(state.error, contains('sin red'));
+    expect(state.error, loadFailedMessage);
     expect(state.loadedOnce, isFalse);
     expect(state.events.created, isEmpty);
+  });
+
+  test('sin red guarda el mensaje de sin conexión', () async {
+    final state = StatsState.withFetcher((_) async => throw http.ClientException('Failed host lookup'));
+
+    await state.load();
+
+    expect(state.error, noConnectionMessage);
   });
 
   test('refresh durante una carga repite la carga al terminar', () async {

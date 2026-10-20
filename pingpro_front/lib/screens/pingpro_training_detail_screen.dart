@@ -37,6 +37,7 @@ import 'package:pingpro_front/screens/pingpro_edit_training_screen.dart';
 import 'package:pingpro_front/widgets/confirm_action_dialog.dart';
 import 'package:pingpro_front/widgets/content_actions_menu.dart';
 import 'package:pingpro_front/widgets/fade_slide_in.dart';
+import 'package:pingpro_front/widgets/load_error_view.dart';
 import 'package:pingpro_front/widgets/pressable_scale.dart';
 import 'package:pingpro_front/widgets/session_selector.dart';
 import 'package:pingpro_front/widgets/staggered_entrance.dart';
@@ -311,8 +312,8 @@ class _PingproTrainingDetailScreenState
             if (exState.isLoading && !exState.loadedOnce && exercises.isEmpty) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (exState.error != null && exercises.isEmpty) {
-              return Center(child: Text('Error: ${exState.error}'));
+            if (exState.error case final error? when exercises.isEmpty) {
+              return LoadErrorView(message: error, onRetry: exState.refresh);
             }
 
             // Progreso de hoy en la sesión elegida

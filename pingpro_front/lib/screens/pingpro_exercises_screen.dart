@@ -15,6 +15,7 @@ import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/widgets/choice_pill.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
 import 'package:pingpro_front/widgets/exercise_card_skeleton.dart';
+import 'package:pingpro_front/widgets/load_error_view.dart';
 import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
 import 'package:pingpro_front/widgets/staggered_entrance.dart';
 
@@ -154,8 +155,8 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
                     ),
                   );
                 }
-                if (s.error != null) {
-                  return Center(child: Text('Error: ${s.error}'));
+                if (s.error case final error?) {
+                  return LoadErrorView(message: error, onRetry: s.refresh);
                 }
 
                 final all = s.all;
