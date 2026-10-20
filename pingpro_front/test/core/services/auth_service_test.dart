@@ -37,7 +37,7 @@ void main() {
       );
       expect(
         passwordResetErrorMessage('network-request-failed'),
-        'Sin conexión, revisa tu red',
+        noConnectionMessage,
       );
     });
 
@@ -58,7 +58,7 @@ void main() {
     test('traduce los demás errores que el usuario puede resolver', () {
       expect(passwordChangeErrorMessage('weak-password'), 'La nueva contraseña es demasiado débil');
       expect(passwordChangeErrorMessage('too-many-requests'), 'Demasiados intentos, prueba más tarde');
-      expect(passwordChangeErrorMessage('network-request-failed'), 'Sin conexión, revisa tu red');
+      expect(passwordChangeErrorMessage('network-request-failed'), noConnectionMessage);
     });
 
     test('cualquier otro código cae en un mensaje genérico', () {
@@ -91,7 +91,7 @@ void main() {
 
     test('comparte con cambiar contraseña los mensajes de intentos y de red', () {
       expect(accountDeletionErrorMessage('too-many-requests'), 'Demasiados intentos, prueba más tarde');
-      expect(accountDeletionErrorMessage('network-request-failed'), 'Sin conexión, revisa tu red');
+      expect(accountDeletionErrorMessage('network-request-failed'), noConnectionMessage);
     });
 
     test('weak-password no aplica al eliminar: cae en el genérico', () {

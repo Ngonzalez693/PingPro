@@ -32,9 +32,9 @@ String passwordResetErrorMessage(String code) {
     case 'invalid-email':
       return 'Email no válido';
     case 'too-many-requests':
-      return 'Demasiados intentos, prueba más tarde';
+      return _tooManyAttemptsMessage;
     case 'network-request-failed':
-      return 'Sin conexión, revisa tu red';
+      return noConnectionMessage;
     default:
       return 'No se pudo enviar el correo, inténtalo de nuevo';
   }
@@ -50,9 +50,9 @@ String? _reauthErrorMessage(String code) {
     case 'invalid-credential':
       return 'La contraseña actual no es correcta';
     case 'too-many-requests':
-      return 'Demasiados intentos, prueba más tarde';
+      return _tooManyAttemptsMessage;
     case 'network-request-failed':
-      return 'Sin conexión, revisa tu red';
+      return noConnectionMessage;
     default:
       return null;
   }
