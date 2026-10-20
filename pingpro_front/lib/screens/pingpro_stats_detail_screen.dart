@@ -17,6 +17,7 @@ import 'package:pingpro_front/widgets/consistency_card.dart';
 import 'package:pingpro_front/widgets/count_bars.dart';
 import 'package:pingpro_front/widgets/exercise_rank_list.dart';
 import 'package:pingpro_front/widgets/labeled_tabs.dart';
+import 'package:pingpro_front/widgets/load_error_view.dart';
 
 class PingproStatsDetailScreen extends StatefulWidget {
   const PingproStatsDetailScreen({super.key});
@@ -99,13 +100,8 @@ class _PingproStatsDetailScreenState extends State<PingproStatsDetailScreen> {
     if (stats.isLoading && !stats.loadedOnce) {
       return const Center(child: CircularProgressIndicator(strokeWidth: 2));
     }
-    if (stats.error != null && !stats.loadedOnce) {
-      return Center(
-        child: Text(
-          'No se pudieron cargar las estadísticas',
-          style: TextStyles.paragraph,
-        ),
-      );
+    if (stats.error case final error? when !stats.loadedOnce) {
+      return LoadErrorView(message: error, onRetry: stats.refresh);
     }
     final inPeriod = eventsInPeriod(stats.events, _period);
     final noActivity =
@@ -191,7 +187,7 @@ class _PingproStatsDetailScreenState extends State<PingproStatsDetailScreen> {
   String _emptyExercisesText(String fallback) {
     final exercises = ExercisesState.instance;
     if (exercises.isLoading && !exercises.loadedOnce) return 'Cargando ejercicios…';
-    if (exercises.error != null && !exercises.loadedOnce) return 'No se pudieron cargar los ejercicios';
+    if (exercises.error case final error? when !exercises.loadedOnce) return error;
     return fallback;
   }
 }

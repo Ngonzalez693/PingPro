@@ -17,6 +17,7 @@ import 'package:pingpro_front/core/services/session_roles.dart';
 import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/screens/pingpro_create_screen.dart';
 import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/widgets/load_error_view.dart';
 import 'package:pingpro_front/widgets/statistics_chart.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
 import 'package:pingpro_front/widgets/exercise_card_skeleton.dart';
@@ -76,14 +77,11 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
         child: SkeletonBox(height: 160, radius: 16),
       );
     }
-    if (stats.error != null && !stats.loadedOnce) {
-      return const SizedBox(
+    if (stats.error case final error? when !stats.loadedOnce) {
+      return SizedBox(
         height: 160,
         child: Center(
-          child: Text(
-            'No se pudieron cargar las estadísticas',
-            style: TextStyles.paragraph,
-          ),
+          child: LoadErrorView(message: error, onRetry: stats.refresh, compact: true),
         ),
       );
     }

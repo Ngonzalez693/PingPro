@@ -20,6 +20,7 @@ import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
 import 'package:pingpro_front/widgets/exercise_card_skeleton.dart';
 import 'package:pingpro_front/widgets/image_banner_carousel.dart';
+import 'package:pingpro_front/widgets/load_error_view.dart';
 import 'package:pingpro_front/widgets/skeleton_box.dart';
 import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
 import 'package:pingpro_front/widgets/staggered_entrance.dart';
@@ -55,13 +56,14 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
   }
 
   // Mismo alto que la gráfica para que el layout no salte al fallar la carga.
-  Widget _buildStatsError() {
-    return const SizedBox(
+  Widget _buildStatsError(String message) {
+    return SizedBox(
       height: 160,
       child: Center(
-        child: Text(
-          'No se pudieron cargar las estadísticas',
-          style: TextStyles.paragraph,
+        child: LoadErrorView(
+          message: message,
+          onRetry: StatsState.instance.refresh,
+          compact: true,
         ),
       ),
     );
@@ -119,11 +121,11 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
                       ),
                     );
                   }
-                  if (ts.error != null) {
-                    return Center(
-                      child: Text(
-                        'Error al cargar entrenamientos: ${ts.error}',
-                      ),
+                  if (ts.error case final error?) {
+                    return LoadErrorView(
+                      message: error,
+                      onRetry: TrainingsState.instance.refresh,
+                      compact: true,
                     );
                   }
 
@@ -182,8 +184,12 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
                     ),
                   );
                 }
-                if (s.error != null) {
-                  return Text('Error al cargar ejercicios: ${s.error}');
+                if (s.error case final error?) {
+                  return LoadErrorView(
+                    message: error,
+                    onRetry: ExercisesState.instance.refresh,
+                    compact: true,
+                  );
                 }
 
                 final List<ExerciseModel> exercises = s.all.take(2).toList();
@@ -240,8 +246,8 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
                       child: SkeletonBox(height: 160, radius: 16),
                     );
                   }
-                  if (stats.error != null && !stats.loadedOnce) {
-                    return _buildStatsError();
+                  if (stats.error case final error? when !stats.loadedOnce) {
+                    return _buildStatsError(error);
                   }
                   final week = buildStatSeries(stats.events, StatPeriod.daily);
                   return StatisticsChart(values: week.total, labels: week.labels);

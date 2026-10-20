@@ -8,6 +8,7 @@ import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/widgets/choice_pill.dart';
+import 'package:pingpro_front/widgets/load_error_view.dart';
 import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
 import 'package:pingpro_front/widgets/staggered_entrance.dart';
 import 'package:pingpro_front/widgets/training_card.dart';
@@ -52,13 +53,6 @@ class _PingproTrainingsScreenState extends State<PingproTrainingsScreen> {
         builder: (context, _) {
           final s = TrainingsState.instance;
 
-          if (s.error != null) {
-            return Center(child: Text('Error: ${s.error}'));
-          }
-
-          final all = s.all;
-          final filtered = _applyFilter(all);
-
           return Column(
             children: [
               // AppBar manual
@@ -101,11 +95,7 @@ class _PingproTrainingsScreenState extends State<PingproTrainingsScreen> {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  // Título y pestañas se ven desde el principio; mientras
-                  // carga, solo la cuadrícula es skeleton.
-                  child: s.isLoading && !s.loadedOnce
-                      ? _buildSkeletonGrid()
-                      : _buildGrid(filtered),
+                  child: _buildBody(s),
                 ),
               ),
             ],
@@ -113,6 +103,16 @@ class _PingproTrainingsScreenState extends State<PingproTrainingsScreen> {
         },
       ),
     );
+  }
+
+  // Título y pestañas se ven siempre, como en Ejercicios: mientras carga o si
+  // falla, solo cambia lo que va debajo.
+  Widget _buildBody(TrainingsState s) {
+    if (s.error case final error?) {
+      return LoadErrorView(message: error, onRetry: s.refresh);
+    }
+    if (s.isLoading && !s.loadedOnce) return _buildSkeletonGrid();
+    return _buildGrid(_applyFilter(s.all));
   }
 
   static const _gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
