@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:pingpro_front/core/load_errors.dart';
 import 'package:pingpro_front/core/services/exercises_service.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/stats_state.dart';
@@ -17,10 +19,12 @@ class _FakeExercisesService implements ExercisesService {
   var fetches = 0;
   var creates = 0;
   bool failCompletion = false;
+  Object? fetchError;
 
   @override
   Future<List<ExerciseModel>> fetchAllMergedWithUserState() async {
     fetches++;
+    if (fetchError case final error?) throw error;
     return [
       ExerciseModel(
         id: 'e1',
@@ -124,5 +128,13 @@ void main() {
     expect(service.creates, 1);
     expect(service.fetches, fetchesBefore + 1);
     expect(statsFetches, 1);
+  });
+
+  test('si la carga falla sin red guarda el mensaje amable, no el error crudo', () async {
+    service.fetchError = http.ClientException('Failed host lookup');
+
+    await store.refresh();
+
+    expect(store.error, noConnectionMessage);
   });
 }

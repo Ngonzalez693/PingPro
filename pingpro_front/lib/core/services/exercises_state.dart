@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:pingpro_front/core/load_errors.dart';
 import 'package:pingpro_front/core/services/safe_notify.dart';
 import 'package:pingpro_front/core/local_completion_events.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
@@ -76,7 +77,8 @@ class ExercisesState extends ChangeNotifier with SafeNotify {
         ..addEntries(list.map((e) => MapEntry(e.id, e)));
       _loadedOnce = true;
     } catch (e) {
-      _error = e.toString();
+      debugPrint('ExercisesState.load: $e');
+      _error = loadErrorMessage(e);
     } finally {
       _isLoading = false;
       safeNotify();
