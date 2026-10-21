@@ -16,6 +16,7 @@ import 'package:pingpro_front/widgets/choice_pill.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
 import 'package:pingpro_front/widgets/exercise_card_skeleton.dart';
 import 'package:pingpro_front/widgets/load_error_view.dart';
+import 'package:pingpro_front/widgets/pull_to_refresh.dart';
 import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
 import 'package:pingpro_front/widgets/staggered_entrance.dart';
 
@@ -137,64 +138,78 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
 
           // Lista vertical
           Expanded(
-            child: AnimatedBuilder(
-              animation: ExercisesState.instance,
-              builder: (context, _) {
-                final s = ExercisesState.instance;
+            child: PullToRefresh(
+              onRefresh: ExercisesState.instance.refresh,
+              child: AnimatedBuilder(
+                animation: ExercisesState.instance,
+                builder: (context, _) {
+                  final s = ExercisesState.instance;
 
-                if (s.isLoading && !s.loadedOnce) {
-                  return SkeletonShimmer(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: 6,
-                      itemBuilder: (_, i) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: ExerciseCardSkeleton(showTopDivider: i != 0),
-                      ),
-                    ),
-                  );
-                }
-                if (s.error case final error?) {
-                  return LoadErrorView(message: error, onRetry: s.refresh);
-                }
-
-                final all = s.all;
-                final filtered = _applyFilter(all);
-
-                if (filtered.isEmpty) {
-                  return const Center(child: Text('No hay ejercicios'));
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: filtered.length,
-                  itemBuilder: (context, i) {
-                    final ex = filtered[i];
-                    return StaggeredEntrance(
-                      index: i,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: ExerciseCard(
-                          exercise: ex,
-                          showTopDivider: i != 0,
-                          onFavoritePressed: () => _toggleFavorite(ex.id),
-                          onViewPressed: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/exerciseDetail',
-                              arguments: {
-                                'exercise': ex,
-                                'returnRoute': '/exercises',
-                              },
-                            );
-                          },
+                  if (s.isLoading && !s.loadedOnce) {
+                    return SkeletonShimmer(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: 6,
+                        itemBuilder: (_, i) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: ExerciseCardSkeleton(showTopDivider: i != 0),
                         ),
                       ),
                     );
-                  },
-                );
-              },
+                  }
+                  if (s.error case final error?) {
+                    return LoadErrorView(message: error, onRetry: s.refresh);
+                  }
+
+                  final all = s.all;
+                  final filtered = _applyFilter(all);
+
+                  // Una lista y no un Center: así también se puede tirar para
+                  // recargar cuando el filtro no deja nada.
+                  if (filtered.isEmpty) {
+                    return ListView(
+                      physics: PullToRefresh.physics,
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.only(top: 48),
+                          child: Center(child: Text('No hay ejercicios')),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return ListView.builder(
+                    physics: PullToRefresh.physics,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, i) {
+                      final ex = filtered[i];
+                      return StaggeredEntrance(
+                        index: i,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: ExerciseCard(
+                            exercise: ex,
+                            showTopDivider: i != 0,
+                            onFavoritePressed: () => _toggleFavorite(ex.id),
+                            onViewPressed: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/exerciseDetail',
+                                arguments: {
+                                  'exercise': ex,
+                                  'returnRoute': '/exercises',
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ),
         ],

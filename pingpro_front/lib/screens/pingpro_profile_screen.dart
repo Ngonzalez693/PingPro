@@ -18,6 +18,7 @@ import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/screens/pingpro_create_screen.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/widgets/load_error_view.dart';
+import 'package:pingpro_front/widgets/pull_to_refresh.dart';
 import 'package:pingpro_front/widgets/statistics_chart.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
 import 'package:pingpro_front/widgets/exercise_card_skeleton.dart';
@@ -142,6 +143,13 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
     }
   }
 
+  // Perfil enseña estadísticas, favoritos y últimos entrenamientos.
+  Future<void> _refresh() => Future.wait([
+    StatsState.instance.refresh(),
+    ExercisesState.instance.refresh(),
+    TrainingsState.instance.refresh(),
+  ]);
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -176,234 +184,238 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
             final stats = StatsState.instance;
             final week = buildStatSeries(stats.events, StatPeriod.daily);
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 20,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(child: _buildProfileLink(name)),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.settings,
-                            color: AppColors.textWhite,
-                          ),
-                          onPressed: () => Navigator.pushNamed(context, '/settings'),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  if (_isAdmin) _buildCatalogButton(),
-
-                  // Estadísticas
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Estadísticas', style: TextStyles.subTitle),
-                        const SizedBox(height: 4),
-                        Text(recentActivityCaption(), style: TextStyles.caption),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: GestureDetector(
-                      onTap: () => Navigator.pushNamed(context, '/stats'),
-                      child: _buildStatsChart(stats, week),
-                    ),
-                  ),
-
-                  // Resumen
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: GestureDetector(
-                      onTap: () => Navigator.pushNamed(context, '/stats'),
+            return PullToRefresh(
+              onRefresh: _refresh,
+              child: SingleChildScrollView(
+                physics: PullToRefresh.physics,
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 20,
+                      ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          SummaryIcon(
-                            assetPath: 'assets/icons/exercise_unselected.svg',
-                            count: week.totalOf(StatType.exercises),
-                            label: 'Ejercicios',
-                          ),
-                          SummaryIcon(
-                            assetPath: 'assets/icons/training_unselected.svg',
-                            count: week.totalOf(StatType.trainings),
-                            label: 'Entrenamientos',
-                          ),
-                          SummaryIcon(
-                            assetPath: 'assets/icons/create_unselected.svg',
-                            count: week.totalOf(StatType.created),
-                            label: 'Creados',
+                          Expanded(child: _buildProfileLink(name)),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.settings,
+                              color: AppColors.textWhite,
+                            ),
+                            onPressed: () => Navigator.pushNamed(context, '/settings'),
                           ),
                         ],
                       ),
                     ),
-                  ),
 
-                  // Actividad reciente
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('Actividad reciente', style: TextStyles.title),
-                  ),
+                    if (_isAdmin) _buildCatalogButton(),
 
-                  // Últimos ejercicios (lista vertical)
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'Últimos ejercicios',
-                      style: TextStyles.subTitle,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  if (exState.isLoading &&
-                      !exState.loadedOnce &&
-                      recentExercises.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: SkeletonShimmer(
-                        child: Column(
-                          children: [
-                            ExerciseCardSkeleton(showTopDivider: false),
-                            SizedBox(height: 12),
-                            ExerciseCardSkeleton(),
-                          ],
-                        ),
-                      ),
-                    )
-                  else if (recentExercises.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'Aún no has hecho ningún ejercicio. ¡Comienza ahora!',
-                        style: TextStyles.paragraph,
-                      ),
-                    )
-                  else
+                    // Estadísticas
+                    const SizedBox(height: 12),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          for (int i = 0; i < recentExercises.length; i++)
-                            StaggeredEntrance(
-                              index: i,
-                              child: Padding(
-                                padding: EdgeInsets.only(
-                                  bottom:
-                                      i == recentExercises.length - 1 ? 0 : 12,
+                          Text('Estadísticas', style: TextStyles.subTitle),
+                          const SizedBox(height: 4),
+                          Text(recentActivityCaption(), style: TextStyles.caption),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: GestureDetector(
+                        onTap: () => Navigator.pushNamed(context, '/stats'),
+                        child: _buildStatsChart(stats, week),
+                      ),
+                    ),
+
+                    // Resumen
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: GestureDetector(
+                        onTap: () => Navigator.pushNamed(context, '/stats'),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            SummaryIcon(
+                              assetPath: 'assets/icons/exercise_unselected.svg',
+                              count: week.totalOf(StatType.exercises),
+                              label: 'Ejercicios',
+                            ),
+                            SummaryIcon(
+                              assetPath: 'assets/icons/training_unselected.svg',
+                              count: week.totalOf(StatType.trainings),
+                              label: 'Entrenamientos',
+                            ),
+                            SummaryIcon(
+                              assetPath: 'assets/icons/create_unselected.svg',
+                              count: week.totalOf(StatType.created),
+                              label: 'Creados',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Actividad reciente
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('Actividad reciente', style: TextStyles.title),
+                    ),
+
+                    // Últimos ejercicios (lista vertical)
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'Últimos ejercicios',
+                        style: TextStyles.subTitle,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    if (exState.isLoading &&
+                        !exState.loadedOnce &&
+                        recentExercises.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: SkeletonShimmer(
+                          child: Column(
+                            children: [
+                              ExerciseCardSkeleton(showTopDivider: false),
+                              SizedBox(height: 12),
+                              ExerciseCardSkeleton(),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if (recentExercises.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'Aún no has hecho ningún ejercicio. ¡Comienza ahora!',
+                          style: TextStyles.paragraph,
+                        ),
+                      )
+                    else
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          children: [
+                            for (int i = 0; i < recentExercises.length; i++)
+                              StaggeredEntrance(
+                                index: i,
+                                child: Padding(
+                                  padding: EdgeInsets.only(
+                                    bottom:
+                                        i == recentExercises.length - 1 ? 0 : 12,
+                                  ),
+                                  child: ExerciseCard(
+                                    exercise: recentExercises[i],
+                                    showTopDivider: i != 0,
+                                    onFavoritePressed:
+                                        () => _toggleFavorite(
+                                          recentExercises[i].id,
+                                        ),
+                                    onViewPressed: () async {
+                                      await Navigator.pushNamed(
+                                        context,
+                                        '/exerciseDetail',
+                                        arguments: {
+                                          'exercise': recentExercises[i],
+                                          'returnRoute': '/profile',
+                                        },
+                                      );
+                                    },
+                                  ),
                                 ),
-                                child: ExerciseCard(
-                                  exercise: recentExercises[i],
-                                  showTopDivider: i != 0,
-                                  onFavoritePressed:
-                                      () => _toggleFavorite(
-                                        recentExercises[i].id,
-                                      ),
-                                  onViewPressed: () async {
-                                    await Navigator.pushNamed(
+                              ),
+                          ],
+                        ),
+                      ),
+
+                    // Últimos entrenamientos
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'Últimos entrenamientos',
+                        style: TextStyles.subTitle,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    if (trState.isLoading &&
+                        !trState.loadedOnce &&
+                        recentTrainings.isEmpty)
+                      SizedBox(
+                        height: 140,
+                        child: SkeletonShimmer(
+                          child: ListView.separated(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            scrollDirection: Axis.horizontal,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: 3,
+                            separatorBuilder: (_, __) => const SizedBox(width: 12),
+                            itemBuilder: (_, __) => const SizedBox(
+                              width: 120,
+                              child: TrainingCardSkeleton(),
+                            ),
+                          ),
+                        ),
+                      )
+                    else if (recentTrainings.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'Aún no has realizado ningún entrenamiento. ¡Pruébalos ahora!',
+                          style: TextStyles.paragraph,
+                        ),
+                      )
+                    else
+                      SizedBox(
+                        height: 140,
+                        child: ListView.separated(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          scrollDirection: Axis.horizontal,
+                          itemCount: recentTrainings.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 12),
+                          itemBuilder: (_, i) {
+                            final t = recentTrainings[i];
+                            return StaggeredEntrance(
+                              index: i,
+                              child: SizedBox(
+                                width: 120,
+                                child: TrainingCard(
+                                  training: t,
+                                  onTap: () {
+                                    Navigator.pushNamed(
                                       context,
-                                      '/exerciseDetail',
-                                      arguments: {
-                                        'exercise': recentExercises[i],
-                                        'returnRoute': '/profile',
-                                      },
+                                      '/trainingDetail',
+                                      arguments: t,
                                     );
                                   },
                                 ),
                               ),
-                            ),
-                        ],
-                      ),
-                    ),
-
-                  // Últimos entrenamientos
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'Últimos entrenamientos',
-                      style: TextStyles.subTitle,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  if (trState.isLoading &&
-                      !trState.loadedOnce &&
-                      recentTrainings.isEmpty)
-                    SizedBox(
-                      height: 140,
-                      child: SkeletonShimmer(
-                        child: ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          scrollDirection: Axis.horizontal,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: 3,
-                          separatorBuilder: (_, __) => const SizedBox(width: 12),
-                          itemBuilder: (_, __) => const SizedBox(
-                            width: 120,
-                            child: TrainingCardSkeleton(),
-                          ),
+                            );
+                          },
                         ),
                       ),
-                    )
-                  else if (recentTrainings.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'Aún no has realizado ningún entrenamiento. ¡Pruébalos ahora!',
-                        style: TextStyles.paragraph,
-                      ),
-                    )
-                  else
-                    SizedBox(
-                      height: 140,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        scrollDirection: Axis.horizontal,
-                        itemCount: recentTrainings.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 12),
-                        itemBuilder: (_, i) {
-                          final t = recentTrainings[i];
-                          return StaggeredEntrance(
-                            index: i,
-                            child: SizedBox(
-                              width: 120,
-                              child: TrainingCard(
-                                training: t,
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    '/trainingDetail',
-                                    arguments: t,
-                                  );
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
 
-                  const SizedBox(height: 24),
-                ],
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
             );
           },

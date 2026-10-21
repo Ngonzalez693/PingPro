@@ -18,6 +18,7 @@ import 'package:pingpro_front/widgets/count_bars.dart';
 import 'package:pingpro_front/widgets/exercise_rank_list.dart';
 import 'package:pingpro_front/widgets/labeled_tabs.dart';
 import 'package:pingpro_front/widgets/load_error_view.dart';
+import 'package:pingpro_front/widgets/pull_to_refresh.dart';
 
 class PingproStatsDetailScreen extends StatefulWidget {
   const PingproStatsDetailScreen({super.key});
@@ -45,6 +46,12 @@ class _PingproStatsDetailScreenState extends State<PingproStatsDetailScreen> {
       arguments: {'exercise': exercise, 'returnRoute': '/statsDetail'},
     );
   }
+
+  // Los rankings de golpes y ejercicios cruzan el historial con los ejercicios.
+  Future<void> _refresh() => Future.wait([
+    StatsState.instance.refresh(),
+    ExercisesState.instance.refresh(),
+  ]);
 
   @override
   Widget build(BuildContext context) {
@@ -106,24 +113,28 @@ class _PingproStatsDetailScreenState extends State<PingproStatsDetailScreen> {
     final inPeriod = eventsInPeriod(stats.events, _period);
     final noActivity =
         inPeriod.exerciseCompletions.isEmpty && inPeriod.trainingCompletions.isEmpty;
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      children: [
-        if (noActivity) ...[
-          Text('Aún no hay actividad en este periodo', style: TextStyles.paragraph),
+    return PullToRefresh(
+      onRefresh: _refresh,
+      child: ListView(
+        physics: PullToRefresh.physics,
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+        children: [
+          if (noActivity) ...[
+            Text('Aún no hay actividad en este periodo', style: TextStyles.paragraph),
+            const SizedBox(height: 16),
+          ],
+          _buildConsistency(stats.events, inPeriod),
           const SizedBox(height: 16),
+          CountBars(
+            title: 'Por categoría',
+            entries: countByCategory(inPeriod.exerciseCompletions),
+          ),
+          const SizedBox(height: 16),
+          _buildStrokes(inPeriod),
+          const SizedBox(height: 16),
+          ..._buildExerciseLists(inPeriod),
         ],
-        _buildConsistency(stats.events, inPeriod),
-        const SizedBox(height: 16),
-        CountBars(
-          title: 'Por categoría',
-          entries: countByCategory(inPeriod.exerciseCompletions),
-        ),
-        const SizedBox(height: 16),
-        _buildStrokes(inPeriod),
-        const SizedBox(height: 16),
-        ..._buildExerciseLists(inPeriod),
-      ],
+      ),
     );
   }
 
