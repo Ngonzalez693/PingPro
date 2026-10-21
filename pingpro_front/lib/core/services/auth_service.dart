@@ -11,8 +11,8 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
 import 'package:pingpro_front/core/load_errors.dart';
+import 'package:pingpro_front/core/services/api_client.dart';
 import 'package:pingpro_front/core/services/api_errors.dart';
 
 /// Si el perfil de GET /api/users/me tiene el rol admin.
@@ -155,7 +155,7 @@ class AuthService {
     // que quedara en memoria sería del usuario equivocado).
     try { await _auth.signOut(); } catch (_) {}
 
-    final resp = await http.post(
+    final resp = await apiClient.post(
       _u('/api/auth/signup'),
       headers: await _jsonHeaders(),
       body: jsonEncode({
@@ -226,8 +226,8 @@ class AuthService {
   /// cerrar sesión, AuthWrapper vacía los stores porque cambia el uid.
   Future<void> deleteAccount(String password) async {
     final user = await _reauthenticate(password);
-    final token = await user.getIdToken();
-    final resp = await http.delete(
+    final token = await withRequestTimeout(user.getIdToken());
+    final resp = await apiClient.delete(
       _u('/api/users/me'),
       headers: {'Authorization': 'Bearer $token'},
     );
@@ -250,9 +250,9 @@ class AuthService {
   Future<Map<String, dynamic>> fetchUserProfile() async {
     final u = _auth.currentUser;
     if (u == null) return {};
-    final token = await u.getIdToken();
+    final token = await withRequestTimeout(u.getIdToken());
 
-    final resp = await http.get(
+    final resp = await apiClient.get(
       _u('/api/users/me'),
       headers: {
         'Content-Type': 'application/json',
@@ -277,9 +277,9 @@ class AuthService {
   Future<void> updateProfile({required String displayName}) async {
     final u = _auth.currentUser;
     if (u == null) throw StateError('No hay sesión iniciada');
-    final token = await u.getIdToken();
+    final token = await withRequestTimeout(u.getIdToken());
 
-    final resp = await http.put(
+    final resp = await apiClient.put(
       _u('/api/users/${u.uid}'),
       headers: {
         'Content-Type': 'application/json',

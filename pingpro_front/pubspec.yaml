@@ -1,7 +1,7 @@
 name: pingpro_front
 description: "Ping Pro Frontend"
 publish_to: 'none'
-version: 0.8.10+13
+version: 0.8.11+14
 
 environment:
   sdk: ^3.7.0
