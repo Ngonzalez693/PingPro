@@ -6,7 +6,7 @@
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
+import 'package:pingpro_front/core/services/api_client.dart';
 import 'package:pingpro_front/core/services/api_errors.dart';
 import 'package:pingpro_front/core/services/api_paths.dart';
 import 'package:pingpro_front/core/services/api_responses.dart';
@@ -22,7 +22,7 @@ class TrainingsService {
     final h = <String, String>{'Content-Type': 'application/json'};
     if (withAuth) {
       final u = FirebaseAuth.instance.currentUser;
-      if (u != null) h['Authorization'] = 'Bearer ${await u.getIdToken()}';
+      if (u != null) h['Authorization'] = 'Bearer ${await withRequestTimeout(u.getIdToken())}';
     }
     return h;
   }
@@ -31,9 +31,8 @@ class TrainingsService {
 
   // Listado “puro”
   Future<List<TrainingModel>> fetchAll() async {
-    final r = await http
-        .get(_u('/api/trainings'), headers: await _jsonHeaders(withAuth: true))
-        .timeout(const Duration(seconds: 25));
+    final r = await apiClient
+        .get(_u('/api/trainings'), headers: await _jsonHeaders(withAuth: true));
     if (r.statusCode != 200) {
       throw Exception('Error al obtener trainings: ${r.body}');
     }
@@ -47,9 +46,8 @@ class TrainingsService {
   // Listado enriquecido con estado del usuario (endpoint: GET /api/trainings/me/list)
   // Es el que usa TrainingsState; fetchAll() queda para usos sin sesión.
   Future<List<TrainingModel>> fetchAllWithUserState() async {
-    final r = await http
-        .get(_u('/api/trainings/me/list'), headers: await _jsonHeaders(withAuth: true))
-        .timeout(const Duration(seconds: 25));
+    final r = await apiClient
+        .get(_u('/api/trainings/me/list'), headers: await _jsonHeaders(withAuth: true));
     if (r.statusCode != 200) {
       throw Exception('Error al obtener trainings del usuario: ${r.body}');
     }
@@ -63,13 +61,12 @@ class TrainingsService {
   /// admin). El backend comprueba que todos los ejercicios sean visibles para
   /// ese destino: uno del catálogo solo puede usar ejercicios del catálogo.
   Future<String> create(TrainingDraft draft) async {
-    final r = await http
+    final r = await apiClient
         .post(
           _u(createPathFor('trainings', draft.scope)),
           headers: await _jsonHeaders(withAuth: true),
           body: jsonEncode(draft.toCreateJson()),
-        )
-        .timeout(const Duration(seconds: 25));
+        );
     if (r.statusCode != 201) {
       throw Exception(backendErrorMessage(r.body, 'No se pudo crear el entrenamiento'));
     }
@@ -85,13 +82,12 @@ class TrainingsService {
   Future<void> update(TrainingDraft draft) async {
     final id = draft.editingId;
     if (id == null) throw StateError('update() necesita un borrador de edición');
-    final r = await http
+    final r = await apiClient
         .put(
           _u(itemPathFor('trainings', id, own: draft.scope == ContentScope.own)),
           headers: await _jsonHeaders(withAuth: true),
           body: jsonEncode(draft.toCreateJson()),
-        )
-        .timeout(const Duration(seconds: 25));
+        );
     if (r.statusCode != 200) {
       throw Exception(backendErrorMessage(r.body, 'No se pudo guardar el entrenamiento'));
     }
@@ -99,9 +95,8 @@ class TrainingsService {
 
   /// DELETE: el backend lo marca como borrado. Sus ejercicios no se tocan.
   Future<void> delete(String id, {required bool own}) async {
-    final r = await http
-        .delete(_u(itemPathFor('trainings', id, own: own)), headers: await _jsonHeaders(withAuth: true))
-        .timeout(const Duration(seconds: 25));
+    final r = await apiClient
+        .delete(_u(itemPathFor('trainings', id, own: own)), headers: await _jsonHeaders(withAuth: true));
     if (r.statusCode != 200) {
       throw Exception(backendErrorMessage(r.body, 'No se pudo eliminar el entrenamiento'));
     }
@@ -109,13 +104,12 @@ class TrainingsService {
 
   // Marcar/unmarcar como completado para el usuario
   Future<void> setCompleted(String id, bool completed, {int? session}) async {
-    final r = await http
+    final r = await apiClient
         .post(
           _u('/api/trainings/$id/completed'),
           headers: await _jsonHeaders(withAuth: true),
           body: jsonEncode(completionBody(completed, session)),
-        )
-        .timeout(const Duration(seconds: 25));
+        );
     if (r.statusCode != 200) {
       throw Exception('Error al actualizar training: ${r.body}');
     }

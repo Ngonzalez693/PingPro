@@ -7,7 +7,7 @@
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
+import 'package:pingpro_front/core/services/api_client.dart';
 import 'package:pingpro_front/core/services/api_errors.dart';
 import 'package:pingpro_front/core/services/api_paths.dart';
 import 'package:pingpro_front/core/services/api_responses.dart';
@@ -58,7 +58,7 @@ class ExercisesService {
     final h = <String, String>{'Content-Type': 'application/json'};
     if (withAuth) {
       final u = FirebaseAuth.instance.currentUser;
-      final token = await u?.getIdToken();
+      final token = u == null ? null : await withRequestTimeout(u.getIdToken());
       if (token != null) h['Authorization'] = 'Bearer $token';
     }
     return h;
@@ -66,7 +66,7 @@ class ExercisesService {
 
   // GET /api/exercises (sin estado de usuario)
   Future<List<ExerciseModel>> fetchAll() async {
-    final r = await http.get(_u('/api/exercises'), headers: await _jsonHeaders(withAuth: true));
+    final r = await apiClient.get(_u('/api/exercises'), headers: await _jsonHeaders(withAuth: true));
     if (r.statusCode != 200) {
       throw Exception('Error al obtener ejercicios: ${r.body}');
     }
@@ -77,7 +77,7 @@ class ExercisesService {
 
   /// GET /api/exercises/me/states (auth): favoritos y completados del usuario.
   Future<Map<String, ExerciseUserState>> fetchMyStates() async {
-    final r = await http.get(
+    final r = await apiClient.get(
       _u('/api/exercises/me/states'),
       headers: await _jsonHeaders(withAuth: true),
     );
@@ -115,7 +115,7 @@ class ExercisesService {
   /// Si falla, la excepción lleva el mensaje del backend (p. ej. el de Joi
   /// cuando un campo no es válido, o el 403 si no es admin) para enseñarlo.
   Future<String> create(ExerciseDraft draft) async {
-    final r = await http.post(
+    final r = await apiClient.post(
       _u(createPathFor('exercises', draft.scope)),
       headers: await _jsonHeaders(withAuth: true),
       body: jsonEncode(draft.toCreateJson()),
@@ -135,7 +135,7 @@ class ExercisesService {
   Future<void> update(ExerciseDraft draft) async {
     final id = draft.editingId;
     if (id == null) throw StateError('update() necesita un borrador de edición');
-    final r = await http.put(
+    final r = await apiClient.put(
       _u(itemPathFor('exercises', id, own: draft.scope == ContentScope.own)),
       headers: await _jsonHeaders(withAuth: true),
       body: jsonEncode(draft.toCreateJson()),
@@ -148,7 +148,7 @@ class ExercisesService {
   /// DELETE: el backend lo marca como borrado; deja de verse y sale de los
   /// entrenamientos que lo usaban.
   Future<void> delete(String id, {required bool own}) async {
-    final r = await http.delete(
+    final r = await apiClient.delete(
       _u(itemPathFor('exercises', id, own: own)),
       headers: await _jsonHeaders(withAuth: true),
     );
@@ -159,7 +159,7 @@ class ExercisesService {
 
   /// POST /api/exercises/:id/favorite
   Future<void> setFavorite({required String id, required bool isFavorite}) async {
-    final r = await http.post(
+    final r = await apiClient.post(
       _u('/api/exercises/$id/favorite'),
       headers: await _jsonHeaders(withAuth: true),
       body: jsonEncode({'isFavorite': isFavorite}),
@@ -171,7 +171,7 @@ class ExercisesService {
 
   /// POST /api/exercises/:id/completed
   Future<void> setCompleted({required String id, required bool completed, int? session}) async {
-    final r = await http.post(
+    final r = await apiClient.post(
       _u('/api/exercises/$id/completed'),
       headers: await _jsonHeaders(withAuth: true),
       body: jsonEncode(completionBody(completed, session)),

@@ -1,3 +1,4 @@
+import 'package:pingpro_front/core/services/api_client.dart';
 // Dónde está el .glb con todas las animaciones.
 //
 // La URL vive en la fila 'PingPro Animations' de models_3d y no en la app, así
@@ -12,7 +13,6 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
 
 final String _baseUrl = dotenv.env['API_BASE_URL']!;
 
@@ -35,8 +35,9 @@ class Model3dCatalog {
   }
 
   Future<String?> _fetchAnimationsUrl() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdToken();
-    final response = await http.get(
+    final user = FirebaseAuth.instance.currentUser;
+    final token = user == null ? null : await withRequestTimeout(user.getIdToken());
+    final response = await apiClient.get(
       Uri.parse('$_baseUrl/api/model3d'),
       headers: {
         'Content-Type': 'application/json',
