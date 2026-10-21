@@ -9,6 +9,7 @@ import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/widgets/choice_pill.dart';
 import 'package:pingpro_front/widgets/load_error_view.dart';
+import 'package:pingpro_front/widgets/pull_to_refresh.dart';
 import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
 import 'package:pingpro_front/widgets/staggered_entrance.dart';
 import 'package:pingpro_front/widgets/training_card.dart';
@@ -112,7 +113,7 @@ class _PingproTrainingsScreenState extends State<PingproTrainingsScreen> {
       return LoadErrorView(message: error, onRetry: s.refresh);
     }
     if (s.isLoading && !s.loadedOnce) return _buildSkeletonGrid();
-    return _buildGrid(_applyFilter(s.all));
+    return PullToRefresh(onRefresh: s.refresh, child: _buildGrid(_applyFilter(s.all)));
   }
 
   static const _gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
@@ -124,6 +125,7 @@ class _PingproTrainingsScreenState extends State<PingproTrainingsScreen> {
 
   Widget _buildGrid(List<TrainingModel> trainings) {
     return GridView.builder(
+      physics: PullToRefresh.physics,
       itemCount: trainings.length,
       gridDelegate: _gridDelegate,
       itemBuilder: (context, i) {

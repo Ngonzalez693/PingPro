@@ -21,6 +21,7 @@ import 'package:pingpro_front/widgets/exercise_card.dart';
 import 'package:pingpro_front/widgets/exercise_card_skeleton.dart';
 import 'package:pingpro_front/widgets/image_banner_carousel.dart';
 import 'package:pingpro_front/widgets/load_error_view.dart';
+import 'package:pingpro_front/widgets/pull_to_refresh.dart';
 import 'package:pingpro_front/widgets/skeleton_box.dart';
 import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
 import 'package:pingpro_front/widgets/staggered_entrance.dart';
@@ -69,194 +70,205 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
     );
   }
 
+  // Inicio enseña las tres cosas, así que recarga las tres.
+  Future<void> _refresh() => Future.wait([
+    TrainingsState.instance.refresh(),
+    ExercisesState.instance.refresh(),
+    StatsState.instance.refresh(),
+  ]);
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final displayName = user?.displayName ?? 'Usuario';
 
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            const Center(
-              child: Text('PingPro', style: TextStyles.brandTitle),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Bienvenido, $displayName',
-              style: TextStyles.paragraph.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            const ImageBannerCarousel(),
-            const SizedBox(height: 32),
+      child: PullToRefresh(
+        onRefresh: _refresh,
+        child: SingleChildScrollView(
+          physics: PullToRefresh.physics,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              const Center(
+                child: Text('PingPro', style: TextStyles.brandTitle),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Bienvenido, $displayName',
+                style: TextStyles.paragraph.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              const ImageBannerCarousel(),
+              const SizedBox(height: 32),
 
-            // Recomendaciones
-            Text('Recomendaciones', style: TextStyles.title),
-            const SizedBox(height: 12),
+              // Recomendaciones
+              Text('Recomendaciones', style: TextStyles.title),
+              const SizedBox(height: 12),
 
-            // Entrenamientos
-            Text('Entrenamientos', style: TextStyles.paragraph),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 160,
-              child: AnimatedBuilder(
-                animation: TrainingsState.instance,
-                builder: (context, _) {
-                  final ts = TrainingsState.instance;
+              // Entrenamientos
+              Text('Entrenamientos', style: TextStyles.paragraph),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 160,
+                child: AnimatedBuilder(
+                  animation: TrainingsState.instance,
+                  builder: (context, _) {
+                    final ts = TrainingsState.instance;
 
-                  if (ts.isLoading && !ts.loadedOnce) {
-                    return SkeletonShimmer(
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: 4,
-                        separatorBuilder: (_, __) => const SizedBox(width: 12),
-                        itemBuilder: (_, __) => const SizedBox(
-                          width: 120,
-                          child: TrainingCardSkeleton(),
+                    if (ts.isLoading && !ts.loadedOnce) {
+                      return SkeletonShimmer(
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: 4,
+                          separatorBuilder: (_, __) => const SizedBox(width: 12),
+                          itemBuilder: (_, __) => const SizedBox(
+                            width: 120,
+                            child: TrainingCardSkeleton(),
+                          ),
                         ),
+                      );
+                    }
+                    if (ts.error case final error?) {
+                      return LoadErrorView(
+                        message: error,
+                        onRetry: TrainingsState.instance.refresh,
+                        compact: true,
+                      );
+                    }
+
+                    final List<TrainingModel> trainings = ts.all.take(4).toList();
+                    if (trainings.isEmpty) {
+                      return const Center(child: Text('No hay entrenamientos'));
+                    }
+
+                    return ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: trainings.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      itemBuilder: (_, i) {
+                        final t = trainings[i];
+                        return StaggeredEntrance(
+                          index: i,
+                          child: SizedBox(
+                            width: 120,
+                            child: TrainingCard(
+                              training: t,
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/trainingDetail',
+                                  arguments: t,
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              //Ejercicios
+              Text('Ejercicios', style: TextStyles.paragraph),
+              const SizedBox(height: 16),
+
+              AnimatedBuilder(
+                animation: ExercisesState.instance,
+                builder: (context, _) {
+                  final s = ExercisesState.instance;
+
+                  if (s.isLoading && !s.loadedOnce) {
+                    return const SkeletonShimmer(
+                      child: Column(
+                        children: [
+                          ExerciseCardSkeleton(),
+                          SizedBox(height: 12),
+                          ExerciseCardSkeleton(),
+                        ],
                       ),
                     );
                   }
-                  if (ts.error case final error?) {
+                  if (s.error case final error?) {
                     return LoadErrorView(
                       message: error,
-                      onRetry: TrainingsState.instance.refresh,
+                      onRetry: ExercisesState.instance.refresh,
                       compact: true,
                     );
                   }
 
-                  final List<TrainingModel> trainings = ts.all.take(4).toList();
-                  if (trainings.isEmpty) {
-                    return const Center(child: Text('No hay entrenamientos'));
+                  final List<ExerciseModel> exercises = s.all.take(2).toList();
+                  if (exercises.isEmpty) {
+                    return const Text('No hay ejercicios disponibles');
                   }
 
-                  return ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: trainings.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 12),
-                    itemBuilder: (_, i) {
-                      final t = trainings[i];
-                      return StaggeredEntrance(
-                        index: i,
-                        child: SizedBox(
-                          width: 120,
-                          child: TrainingCard(
-                            training: t,
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/trainingDetail',
-                                arguments: t,
-                              );
-                            },
+                  return Column(
+                    children: [
+                      for (final (i, ex) in exercises.indexed)
+                        StaggeredEntrance(
+                          index: i,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: ExerciseCard(
+                              exercise: ex,
+                              onFavoritePressed: () => _toggleFavorite(ex.id),
+                              onViewPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => PingproExerciseDetailScreen(
+                                          exercise:
+                                              ex, // puedes seguir pasando el objeto
+                                          returnRoute: '/home',
+                                        ),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         ),
+                    ],
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              // Estadísticas
+              Text('Estadísticas', style: TextStyles.subTitle),
+              const SizedBox(height: 4),
+              Text(recentActivityCaption(), style: TextStyles.caption),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () => Navigator.pushNamed(context, '/stats'),
+                child: AnimatedBuilder(
+                  animation: StatsState.instance,
+                  builder: (context, _) {
+                    final stats = StatsState.instance;
+                    if (stats.isLoading && !stats.loadedOnce) {
+                      return const SkeletonShimmer(
+                        child: SkeletonBox(height: 160, radius: 16),
                       );
-                    },
-                  );
-                },
+                    }
+                    if (stats.error case final error? when !stats.loadedOnce) {
+                      return _buildStatsError(error);
+                    }
+                    final week = buildStatSeries(stats.events, StatPeriod.daily);
+                    return StatisticsChart(values: week.total, labels: week.labels);
+                  },
+                ),
               ),
-            ),
 
-            const SizedBox(height: 24),
-
-            //Ejercicios
-            Text('Ejercicios', style: TextStyles.paragraph),
-            const SizedBox(height: 16),
-
-            AnimatedBuilder(
-              animation: ExercisesState.instance,
-              builder: (context, _) {
-                final s = ExercisesState.instance;
-
-                if (s.isLoading && !s.loadedOnce) {
-                  return const SkeletonShimmer(
-                    child: Column(
-                      children: [
-                        ExerciseCardSkeleton(),
-                        SizedBox(height: 12),
-                        ExerciseCardSkeleton(),
-                      ],
-                    ),
-                  );
-                }
-                if (s.error case final error?) {
-                  return LoadErrorView(
-                    message: error,
-                    onRetry: ExercisesState.instance.refresh,
-                    compact: true,
-                  );
-                }
-
-                final List<ExerciseModel> exercises = s.all.take(2).toList();
-                if (exercises.isEmpty) {
-                  return const Text('No hay ejercicios disponibles');
-                }
-
-                return Column(
-                  children: [
-                    for (final (i, ex) in exercises.indexed)
-                      StaggeredEntrance(
-                        index: i,
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: ExerciseCard(
-                            exercise: ex,
-                            onFavoritePressed: () => _toggleFavorite(ex.id),
-                            onViewPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => PingproExerciseDetailScreen(
-                                        exercise:
-                                            ex, // puedes seguir pasando el objeto
-                                        returnRoute: '/home',
-                                      ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
-
-            const SizedBox(height: 24),
-
-            // Estadísticas
-            Text('Estadísticas', style: TextStyles.subTitle),
-            const SizedBox(height: 4),
-            Text(recentActivityCaption(), style: TextStyles.caption),
-            const SizedBox(height: 16),
-            GestureDetector(
-              onTap: () => Navigator.pushNamed(context, '/stats'),
-              child: AnimatedBuilder(
-                animation: StatsState.instance,
-                builder: (context, _) {
-                  final stats = StatsState.instance;
-                  if (stats.isLoading && !stats.loadedOnce) {
-                    return const SkeletonShimmer(
-                      child: SkeletonBox(height: 160, radius: 16),
-                    );
-                  }
-                  if (stats.error case final error? when !stats.loadedOnce) {
-                    return _buildStatsError(error);
-                  }
-                  final week = buildStatSeries(stats.events, StatPeriod.daily);
-                  return StatisticsChart(values: week.total, labels: week.labels);
-                },
-              ),
-            ),
-
-            const SizedBox(height: 24),
-          ],
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );

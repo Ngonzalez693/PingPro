@@ -11,6 +11,7 @@ import 'package:pingpro_front/core/stats_buckets.dart';
 import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/widgets/labeled_tabs.dart';
 import 'package:pingpro_front/widgets/load_error_view.dart';
+import 'package:pingpro_front/widgets/pull_to_refresh.dart';
 import 'package:pingpro_front/widgets/statistics_chart.dart';
 import 'package:pingpro_front/widgets/statistics_secundary_cart.dart';
 import 'package:pingpro_front/widgets/summary_icon_row.dart';
@@ -59,118 +60,122 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
             final stats = StatsState.instance;
             final series = buildStatSeries(stats.events, _period);
 
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  // Header
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(
-                            Icons.arrow_back,
-                            color: AppColors.textWhite,
+            return PullToRefresh(
+              onRefresh: StatsState.instance.refresh,
+              child: SingleChildScrollView(
+                physics: PullToRefresh.physics,
+                child: Column(
+                  children: [
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.arrow_back,
+                              color: AppColors.textWhite,
+                            ),
+                            onPressed: () {
+                              FocusScope.of(context).unfocus();
+                              Navigator.pop(context);
+                            },
                           ),
-                          onPressed: () {
-                            FocusScope.of(context).unfocus();
-                            Navigator.pop(context);
-                          },
-                        ),
-                        const Spacer(),
-                        Text('Estadísticas', style: TextStyles.title),
-                        const Spacer(),
-                        const SizedBox(width: 48),
-                      ],
+                          const Spacer(),
+                          Text('Estadísticas', style: TextStyles.title),
+                          const Spacer(),
+                          const SizedBox(width: 48),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  // Period tabs
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: LabeledTabs<StatPeriod>(
-                      options: statPeriodOptions,
-                      selected: _period,
-                      onSelected: _onPeriodSelected,
+                    // Period tabs
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: LabeledTabs<StatPeriod>(
+                        options: statPeriodOptions,
+                        selected: _period,
+                        onSelected: _onPeriodSelected,
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 12),
-                  Text(statPeriodCaption(_period), style: TextStyles.caption),
-                  const SizedBox(height: 8),
+                    const SizedBox(height: 12),
+                    Text(statPeriodCaption(_period), style: TextStyles.caption),
+                    const SizedBox(height: 8),
 
-                  // ===== Gráfico principal (línea) =====
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: StatisticsChart(
-                      values: series.total,
-                      labels: series.labels,
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // ===== Summary icons (real) =====
-                  SummaryIconRow(
-                    active: _activeType,
-                    onSelected: _onTypeSelected,
-                    exercisesCount: series.totalOf(StatType.exercises),
-                    trainingsCount: series.totalOf(StatType.trainings),
-                    createdCount: series.totalOf(StatType.created),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // ===== Gráfico secundario (barras) =====
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16, right: 16),
-                    child: SizedBox(
-                      height: 200,
-                      child: StatisticsSecondaryChart(
-                        title: _titleFor(_activeType),
-                        values: series.of(_activeType),
+                    // ===== Gráfico principal (línea) =====
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: StatisticsChart(
+                        values: series.total,
                         labels: series.labels,
                       ),
                     ),
-                  ),
 
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppColors.primary),
-                        ),
-                        onPressed:
-                            () => Navigator.pushNamed(context, '/statsDetail'),
-                        icon: const Icon(
-                          Icons.insights,
-                          color: AppColors.primary,
-                        ),
-                        label: const Text(
-                          'Ver detalle',
-                          style: TextStyle(color: AppColors.primary),
-                        ),
-                      ),
+                    const SizedBox(height: 16),
+
+                    // ===== Summary icons (real) =====
+                    SummaryIconRow(
+                      active: _activeType,
+                      onSelected: _onTypeSelected,
+                      exercisesCount: series.totalOf(StatType.exercises),
+                      trainingsCount: series.totalOf(StatType.trainings),
+                      createdCount: series.totalOf(StatType.created),
                     ),
-                  ),
 
-                  if (stats.isLoading && !stats.loadedOnce)
-                    const Padding(
-                      padding: EdgeInsets.all(16),
+                    const SizedBox(height: 8),
+
+                    // ===== Gráfico secundario (barras) =====
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16, right: 16),
                       child: SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        height: 200,
+                        child: StatisticsSecondaryChart(
+                          title: _titleFor(_activeType),
+                          values: series.of(_activeType),
+                          labels: series.labels,
+                        ),
                       ),
                     ),
-                  if (stats.error case final error? when !stats.loadedOnce)
-                    LoadErrorView(message: error, onRetry: stats.refresh),
-                ],
+
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppColors.primary),
+                          ),
+                          onPressed:
+                              () => Navigator.pushNamed(context, '/statsDetail'),
+                          icon: const Icon(
+                            Icons.insights,
+                            color: AppColors.primary,
+                          ),
+                          label: const Text(
+                            'Ver detalle',
+                            style: TextStyle(color: AppColors.primary),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    if (stats.isLoading && !stats.loadedOnce)
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    if (stats.error case final error? when !stats.loadedOnce)
+                      LoadErrorView(message: error, onRetry: stats.refresh),
+                  ],
+                ),
               ),
             );
           },
