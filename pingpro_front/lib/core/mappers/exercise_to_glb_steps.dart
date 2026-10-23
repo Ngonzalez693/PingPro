@@ -29,12 +29,6 @@ class GlbStep {
   final String clip;
 
   const GlbStep({required this.url, required this.clip});
-
-  @override
-  bool operator ==(Object other) => other is GlbStep && other.url == url && other.clip == clip;
-
-  @override
-  int get hashCode => Object.hash(url, clip);
 }
 
 const _serveClips = [
