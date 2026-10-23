@@ -36,9 +36,19 @@ Future<void> _settle(WidgetTester tester) async {
   }
 }
 
-Future<void> _pump(WidgetTester tester, Future<File> Function(String url) obtainFile) async {
+Future<void> _pump(
+  WidgetTester tester,
+  Future<File> Function(String url) obtainFile, {
+  Future<void> Function(String url)? evictFile,
+}) async {
   await tester.pumpWidget(MaterialApp(
-    home: Scaffold(body: ExerciseSequenceViewer(steps: _steps, obtainFile: obtainFile)),
+    home: Scaffold(
+      body: ExerciseSequenceViewer(
+        steps: _steps,
+        obtainFile: obtainFile,
+        evictFile: evictFile ?? (_) async {},
+      ),
+    ),
   ));
   await _settle(tester);
 }
@@ -67,6 +77,34 @@ void main() {
     await _pump(tester, (_) async => file);
 
     expect(find.text('No se pudo cargar la animación'), findsOneWidget);
+    await tester.runAsync(() => dir.delete(recursive: true));
+  });
+
+  // Un archivo guardado que no se puede leer no debe romper el visor para
+  // siempre: se borra y "Reintentar" lo vuelve a bajar.
+  testWidgets('un archivo ilegible se borra y deja reintentar', (tester) async {
+    final dir = await tester.runAsync(() => Directory.systemTemp.createTemp('viewer_widget_test'));
+    final file = File('${dir!.path}/a.glb');
+    await tester.runAsync(() => file.writeAsString('esto no es un glb'));
+    final evicted = <String>[];
+    var obtained = 0;
+
+    await _pump(
+      tester,
+      (_) async {
+        obtained++;
+        return file;
+      },
+      evictFile: (url) async => evicted.add(url),
+    );
+
+    expect(find.text('No se pudo cargar la animación'), findsOneWidget);
+    expect(find.text('Reintentar'), findsOneWidget);
+    expect(evicted, [_steps.first.url]);
+
+    await tester.tap(find.text('Reintentar'));
+    await _settle(tester);
+    expect(obtained, 2);
     await tester.runAsync(() => dir.delete(recursive: true));
   });
 }

@@ -33,6 +33,18 @@ class FloorTrack {
 /// Pista del suelo de cada animación, por nombre. Las que no mueven [rootBone]
 /// no aparecen. Lanza [FormatException] si no es un .glb legible.
 Map<String, FloorTrack> readFloorTracks(Uint8List glb, {String rootBone = 'root.x'}) {
+  try {
+    return _readFloorTracks(glb, rootBone);
+  } on TypeError catch (e) {
+    // El archivo viene de fuera: un campo que falta o con otro tipo, o un
+    // accesor que apunta fuera de los datos, es un archivo ilegible.
+    throw FormatException('Estructura del .glb inesperada: $e');
+  } on RangeError catch (e) {
+    throw FormatException('Datos del .glb fuera de rango: $e');
+  }
+}
+
+Map<String, FloorTrack> _readFloorTracks(Uint8List glb, String rootBone) {
   final (json, bin) = _chunks(glb);
   final nodes = (json['nodes'] as List?) ?? const [];
   final root = nodes.indexWhere((n) => n is Map && n['name'] == rootBone);

@@ -55,8 +55,17 @@ class AnimationFileCache {
     return future;
   }
 
+  /// Borra el archivo guardado de [url] (p. ej. porque resultó ilegible), para
+  /// que el siguiente [fileFor] lo vuelva a bajar.
+  Future<void> evict(String url) async {
+    final file = _fileFor(url);
+    if (await file.exists()) await file.delete();
+  }
+
+  File _fileFor(String url) => File('${_directory.path}/${_fnv1a(url)}.glb');
+
   Future<File> _obtain(String url) async {
-    final file = File('${_directory.path}/${_fnv1a(url)}.glb');
+    final file = _fileFor(url);
     if (await file.exists()) return file;
     await _directory.create(recursive: true);
     final part = File('${file.path}.part');
