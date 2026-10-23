@@ -8,8 +8,13 @@
 // (assets/viewer/viewer.js), que reproduce el plan. Con ella habla por los
 // mensajes de core/viewer/viewer_bridge.dart.
 //
-// Si el archivo no se puede bajar se ve el aviso amable con "Reintentar";
-// si se baja pero ningún golpe del ejercicio está dentro, un aviso sin más.
+// Ninguna espera es eterna: si el archivo no se puede bajar o leer, si el
+// servidor o la página fallan, o si la página no empieza a reproducir en
+// _startLimit, se ve el aviso con "Reintentar". Un archivo guardado que no se
+// puede leer se borra antes, para que el reintento lo vuelva a bajar. Solo si
+// ningún golpe del ejercicio está en el archivo se ve un aviso sin reintento:
+// volver a bajarlo no lo arreglaría.
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -28,17 +33,23 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 const _animationError = 'No se pudo cargar la animación';
 
+/// Desde que se abre la página hasta que reproduce el primer paso.
+const _startLimit = Duration(seconds: 15);
+
 class ExerciseSequenceViewer extends StatefulWidget {
   final List<GlbStep> steps;
   final ValueChanged<int>? onStepChange;
   final Future<File> Function(String url) _obtainFile;
+  final Future<void> Function(String url) _evictFile;
 
   ExerciseSequenceViewer({
     super.key,
     required this.steps,
     this.onStepChange,
     @visibleForTesting Future<File> Function(String url)? obtainFile,
-  }) : _obtainFile = obtainFile ?? AnimationFileCache.instance.fileFor;
+    @visibleForTesting Future<void> Function(String url)? evictFile,
+  })  : _obtainFile = obtainFile ?? AnimationFileCache.instance.fileFor,
+        _evictFile = evictFile ?? AnimationFileCache.instance.evict;
 
   @override
   State<ExerciseSequenceViewer> createState() => _ExerciseSequenceViewerState();
@@ -48,17 +59,20 @@ class _ExerciseSequenceViewerState extends State<ExerciseSequenceViewer> {
   ChainPlan? _plan;
   ViewerServer? _server;
   WebViewController? _controller;
+  Timer? _startWatchdog;
 
   // Antes de que la página empiece el primer paso.
   bool _loading = true;
   bool _playing = true;
   int _index = 0;
 
-  /// Error con "Reintentar" (no se pudo bajar el archivo).
-  String? _loadError;
+  /// Error con "Reintentar".
+  String? _retryError;
 
-  /// Error sin reintento (el archivo no sirve para este ejercicio).
+  /// Error sin reintento: ningún golpe del ejercicio está en el archivo.
   String? _fatalError;
+
+  String get _url => widget.steps.first.url;
 
   @override
   void initState() {
@@ -68,53 +82,89 @@ class _ExerciseSequenceViewerState extends State<ExerciseSequenceViewer> {
 
   @override
   void dispose() {
-    _server?.close();
+    _stopViewer();
     super.dispose();
   }
 
-  Future<void> _prepare() async {
+  void _restart() {
+    _stopViewer();
     setState(() {
       _loading = true;
-      _loadError = null;
+      _playing = true;
+      _index = 0;
+      _retryError = null;
       _fatalError = null;
     });
+    _prepare();
+  }
+
+  Future<void> _prepare() async {
     final File file;
     try {
-      file = await widget._obtainFile(widget.steps.first.url);
+      file = await widget._obtainFile(_url);
     } on Object catch (e) {
       debugPrint('Visor 3D: no se pudo obtener el archivo: $e');
-      if (mounted) setState(() => _loadError = loadErrorMessage(e));
+      _fail(loadErrorMessage(e));
       return;
     }
     final ChainPlan plan;
     try {
-      final tracks = readFloorTracks(await file.readAsBytes());
-      plan = buildChainPlan([for (final s in widget.steps) s.clip], tracks);
-    } on FormatException catch (e) {
-      debugPrint('Visor 3D: archivo ilegible: $e');
+      plan = await _readPlan(file);
+    } on Object catch (e) {
+      debugPrint('Visor 3D: archivo ilegible, se borra: $e');
+      await _evict();
+      _fail(_animationError);
+      return;
+    }
+    if (!plan.playable) {
       if (mounted) setState(() => _fatalError = _animationError);
       return;
     }
-    if (!mounted) return;
-    if (!plan.playable) {
-      setState(() => _fatalError = _animationError);
-      return;
+    try {
+      await _openViewer(plan, file);
+    } on Object catch (e) {
+      debugPrint('Visor 3D: no se pudo abrir el visor: $e');
+      _fail(_animationError);
     }
+  }
+
+  Future<ChainPlan> _readPlan(File file) async {
+    final tracks = readFloorTracks(await file.readAsBytes());
+    return buildChainPlan([for (final s in widget.steps) s.clip], tracks);
+  }
+
+  Future<void> _evict() async {
+    try {
+      await widget._evictFile(_url);
+    } on FileSystemException catch (e) {
+      debugPrint('Visor 3D: no se pudo borrar el archivo ilegible: $e');
+    }
+  }
+
+  Future<void> _openViewer(ChainPlan plan, File file) async {
     final server = await ViewerServer.start(loadAsset: rootBundle.load, animationFile: file);
     if (!mounted) {
       await server.close();
       return;
     }
-    final controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.transparent)
-      ..addJavaScriptChannel(viewerChannel, onMessageReceived: (m) => _onEvent(m.message))
-      ..loadRequest(server.pageUri);
+    _server = server;
+    final controller = WebViewController();
+    await controller.setJavaScriptMode(JavaScriptMode.unrestricted);
+    await controller.setBackgroundColor(Colors.transparent);
+    await controller.addJavaScriptChannel(viewerChannel, onMessageReceived: (m) => _onEvent(m.message));
+    await controller.setNavigationDelegate(NavigationDelegate(onWebResourceError: _onWebError));
+    if (!mounted || _server != server) return;
     setState(() {
       _plan = plan;
-      _server = server;
       _controller = controller;
     });
+    _startWatchdog = Timer(_startLimit, () => _fail(_animationError));
+    await controller.loadRequest(server.pageUri);
+  }
+
+  void _onWebError(WebResourceError error) {
+    debugPrint('Visor 3D: error de la página: ${error.description}');
+    if (error.isForMainFrame ?? true) _fail(_animationError);
   }
 
   void _onEvent(String raw) {
@@ -124,6 +174,7 @@ class _ExerciseSequenceViewerState extends State<ExerciseSequenceViewer> {
       case ViewerReady():
         _run(loadCommand(_plan!));
       case ViewerPlaying(:final index):
+        _startWatchdog?.cancel();
         setState(() {
           _loading = false;
           _index = index;
@@ -131,8 +182,23 @@ class _ExerciseSequenceViewerState extends State<ExerciseSequenceViewer> {
         widget.onStepChange?.call(index);
       case ViewerError(:final message):
         debugPrint('Visor 3D: $message');
-        setState(() => _fatalError = _animationError);
+        _fail(_animationError);
     }
+  }
+
+  void _fail(String message) {
+    if (!mounted) return;
+    _stopViewer();
+    setState(() => _retryError = message);
+  }
+
+  void _stopViewer() {
+    _startWatchdog?.cancel();
+    _startWatchdog = null;
+    final server = _server;
+    _server = null;
+    _controller = null;
+    if (server != null) unawaited(server.close());
   }
 
   Future<void> _run(String command) async {
@@ -158,8 +224,8 @@ class _ExerciseSequenceViewerState extends State<ExerciseSequenceViewer> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loadError case final message?) {
-      return LoadErrorView(message: message, onRetry: _prepare);
+    if (_retryError case final message?) {
+      return LoadErrorView(message: message, onRetry: _restart);
     }
     if (_fatalError case final message?) {
       return Center(
