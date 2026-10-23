@@ -141,4 +141,31 @@ void main() {
     expect((await a).path, (await b).path);
     expect(calls, 1);
   });
+
+  // Si el archivo guardado resulta ilegible, se borra y el siguiente intento
+  // lo vuelve a bajar en vez de reutilizar el roto para siempre.
+  test('evict borra el archivo guardado y la siguiente vez se baja de nuevo', () async {
+    var calls = 0;
+    final cache = AnimationFileCache(
+      directory: dir,
+      client: MockClient((_) async {
+        calls++;
+        return http.Response.bytes([calls], 200);
+      }),
+    );
+
+    final first = await cache.fileFor(_url);
+    await cache.evict(_url);
+    expect(first.existsSync(), isFalse);
+
+    final again = await cache.fileFor(_url);
+    expect(calls, 2);
+    expect(await again.readAsBytes(), [2]);
+  });
+
+  test('evict de algo que no está guardado no falla', () async {
+    final cache = AnimationFileCache(directory: dir, client: MockClient((_) async => http.Response('', 200)));
+
+    await cache.evict(_url);
+  });
 }
