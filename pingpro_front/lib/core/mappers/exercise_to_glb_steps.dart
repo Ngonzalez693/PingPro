@@ -19,7 +19,23 @@ import 'package:pingpro_front/core/services/model3d_catalog.dart';
 import 'package:pingpro_front/core/stroke_codes.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/sequence_step_model.dart';
-import 'package:pingpro_front/widgets/exercise_glb_sequence_view.dart';
+
+/// Un paso de la secuencia: qué .glb mostrar y qué clip de ese archivo.
+///
+/// Hoy todos los pasos comparten `url` (un único .glb con todas las
+/// animaciones): el visor lo baja una vez y va cambiando de clip.
+class GlbStep {
+  final String url;
+  final String clip;
+
+  const GlbStep({required this.url, required this.clip});
+
+  @override
+  bool operator ==(Object other) => other is GlbStep && other.url == url && other.clip == clip;
+
+  @override
+  int get hashCode => Object.hash(url, clip);
+}
 
 const _serveClips = [
   AnimationClip.saquePendulo,

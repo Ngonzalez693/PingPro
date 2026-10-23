@@ -1,7 +1,7 @@
 name: pingpro_front
 description: "Ping Pro Frontend"
 publish_to: 'none'
-version: 0.8.12+15
+version: 0.8.13+16
 
 environment:
   sdk: ^3.7.0
@@ -15,13 +15,13 @@ dependencies:
   firebase_auth: ^6.0.2
   http: ^1.5.0
   fl_chart: ^0.66.2
-  model_viewer_plus: ^1.9.3
   package_info_plus: ^9.0.1
   url_launcher: ^6.3.2
   shared_preferences: ^2.5.3
   flutter_local_notifications: ^19.5.0
   timezone: ^0.10.1
   flutter_timezone: ^5.1.1
+  webview_flutter: ^4.13.0
 
 dev_dependencies:
   flutter_test:
@@ -33,6 +33,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/viewer/
     - assets/fonts/OFL.txt
     - .env
   fonts:

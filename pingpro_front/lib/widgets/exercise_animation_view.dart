@@ -1,7 +1,7 @@
 // Animación 3D de un ejercicio, dentro de un recuadro con esquinas.
 //
 // Traduce la secuencia a animaciones (buildGlbStepsForExercise) y las
-// reproduce con ExerciseGlbSequenceView. Mientras carga enseña un indicador, y
+// reproduce con ExerciseSequenceViewer. Mientras carga enseña un indicador, y
 // si el archivo de animaciones no se encuentra o falla al cargar, un aviso.
 //
 // La usan el detalle de un ejercicio y la vista previa al crearlo. Solo mira la
@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/mappers/exercise_to_glb_steps.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
-import 'package:pingpro_front/widgets/exercise_glb_sequence_view.dart';
+import 'package:pingpro_front/widgets/exercise_sequence_viewer.dart';
 
 class ExerciseAnimationView extends StatefulWidget {
   final ExerciseModel exercise;
@@ -61,6 +61,6 @@ class _ExerciseAnimationViewState extends State<ExerciseAnimationView> {
         ),
       );
     }
-    return ExerciseGlbSequenceView(steps: steps);
+    return ExerciseSequenceViewer(steps: steps);
   }
 }
