@@ -103,6 +103,9 @@ function startStep(index, offsetX, offsetZ) {
   action.clampWhenFinished = true;
   action.reset().play();
   if (current) current.action.crossFadeTo(action, BLEND, false);
+  // Sin esto la acción nueva pesa 1 hasta la siguiente actualización y, en
+  // ese fotograma, el jugador saltaría a medio camino del inicio del clip.
+  mixer.update(0);
   const track = floorTracks.get(step.clip);
   current = { index, action, clip, offsetX, offsetZ, interpolant: track?.createInterpolant() };
   entries.push(current);
