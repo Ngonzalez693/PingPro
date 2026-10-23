@@ -110,6 +110,31 @@ void main() {
     expect(readFloorTracks(glb, rootBone: 'hips')['D']!.endX, 2);
   });
 
+  // Un .glb bien formado por fuera pero con datos inesperados también es un
+  // archivo ilegible para el visor, no un fallo de la app.
+  test('un glb sin bloque binario da FormatException', () {
+    final full = _glb(['root.x'], {
+      'A': [_translation(0, [0, 1], [[0, 0, 0], [1, 0, 1]])],
+    });
+    final jsonLength = ByteData.sublistView(full).getUint32(12, Endian.little);
+    final withoutBin = Uint8List.fromList(full.sublist(0, 20 + jsonLength));
+    ByteData.sublistView(withoutBin).setUint32(8, withoutBin.length, Endian.little);
+
+    expect(() => readFloorTracks(withoutBin), throwsFormatException);
+  });
+
+  test('una animación sin samplers da FormatException', () {
+    final full = _glb(['root.x'], {
+      'A': [_translation(0, [0, 1], [[0, 0, 0], [1, 0, 1]])],
+    });
+    final data = ByteData.sublistView(full);
+    final jsonLength = data.getUint32(12, Endian.little);
+    final json = utf8.decode(full.sublist(20, 20 + jsonLength)).replaceFirst('"samplers"', '"sampl3rs"');
+    final patched = Uint8List.fromList([...full.sublist(0, 20), ...utf8.encode(json), ...full.sublist(20 + jsonLength)]);
+
+    expect(() => readFloorTracks(patched), throwsFormatException);
+  });
+
   test('un archivo que no es glb da FormatException', () {
     expect(() => readFloorTracks(Uint8List.fromList(utf8.encode('no soy un glb, para nada'))), throwsFormatException);
   });
