@@ -11,7 +11,8 @@
 // Solo responde a una lista fija de nombres: la ruta pedida nunca se usa
 // para construir una ruta de archivo.
 import 'dart:io';
-import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 
 const _html = 'text/html; charset=utf-8';
 const _javascript = 'text/javascript; charset=utf-8';
@@ -39,7 +40,7 @@ class ViewerServer {
   }) async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     final viewer = ViewerServer._(server, loadAsset, animationFile);
-    server.listen(viewer._handle);
+    server.listen(viewer._handle, onError: (Object e) => debugPrint('Visor 3D: servidor local: $e'));
     return viewer;
   }
 
@@ -47,9 +48,35 @@ class ViewerServer {
 
   Future<void> close() => _server.close(force: true);
 
+  // Cada apertura usa otro puerto, así que para el WebView cada vez es otro
+  // sitio: sin no-store guardaría una copia del archivo (~4 MB) por apertura.
   Future<void> _handle(HttpRequest request) async {
     final response = request.response;
-    final path = request.uri.path;
+    response.headers.set(HttpHeaders.cacheControlHeader, 'no-store');
+    try {
+      await _respond(request.uri.path, response);
+    } on Object catch (e) {
+      debugPrint('Visor 3D: no se pudo servir ${request.uri.path}: $e');
+      _markFailed(response);
+    }
+    try {
+      await response.close();
+    } on Object catch (e) {
+      debugPrint('Visor 3D: conexión cerrada a medias: $e');
+    }
+  }
+
+  // Si el cuerpo ya empezó a salir, el estado no se puede cambiar: la página
+  // verá la respuesta cortada y lo tratará como error de carga.
+  void _markFailed(HttpResponse response) {
+    try {
+      response.statusCode = HttpStatus.internalServerError;
+    } on StateError catch (e) {
+      debugPrint('Visor 3D: respuesta ya empezada, se corta: $e');
+    }
+  }
+
+  Future<void> _respond(String path, HttpResponse response) async {
     if (path == '/animations.glb' && await _animationFile.exists()) {
       response.headers.set(HttpHeaders.contentTypeHeader, _glb);
       await response.addStream(_animationFile.openRead());
@@ -60,6 +87,5 @@ class ViewerServer {
     } else {
       response.statusCode = HttpStatus.notFound;
     }
-    await response.close();
   }
 }
