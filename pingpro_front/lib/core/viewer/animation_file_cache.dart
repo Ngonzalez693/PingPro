@@ -3,8 +3,10 @@
 //
 // Se guarda por URL: si se suben animaciones mejores, la URL cambia (las de
 // Cloudinary llevan versión), se baja el nuevo y se borra el anterior, así la
-// carpeta nunca crece. La carpeta es la de caché de la app (en Android,
-// Directory.systemTemp): si el sistema la vacía, simplemente se vuelve a bajar.
+// carpeta nunca crece. La carpeta es la de caché de la app
+// (getApplicationCacheDirectory) y no Directory.systemTemp: en Android esa es
+// code_cache, que se borra en cada actualización de la app. Si el sistema vacía
+// la caché por falta de espacio, simplemente se vuelve a bajar.
 //
 // La descarga se escribe primero en un .part y solo al terminar se renombra:
 // un archivo a medias (red cortada, app cerrada) nunca se usa.
@@ -13,6 +15,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'package:pingpro_front/core/services/api_client.dart';
 
 /// El servidor respondió, pero sin el archivo. No es un error de conexión.
@@ -26,7 +29,9 @@ class AnimationDownloadException implements Exception {
 }
 
 class AnimationFileCache {
-  final Directory _directory;
+  /// La de los tests; si es null se usa la caché de la app.
+  final Directory? _fixedDirectory;
+  Directory? _directory;
   final http.Client _client;
 
   /// Cuánto puede tardar en llegar el siguiente trozo del archivo: el límite
@@ -36,7 +41,7 @@ class AnimationFileCache {
   final Map<String, Future<File>> _inFlight = {};
 
   AnimationFileCache({Directory? directory, http.Client? client, this.idleTimeout = requestTimeout})
-      : _directory = directory ?? Directory('${Directory.systemTemp.path}/pingpro_animations'),
+      : _fixedDirectory = directory,
         _client = client ?? apiClient;
 
   static final AnimationFileCache instance = AnimationFileCache();
@@ -58,16 +63,19 @@ class AnimationFileCache {
   /// Borra el archivo guardado de [url] (p. ej. porque resultó ilegible), para
   /// que el siguiente [fileFor] lo vuelva a bajar.
   Future<void> evict(String url) async {
-    final file = _fileFor(url);
+    final file = await _fileFor(url);
     if (await file.exists()) await file.delete();
   }
 
-  File _fileFor(String url) => File('${_directory.path}/${_fnv1a(url)}.glb');
+  Future<Directory> _folder() async =>
+      _directory ??= _fixedDirectory ?? Directory('${(await getApplicationCacheDirectory()).path}/pingpro_animations');
+
+  Future<File> _fileFor(String url) async => File('${(await _folder()).path}/${_fnv1a(url)}.glb');
 
   Future<File> _obtain(String url) async {
-    final file = _fileFor(url);
+    final file = await _fileFor(url);
     if (await file.exists()) return file;
-    await _directory.create(recursive: true);
+    await (await _folder()).create(recursive: true);
     final part = File('${file.path}.part');
     try {
       await _download(url, part);
@@ -99,10 +107,11 @@ class AnimationFileCache {
     }
   }
 
-  // Se compara por nombre de archivo y no por ruta: al listar, Windows usa   // como separador y la ruta no coincidiría con la que se armó con /.
+  // Se compara por nombre de archivo y no por ruta: al listar, Windows separa
+  // con \ y la ruta no coincidiría con la que se armó con /.
   Future<void> _deleteOthers({required File keep}) async {
     final keepName = keep.uri.pathSegments.last;
-    await for (final entity in _directory.list()) {
+    await for (final entity in (await _folder()).list()) {
       final name = entity.uri.pathSegments.last;
       if (entity is File && name != keepName && (name.endsWith('.glb') || name.endsWith('.part'))) {
         await entity.delete();
