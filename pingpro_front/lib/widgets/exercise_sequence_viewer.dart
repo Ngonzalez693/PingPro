@@ -211,10 +211,16 @@ class _ExerciseSequenceViewerState extends State<ExerciseSequenceViewer> {
     }
   }
 
-  void _goTo(int index) {
+  // El índice se adelanta aquí y no al llegar el aviso de la página: con
+  // varios toques seguidos, cada uno avanza desde el anterior.
+  void _goTo(int index, {bool backwards = false}) {
     final count = widget.steps.length;
-    setState(() => _playing = true);
-    _run(goToCommand((index + count) % count));
+    final target = (index + count) % count;
+    setState(() {
+      _playing = true;
+      _index = target;
+    });
+    _run(goToCommand(target, backwards: backwards));
   }
 
   void _playPause() {
@@ -256,7 +262,7 @@ class _ExerciseSequenceViewerState extends State<ExerciseSequenceViewer> {
         child: Row(
           children: [
             IconButton(
-              onPressed: () => _goTo(_index - 1),
+              onPressed: () => _goTo(_index - 1, backwards: true),
               icon: const Icon(Icons.skip_previous, color: Colors.white),
             ),
             IconButton(

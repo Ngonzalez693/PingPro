@@ -68,4 +68,25 @@ void main() {
       throwsA(anyOf(isA<SocketException>(), isA<http.ClientException>())),
     );
   });
+
+  // Cada apertura usa otro puerto: si el WebView guardara las respuestas,
+  // acumularía una copia del archivo de animaciones por cada vez.
+  test('ninguna respuesta se guarda en la caché del WebView', () async {
+    for (final path in ['/', '/three.module.min.js', '/animations.glb', '/nada.js']) {
+      final r = await http.get(at(path));
+      expect(r.headers['cache-control'], 'no-store', reason: path);
+    }
+  });
+
+  test('si falla un asset responde 500 y el servidor sigue', () async {
+    final broken = await ViewerServer.start(
+      loadAsset: (_) async => throw StateError('asset roto'),
+      animationFile: glb,
+    );
+    final uri = broken.pageUri;
+
+    expect((await http.get(uri)).statusCode, 500);
+    expect((await http.get(uri.replace(path: '/animations.glb'))).statusCode, 200);
+    await broken.close();
+  });
 }

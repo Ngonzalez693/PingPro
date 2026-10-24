@@ -47,8 +47,14 @@ void main() {
       expect(command, contains('"clip":"Globo"'));
     });
 
-    test('goToCommand', () {
-      expect(goToCommand(2), 'ppGoTo(2)');
+    test('goToCommand busca hacia delante por defecto', () {
+      expect(goToCommand(2), 'ppGoTo(2, 1)');
+    });
+
+    // Con ◀ los pasos sin clip se saltan hacia atrás; si no, se volvería al
+    // mismo paso y ◀ se quedaría atascado.
+    test('goToCommand hacia atrás', () {
+      expect(goToCommand(2, backwards: true), 'ppGoTo(2, -1)');
     });
 
     test('pausa y reanudar', () {
