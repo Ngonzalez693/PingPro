@@ -54,4 +54,6 @@ String loadCommand(ChainPlan plan) => 'ppLoad(${jsonEncode(plan.toJson())})';
 const pauseCommand = 'ppPause()';
 const resumeCommand = 'ppResume()';
 
-String goToCommand(int index) => 'ppGoTo($index)';
+/// [backwards] decide hacia dónde se buscan los pasos que se pueden
+/// reproducir si [index] no lo es (con ◀, hacia atrás).
+String goToCommand(int index, {bool backwards = false}) => 'ppGoTo($index, ${backwards ? -1 : 1})';

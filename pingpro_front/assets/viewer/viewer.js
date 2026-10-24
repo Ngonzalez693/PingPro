@@ -8,8 +8,11 @@
 //   hay que desplazar cada clip; al repetir el ejercicio se vuelve al inicio.
 // - La posición en el suelo (x, z del hueso root.x) la pone el visor y no los
 //   clips: mientras dos clips se funden, se mezclan sus posiciones ya
-//   desplazadas con los mismos pesos que el crossfade. Si se desplazara el
-//   modelo entero al cambiar de clip, el que se está yendo daría un salto.
+//   desplazadas con los mismos pesos que la pose. Si se desplazara el modelo
+//   entero al cambiar de clip, el que se está yendo daría un salto.
+// - Los pesos de la mezcla los lleva el visor (weightOf) y no crossFadeTo de
+//   three.js: este hace bajar al clip que se va siempre desde 1, y si se salta
+//   de paso a mitad de una mezcla, la pose y el suelo darían un tirón.
 // - Cámara fija, encuadrada una vez con la zona del suelo de una pasada.
 //
 // Mensajes a la app por el canal PingPro (ver lib/core/viewer/viewer_bridge.dart).
@@ -24,6 +27,8 @@ const CAMERA_THETA = 0;
 const CAMERA_PHI = THREE.MathUtils.degToRad(70);
 const CAMERA_FOV = 35;
 const FRAME_MARGIN = 1.15;
+const MIN_ZOOM = 0.3;
+const MAX_ZOOM = 2.5;
 
 const send = (msg) => window.PingPro?.postMessage(JSON.stringify(msg));
 window.addEventListener('error', (e) => send({ type: 'error', message: String(e.message) }));
@@ -46,10 +51,15 @@ const clips = new Map(); // nombre → AnimationClip
 const floorTracks = new Map(); // nombre → pista de posición del root.x
 
 let plan = null;
-// Clips que todavía pesan en la mezcla: { index, action, clip, offsetX, offsetZ, track }.
+// Clips que todavía pesan en la mezcla: { index, action, clip, offsetX, offsetZ,
+// interpolant, fadeFrom, fadeTo, fadeStart, advancing }.
 let entries = [];
 let current = null;
 const floor = { x: 0, z: 0 };
+// Reloj de las mezclas: se para con la pausa, igual que las animaciones.
+let blendTime = 0;
+// Zona encuadrada, para volver a encuadrar si cambia el tamaño del visor.
+let framedBounds = null;
 
 function resize() {
   const w = window.innerWidth;
@@ -57,6 +67,7 @@ function resize() {
   renderer.setSize(w, h, false);
   camera.aspect = w / Math.max(h, 1);
   camera.updateProjectionMatrix();
+  if (framedBounds) frameCamera(framedBounds);
 }
 window.addEventListener('resize', resize);
 resize();
@@ -65,6 +76,9 @@ new GLTFLoader().load(
   './animations.glb',
   (gltf) => {
     model = gltf.scene;
+    // Oculto hasta encuadrar la cámara en ppLoad: si no, se vería un instante
+    // en la pose de reposo desde la cámara por defecto.
+    model.visible = false;
     scene.add(model);
     model.updateMatrixWorld(true);
     rootBone = model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(ROOT_BONE));
@@ -84,10 +98,12 @@ new GLTFLoader().load(
   (e) => send({ type: 'error', message: String(e?.message ?? e) }),
 );
 
-function playableFrom(index) {
+// Primer paso reproducible desde index, buscando hacia delante (direction 1)
+// o hacia atrás (-1, para ◀).
+function playableFrom(index, direction = 1) {
   const n = plan.steps.length;
   for (let k = 0; k < n; k++) {
-    const i = (index + k) % n;
+    const i = (((index + direction * k) % n) + n) % n;
     if (plan.steps[i].playable && clips.has(plan.steps[i].clip)) return i;
   }
   return -1;
@@ -102,14 +118,30 @@ function startStep(index, offsetX, offsetZ) {
   action.setLoop(THREE.LoopOnce, 1);
   action.clampWhenFinished = true;
   action.reset().play();
-  if (current) current.action.crossFadeTo(action, BLEND, false);
-  // Sin esto la acción nueva pesa 1 hasta la siguiente actualización y, en
-  // ese fotograma, el jugador saltaría a medio camino del inicio del clip.
-  mixer.update(0);
+  // Lo que sonaba baja desde el peso que tenga ahora; el primer paso entra
+  // entero y los demás suben desde 0.
+  for (const e of entries) fade(e, weightOf(e), 0);
   const track = floorTracks.get(step.clip);
   current = { index, action, clip, offsetX, offsetZ, interpolant: track?.createInterpolant() };
+  fade(current, entries.length === 0 ? 1 : 0, 1);
   entries.push(current);
+  applyWeights();
   send({ type: 'playing', index });
+}
+
+function fade(entry, from, to) {
+  entry.fadeFrom = from;
+  entry.fadeTo = to;
+  entry.fadeStart = blendTime;
+}
+
+function weightOf(entry) {
+  const t = Math.min(Math.max((blendTime - entry.fadeStart) / BLEND, 0), 1);
+  return entry.fadeFrom + (entry.fadeTo - entry.fadeFrom) * t;
+}
+
+function applyWeights() {
+  for (const e of entries) e.action.setEffectiveWeight(weightOf(e));
 }
 
 function advanceIfEnding() {
@@ -144,7 +176,7 @@ function placeOnFloor() {
   let z = 0;
   let total = 0;
   for (const e of entries) {
-    const w = e.action.getEffectiveWeight();
+    const w = weightOf(e);
     if (w <= 0 || !e.interpolant) continue;
     const p = e.interpolant.evaluate(Math.min(e.action.time, e.clip.duration));
     x += w * (p[0] + e.offsetX);
@@ -161,7 +193,7 @@ function placeOnFloor() {
 
 function dropFinishedEntries() {
   entries = entries.filter((e) => {
-    if (e === current || e.action.getEffectiveWeight() > 0) return true;
+    if (e === current || weightOf(e) > 0) return true;
     e.action.stop();
     mixer.uncacheClip(e.clip);
     return false;
@@ -181,14 +213,22 @@ function frameCamera(bounds) {
   }
   const center = box.getCenter(new THREE.Vector3());
   const radius = box.getBoundingSphere(new THREE.Sphere()).radius;
-  const distance = (radius * FRAME_MARGIN) / Math.sin(THREE.MathUtils.degToRad(CAMERA_FOV) / 2);
+  // El ángulo más estrecho de los dos: en un visor más alto que ancho manda
+  // el horizontal, y con solo el vertical se cortarían los lados.
+  const vFov = THREE.MathUtils.degToRad(CAMERA_FOV);
+  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
+  const distance = (radius * FRAME_MARGIN) / Math.sin(Math.min(vFov, hFov) / 2);
   const offset = new THREE.Vector3().setFromSphericalCoords(distance, CAMERA_PHI, CAMERA_THETA);
   camera.position.copy(center).add(offset);
+  // Límites del zoom con los dedos: más allá el modelo desaparecería.
+  controls.minDistance = distance * MIN_ZOOM;
+  controls.maxDistance = distance * MAX_ZOOM;
   camera.near = Math.max(distance / 100, 0.01);
-  camera.far = distance * 10;
+  camera.far = distance * MAX_ZOOM + radius * 2;
   camera.updateProjectionMatrix();
   controls.target.copy(center);
   controls.update();
+  framedBounds = bounds;
 }
 
 window.ppLoad = (newPlan) => {
@@ -204,14 +244,15 @@ window.ppLoad = (newPlan) => {
     return;
   }
   frameCamera(plan.bounds);
+  model.visible = true;
   mixer.timeScale = 1;
   startStep(first, plan.steps[first].offsetX, plan.steps[first].offsetZ);
 };
 
 // Saltar a un paso continúa desde donde está el jugador.
-window.ppGoTo = (index) => {
+window.ppGoTo = (index, direction = 1) => {
   if (!plan) return;
-  const i = playableFrom(index);
+  const i = playableFrom(index, direction);
   if (i === -1) return;
   const step = plan.steps[i];
   startStep(i, floor.x - step.startX, floor.z - step.startZ);
@@ -230,6 +271,8 @@ function tick() {
   requestAnimationFrame(tick);
   const dt = clock.getDelta();
   if (mixer && plan && current) {
+    blendTime += dt * mixer.timeScale;
+    applyWeights();
     mixer.update(dt);
     advanceIfEnding();
     placeOnFloor();
