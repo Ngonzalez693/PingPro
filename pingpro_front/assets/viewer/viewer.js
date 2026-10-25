@@ -14,6 +14,9 @@
 //   three.js: este hace bajar al clip que se va siempre desde 1, y si se salta
 //   de paso a mitad de una mezcla, la pose y el suelo darían un tirón.
 // - Cámara fija, encuadrada una vez con la zona del suelo de una pasada.
+// - La mesa (empaquetada, ver placeTable) va delante de la posición de espera
+//   grabada, a escala del jugador y a lo ancho de la zona por la que se mueve
+//   en el ejercicio, como referencia de dónde está. La cámara se centra en ella.
 //
 // Mensajes a la app por el canal PingPro (ver lib/core/viewer/viewer_bridge.dart).
 import * as THREE from 'three';
@@ -22,13 +25,43 @@ import { OrbitControls } from './OrbitControls.js';
 
 const BLEND = 0.25;
 const ROOT_BONE = 'root.x';
-// Ángulos de cámara del visor anterior: de frente y algo desde arriba.
+// De frente al jugador, al otro lado de la mesa y algo por encima de ella.
+// Elegido a ojo en el teléfono: más arriba el jugador se ve aplastado; más
+// abajo la mesa tapa más las piernas.
 const CAMERA_THETA = 0;
-const CAMERA_PHI = THREE.MathUtils.degToRad(70);
+const CAMERA_PHI = THREE.MathUtils.degToRad(65);
 const CAMERA_FOV = 35;
-const FRAME_MARGIN = 1.15;
+// Menos de 1: la cámara se acerca un poco más de lo que pide la zona de la
+// cadera, para que el jugador se vea más grande; los brazos los cubre
+// ARM_REACH_M.
+const FRAME_MARGIN = 0.95;
 const MIN_ZOOM = 0.3;
 const MAX_ZOOM = 2.5;
+// La zona del suelo es la de la cadera: los brazos y la paleta llegan más
+// lejos, y sin este margen se salían de la imagen en los golpes de los lados.
+const ARM_REACH_M = 0.3;
+
+// La mesa. La captura se grabó con una mesa real, pero solo el jugador llevaba
+// marcadores: dónde estaba la mesa no viene en el archivo. Se coloca delante de
+// la posición de espera (inicio del clip PosInicial) y, a lo ancho, en el medio
+// de la zona que recorre el ejercicio: en un ejercicio de juego de pies el
+// jugador cubre la mesa de lado a lado. Las medidas, en metros, se ajustaron
+// mirando los ejercicios en el teléfono.
+const ANCHOR_CLIP = 'PosInicial';
+const PLAYER_HEIGHT_M = 1.75; // altura de la persona que grabó los golpes
+const TABLE_GAP_M = 0.8; // de la posición de espera a la línea de fondo
+// Lo mínimo entre la cadera y la línea de fondo. Al encadenar golpes (sobre
+// todo los pivotes) el jugador avanza, y sin este margen atravesaba la mesa.
+const TABLE_CLEARANCE_M = 0.3;
+// Corrimiento de la mesa hacia la derecha del jugador: se espera algo cargado
+// hacia el lado del revés, no en el centro exacto.
+const TABLE_SIDE_M = 0.3;
+// Más ancha que la real (1,525 m): elegida a ojo en el teléfono, al lado del
+// jugador se ve más natural.
+const TABLE_WIDTH_FACTOR = 1.5;
+// Toda la mesa algo más chica que a escala del jugador: con la cámara más
+// cerca, así la mesa se ve igual y el jugador más grande.
+const TABLE_SCALE = 0.9;
 
 const send = (msg) => window.PingPro?.postMessage(JSON.stringify(msg));
 window.addEventListener('error', (e) => send({ type: 'error', message: String(e.message) }));
@@ -47,6 +80,15 @@ const clock = new THREE.Clock();
 let mixer = null;
 let model = null;
 let rootBone = null;
+let table = null;
+let tableSize = null;
+let tablePlaced = false;
+// Puntos de la mitad de la mesa del jugador (línea de fondo y red), en la
+// escena: lo que la cámara tiene que mostrar de la mesa.
+let tableMarks = [];
+// Medidas del jugador en reposo (escena): altura y nivel de los pies.
+let playerHeight = 0;
+let feetY = 0;
 const clips = new Map(); // nombre → AnimationClip
 const floorTracks = new Map(); // nombre → pista de posición del root.x
 
@@ -86,6 +128,10 @@ new GLTFLoader().load(
       send({ type: 'error', message: 'El archivo no trae el hueso ' + ROOT_BONE });
       return;
     }
+    // En reposo, antes de animar: con esto se escala la mesa.
+    const rest = new THREE.Box3().setFromObject(model, true);
+    playerHeight = rest.max.y - rest.min.y;
+    feetY = rest.min.y;
     mixer = new THREE.AnimationMixer(model);
     for (const clip of gltf.animations) {
       clips.set(clip.name, clip);
@@ -97,6 +143,85 @@ new GLTFLoader().load(
   undefined,
   (e) => send({ type: 'error', message: String(e?.message ?? e) }),
 );
+
+// La mesa es opcional: si no carga, el visor sigue solo con el jugador.
+new GLTFLoader().load(
+  './table.glb',
+  (gltf) => {
+    table = gltf.scene;
+    // Medida una sola vez: después placeTable la gira y la escala.
+    tableSize = new THREE.Box3().setFromObject(table).getSize(new THREE.Vector3());
+    table.visible = false;
+    makeUnlit(table);
+    scene.add(table);
+    // Si el ejercicio ya está encuadrado, la mesa llegó tarde: se coloca ahora.
+    if (!framedBounds) return;
+    placeTable();
+    frameCamera(framedBounds);
+  },
+  undefined,
+  (e) => console.warn('No se pudo cargar la mesa', e),
+);
+
+// Colores planos como el jugador: la escena no tiene luces, y la transmisión
+// de la red es cara en un teléfono.
+function makeUnlit(object) {
+  object.traverse((o) => {
+    if (!o.isMesh) return;
+    const m = o.material;
+    o.material = new THREE.MeshBasicMaterial({
+      map: m.map,
+      color: m.color,
+      alphaMap: m.alphaMap,
+      transparent: m.transparent,
+      opacity: m.opacity,
+      side: m.side,
+      depthWrite: !m.transparent,
+    });
+    m.dispose();
+  });
+}
+
+// Coloca la mesa para el ejercicio de plan; hacen falta el jugador y la mesa,
+// que cargan en paralelo.
+function placeTable() {
+  const anchor = floorTracks.get(ANCHOR_CLIP);
+  if (!table || !rootBone || !anchor || !plan?.bounds || playerHeight <= 0) return;
+  const parent = rootBone.parent;
+  model.updateMatrixWorld(true);
+  const p = anchor.createInterpolant().evaluate(0);
+  const stance = parent.localToWorld(new THREE.Vector3(p[0], 0, p[2]));
+  // Hacia dónde mira el jugador: +z del espacio del esqueleto, en la escena.
+  const ahead = parent.localToWorld(new THREE.Vector3(p[0], 0, p[2] + 1)).sub(stance).setY(0).normalize();
+  const right = new THREE.Vector3(-ahead.z, 0, ahead.x);
+  const b = plan.bounds;
+  const midX = (b.minX + b.maxX) / 2;
+  const side = parent.localToWorld(new THREE.Vector3(midX, 0, b.minZ)).sub(stance).dot(right);
+  const perMetre = playerHeight / PLAYER_HEIGHT_M;
+  // Hasta dónde avanza la cadera en el ejercicio, en metros desde la espera.
+  const reach = parent.localToWorld(new THREE.Vector3(midX, 0, b.maxZ)).sub(stance).dot(ahead) / perMetre;
+  const gap = Math.max(TABLE_GAP_M, reach + TABLE_CLEARANCE_M);
+  // La mesa viene en metros con el largo en x: se gira para que el largo
+  // apunte hacia donde mira el jugador y se escala a su tamaño.
+  const size = tableSize;
+  const tableScale = perMetre * TABLE_SCALE;
+  const longAxis = size.x >= size.z ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 0, 1);
+  table.quaternion.setFromUnitVectors(longAxis, ahead);
+  // La escala va en los ejes propios de la mesa: el ancho es el que no es el largo.
+  const widthScale = tableScale * TABLE_WIDTH_FACTOR;
+  table.scale.set(longAxis.x ? tableScale : widthScale, tableScale, longAxis.z ? tableScale : widthScale);
+  const halfLength = (Math.max(size.x, size.z) / 2) * tableScale;
+  table.position
+    .copy(stance)
+    .addScaledVector(ahead, gap * perMetre + halfLength)
+    .addScaledVector(right, side + TABLE_SIDE_M * perMetre)
+    .setY(feetY);
+  const top = new THREE.Box3().setFromObject(table).max.y;
+  tableMarks = [table.position.clone().addScaledVector(ahead, -halfLength), table.position.clone()];
+  for (const m of tableMarks) m.setY(top);
+  tablePlaced = true;
+  table.visible = model.visible;
+}
 
 // Primer paso reproducible desde index, buscando hacia delante (direction 1)
 // o hacia atrás (-1, para ◀).
@@ -200,6 +325,56 @@ function dropFinishedEntries() {
   });
 }
 
+function cornersOf(box) {
+  const corners = [];
+  for (const x of [box.min.x, box.max.x]) {
+    for (const y of [box.min.y, box.max.y]) {
+      for (const z of [box.min.z, box.max.z]) corners.push(new THREE.Vector3(x, y, z));
+    }
+  }
+  return corners;
+}
+
+// La distancia más corta a la que las esquinas caben en la imagen: las de
+// `wide` a lo ancho y las de `tall` a lo alto. Una esfera alrededor de la caja
+// dejaba al jugador diminuto: desde arriba la caja se ve mucho más chata que
+// su diagonal.
+function fitDistance({ wide, tall }, center, toCamera) {
+  const tanV = Math.tan(THREE.MathUtils.degToRad(CAMERA_FOV) / 2);
+  const tanH = tanV * camera.aspect;
+  const side = new THREE.Vector3().crossVectors(camera.up, toCamera).normalize();
+  const up = new THREE.Vector3().crossVectors(toCamera, side);
+  const needed = (corners, axis, tan) =>
+    corners.reduce((d, c) => {
+      const r = c.clone().sub(center);
+      return Math.max(d, Math.abs(r.dot(axis)) / tan + r.dot(toCamera));
+    }, 0);
+  return Math.max(needed(wide, side, tanH), needed(tall, up, tanV));
+}
+
+// Desde arriba, las esquinas de abajo (más cerca de la cámara) bajan mucho más
+// en la imagen de lo que suben las de arriba: centrado en la caja, quedaba
+// media imagen vacía encima del jugador. Se corre el centro hacia arriba o
+// hacia abajo hasta que sobra lo mismo por los dos lados; mueve `center`.
+function balanceVertically(corners, center, toCamera) {
+  const { tall } = corners;
+  const tanV = Math.tan(THREE.MathUtils.degToRad(CAMERA_FOV) / 2);
+  const side = new THREE.Vector3().crossVectors(camera.up, toCamera).normalize();
+  const up = new THREE.Vector3().crossVectors(toCamera, side);
+  let distance = fitDistance(corners, center, toCamera);
+  for (let i = 0; i < 4; i++) {
+    // Altura en la imagen de cada esquina, de -1 (abajo) a 1 (arriba).
+    const heights = tall.map((c) => {
+      const r = c.clone().sub(center);
+      return r.dot(up) / ((distance - r.dot(toCamera)) * tanV);
+    });
+    const middle = (Math.min(...heights) + Math.max(...heights)) / 2;
+    center.addScaledVector(up, middle * distance * tanV);
+    distance = fitDistance(corners, center, toCamera);
+  }
+  return distance;
+}
+
 function frameCamera(bounds) {
   model.updateMatrixWorld(true);
   const parent = rootBone.parent;
@@ -211,14 +386,26 @@ function frameCamera(bounds) {
       for (const y of [0, top]) box.expandByPoint(parent.localToWorld(new THREE.Vector3(x, y, z)));
     }
   }
+  const reach = (ARM_REACH_M * playerHeight) / PLAYER_HEIGHT_M;
+  box.expandByVector(new THREE.Vector3(reach, 0, reach));
   const center = box.getCenter(new THREE.Vector3());
-  const radius = box.getBoundingSphere(new THREE.Sphere()).radius;
-  // El ángulo más estrecho de los dos: en un visor más alto que ancho manda
-  // el horizontal, y con solo el vertical se cortarían los lados.
-  const vFov = THREE.MathUtils.degToRad(CAMERA_FOV);
-  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
-  const distance = (radius * FRAME_MARGIN) / Math.sin(Math.min(vFov, hFov) / 2);
-  const offset = new THREE.Vector3().setFromSphericalCoords(distance, CAMERA_PHI, CAMERA_THETA);
+  // A lo ancho manda el jugador y la mesa puede quedar cortada por los lados;
+  // a lo alto entra además su mitad de la mesa, hasta la red, como referencia.
+  // Se suman esos puntos y no una caja que envuelva todo: esa tendría esquinas
+  // a la altura de la cabeza sobre la red, y desde arriba dejaban la imagen
+  // medio vacía.
+  const corners = { wide: cornersOf(box), tall: cornersOf(box) };
+  if (tablePlaced) corners.tall.push(...tableMarks);
+  const radius = corners.tall.reduce((r, c) => Math.max(r, c.distanceTo(center)), 0);
+  const toCamera = new THREE.Vector3().setFromSphericalCoords(1, CAMERA_PHI, CAMERA_THETA);
+  // Con mesa, la imagen se centra a lo ancho en ella y no en el jugador: así
+  // se ve hacia qué lado de la mesa se mueve.
+  if (tablePlaced) {
+    const side = new THREE.Vector3().crossVectors(camera.up, toCamera).normalize();
+    center.addScaledVector(side, table.position.clone().sub(center).dot(side));
+  }
+  const distance = balanceVertically(corners, center, toCamera) * FRAME_MARGIN;
+  const offset = toCamera.multiplyScalar(distance);
   camera.position.copy(center).add(offset);
   // Límites del zoom con los dedos: más allá el modelo desaparecería.
   controls.minDistance = distance * MIN_ZOOM;
@@ -243,8 +430,10 @@ window.ppLoad = (newPlan) => {
     send({ type: 'error', message: 'Ningún golpe del ejercicio está en el archivo' });
     return;
   }
+  placeTable();
   frameCamera(plan.bounds);
   model.visible = true;
+  if (tablePlaced) table.visible = true;
   mixer.timeScale = 1;
   startStep(first, plan.steps[first].offsetX, plan.steps[first].offsetZ);
 };
