@@ -1,5 +1,5 @@
 // Servidor HTTP local (solo 127.0.0.1) que sirve el visor 3D al WebView: la
-// página, three.js y el archivo de animaciones guardado en el teléfono.
+// página, three.js, la mesa y el archivo de animaciones guardado en el teléfono.
 //
 // Por qué un servidor y no cargar la página como archivo: three.js se carga
 // como módulos ES, y el WebView de Android no los admite desde file://.
@@ -25,6 +25,9 @@ const _assets = {
   '/GLTFLoader.js': ('assets/viewer/GLTFLoader.js', _javascript),
   '/BufferGeometryUtils.js': ('assets/viewer/BufferGeometryUtils.js', _javascript),
   '/OrbitControls.js': ('assets/viewer/OrbitControls.js', _javascript),
+  // La mesa va empaquetada: es fija y así está disponible sin red desde el
+  // primer uso (el archivo de animaciones, en cambio, se baja).
+  '/table.glb': ('assets/viewer/mesa.glb', _glb),
 };
 
 class ViewerServer {

@@ -54,6 +54,14 @@ void main() {
     expect(r.headers['content-type'], 'model/gltf-binary');
   });
 
+  test('sirve la mesa empaquetada', () async {
+    final r = await http.get(at('/table.glb'));
+
+    expect(r.statusCode, 200);
+    expect(r.body, 'asset:assets/viewer/mesa.glb');
+    expect(r.headers['content-type'], 'model/gltf-binary');
+  });
+
   test('cualquier otra ruta es 404', () async {
     expect((await http.get(at('/../secret'))).statusCode, 404);
     expect((await http.get(at('/nada.js'))).statusCode, 404);
