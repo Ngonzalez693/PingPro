@@ -171,8 +171,6 @@ npm run test:integration  # Firebase emulators + local test database
 
 Unit tests cover controllers, services, middlewares (roles, rate limiting), validators and the Postgres pool configuration.
 
-The integration suites need two things: the Firebase Auth and Firestore emulators, which `npm run test:integration` starts and stops around Jest, and a local `pingpro_test` database created once from `db/create-test-database.sql`. They cover each Postgres repository, the schema itself, the auth/catalogue/users APIs and the one-off Firestore import.
-
 Two independent guards keep the tests off real data. `tests/setup.ts` pins the project to `demo-pingpro` — a prefix Firebase guarantees never reaches the cloud — and points `DATABASE_URL` at the local test database, before anything can load the production `.env`. Behind that, `poolConfig()` throws if a test run targets a database that is not both local and named C.
 
 ## Version
