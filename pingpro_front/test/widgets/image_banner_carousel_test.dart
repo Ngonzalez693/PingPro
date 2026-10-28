@@ -36,4 +36,25 @@ void main() {
     expect(controller.page, 0);
     await dispose(tester);
   });
+
+  // Las imágenes son de 609×246: con la misma forma en todos los teléfonos se
+  // ven enteras, sin que un teléfono más angosto o más ancho las recorte.
+  for (final width in [300.0, 420.0]) {
+    testWidgets('con $width de ancho mantiene la forma de las imágenes', (tester) async {
+      await tester.pumpWidget(MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(width: width, child: const ImageBannerCarousel()),
+          ),
+        ),
+      ));
+
+      final size = tester.getSize(find.byType(ImageBannerCarousel));
+      expect(size.width / size.height, closeTo(609 / 246, 0.001));
+      await dispose(tester);
+    });
+  }
 }

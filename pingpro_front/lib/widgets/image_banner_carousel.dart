@@ -9,6 +9,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/motion.dart';
 
+// La forma de las imágenes (609×246). Con un alto fijo, cada teléfono las
+// recortaba distinto según su ancho; así se ven enteras en todos.
+const _bannerAspectRatio = 609 / 246;
+
 class ImageBannerCarousel extends StatefulWidget {
   const ImageBannerCarousel({super.key});
 
@@ -69,9 +73,8 @@ class _ImageBannerCarouselState extends State<ImageBannerCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 150,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+    return AspectRatio(
+      aspectRatio: _bannerAspectRatio,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Stack(
