@@ -8,7 +8,7 @@
 PRODUCT_NAME = pingpro_front
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.pingproFront
+PRODUCT_BUNDLE_IDENTIFIER = com.pingpro.app
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 PingPro. All rights reserved.
