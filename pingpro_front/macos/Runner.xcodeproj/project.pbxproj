@@ -385,7 +385,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.pingproFront.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pingpro.app.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/pingpro_front.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/pingpro_front";
@@ -399,7 +399,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.pingproFront.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pingpro.app.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/pingpro_front.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/pingpro_front";
@@ -413,7 +413,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.pingproFront.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pingpro.app.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/pingpro_front.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/pingpro_front";

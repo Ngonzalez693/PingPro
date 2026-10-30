@@ -33,6 +33,35 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:295247869938:android:78954d8390b7ca27405d6b",
+        "android_client_info": {
+          "package_name": "com.pingpro.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "295247869938-da576dnec2vjj436r97jn5gogu0jkm5j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8QHFgikpxH3AsZ3i5xc0_VUvAupEeZZc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "295247869938-da576dnec2vjj436r97jn5gogu0jkm5j.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"
