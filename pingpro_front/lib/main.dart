@@ -19,6 +19,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:pingpro_front/core/app_locale.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/screens/pingpro_edit_profile_screen.dart';
 import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
@@ -88,6 +89,8 @@ class MainApp extends StatelessWidget {
       title: 'PingPro',
       theme: ThemeData(scaffoldBackgroundColor: AppColors.background),
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: appLocalizationsDelegates,
+      supportedLocales: appSupportedLocales,
       builder: (context, child) =>
           ReduceMotionScope(preferences: AppPreferences.instance, child: child!),
       // Sin `initialRoute`: con él, Navigator construía la pila ['/', '/welcome']
