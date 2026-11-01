@@ -40,6 +40,7 @@ import 'package:pingpro_front/widgets/custom_bottom_navigation.dart';
 import 'package:pingpro_front/widgets/reduce_motion_scope.dart';
 import 'package:pingpro_front/widgets/splash_view.dart';
 import 'package:pingpro_front/widgets/startup_splash.dart';
+import 'package:pingpro_front/widgets/swipeable_tabs.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/app_licenses.dart';
 import 'package:pingpro_front/core/motion.dart';
@@ -220,12 +221,12 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
 /// Contenedor de las 5 pestañas principales.
 ///
-/// Usa IndexedStack en vez de cambiar el body: mantiene vivas las cinco
-/// pantallas, así que el scroll y el estado de cada pestaña sobreviven al
-/// cambiar de tab y no se vuelve a llamar initState (ni a recargar datos).
+/// SwipeableTabs mantiene vivas las cinco pantallas, así que el scroll y el
+/// estado de cada pestaña sobreviven al cambiar de tab y no se vuelve a llamar
+/// initState (ni a recargar datos).
 ///
-/// El fundido al cambiar de pestaña va sobre el IndexedStack entero: solo se
-/// ve la pestaña activa, así que animar el conjunto equivale a animar esa.
+/// Tocar la barra inferior salta a la pestaña con un fundido, también sobre
+/// las que quedan en medio; deslizar la mueve con el dedo, sin fundido.
 class HomeNavigation extends StatefulWidget {
   const HomeNavigation({super.key});
   @override
@@ -254,6 +255,8 @@ class _HomeNavigationState extends State<HomeNavigation>
     curve: Curves.easeOut,
   );
 
+  void _onSwiped(int index) => setState(() => _currentIndex = index);
+
   void _onNavTap(int index) {
     if (index == _currentIndex) return;
     setState(() => _currentIndex = index);
@@ -272,7 +275,11 @@ class _HomeNavigationState extends State<HomeNavigation>
     return Scaffold(
       body: FadeTransition(
         opacity: _opacity,
-        child: IndexedStack(index: _currentIndex, children: _pages),
+        child: SwipeableTabs(
+          index: _currentIndex,
+          onIndexChanged: _onSwiped,
+          children: _pages,
+        ),
       ),
       bottomNavigationBar: CustomBottomNavigation(
         currentIndex: _currentIndex,
