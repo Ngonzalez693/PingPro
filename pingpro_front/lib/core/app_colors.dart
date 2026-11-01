@@ -7,9 +7,9 @@ import 'dart:ui';
 class AppColors {
   static const Color primary = Color(0xFFECFF17);
   static const Color secundary = Color(0xFFFBFFCA);
-  static const Color accent = Color(0xFFFF0FCF);
+  static const Color accent = Color(0xFF0D76D4);
 
-  // Acciones que no se deshacen (eliminar cuenta): rojo, distinto del rosa `accent`.
+  // Acciones que no se deshacen (eliminar cuenta): rojo, distinto del azul `accent`.
   static const Color danger = Color(0xFFFF5A5A);
 
   static const Color background = Color(0xFF000000);
