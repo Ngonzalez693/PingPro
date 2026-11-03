@@ -8,12 +8,12 @@
 // StatsState, calculada con core/stats_series.dart como en Estadísticas.
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/stats_state.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
 import 'package:pingpro_front/core/stats_buckets.dart';
 import 'package:pingpro_front/core/stats_series.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
@@ -92,24 +92,24 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              const Center(
-                child: Text('PingPro', style: TextStyles.brandTitle),
+              Center(
+                child: Text('PingPro', style: context.text.brandTitle),
               ),
               const SizedBox(height: 16),
               Text(
                 'Bienvenido, $displayName',
-                style: TextStyles.paragraph.copyWith(fontWeight: FontWeight.bold),
+                style: context.text.paragraph.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               const ImageBannerCarousel(),
               const SizedBox(height: 32),
 
               // Recomendaciones
-              Text('Recomendaciones', style: TextStyles.title),
+              Text('Recomendaciones', style: context.text.title),
               const SizedBox(height: 12),
 
               // Entrenamientos
-              Text('Entrenamientos', style: TextStyles.paragraph),
+              Text('Entrenamientos', style: context.text.paragraph),
               const SizedBox(height: 16),
               SizedBox(
                 height: 160,
@@ -176,7 +176,7 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
               const SizedBox(height: 24),
 
               //Ejercicios
-              Text('Ejercicios', style: TextStyles.paragraph),
+              Text('Ejercicios', style: context.text.paragraph),
               const SizedBox(height: 16),
 
               AnimatedBuilder(
@@ -242,9 +242,9 @@ class _PingproHomeScreenState extends State<PingproHomeScreen> {
               const SizedBox(height: 24),
 
               // Estadísticas
-              Text('Estadísticas', style: TextStyles.subTitle),
+              Text('Estadísticas', style: context.text.subTitle),
               const SizedBox(height: 4),
-              Text(recentActivityCaption(), style: TextStyles.caption),
+              Text(recentActivityCaption(), style: context.text.caption),
               const SizedBox(height: 16),
               GestureDetector(
                 onTap: () => Navigator.pushNamed(context, '/stats'),

@@ -4,8 +4,7 @@
 // las categorías sí coinciden con las etiquetas visibles ('Grado', 'Objetivo',
 // 'Momento', 'Estilo', 'Estructura') y con el desplegable de creación.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
-import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/widgets/choice_pill.dart';
 import 'package:pingpro_front/widgets/load_error_view.dart';
@@ -61,7 +60,7 @@ class _PingproTrainingsScreenState extends State<PingproTrainingsScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Text(
                   'Entrenamientos',
-                  style: TextStyles.title,
+                  style: context.text.title,
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -164,9 +163,9 @@ class _PingproTrainingsScreenState extends State<PingproTrainingsScreen> {
     );
   }
 
-  // Más chico que TextStyles.buttons: con 16 px "Estructura" no entra en 80.
-  static const _tabTextStyle = TextStyle(
-    color: AppColors.textBlack,
+  // Más chico que el estilo `buttons`: con 16 px "Estructura" no entra en 80.
+  TextStyle get _tabTextStyle => TextStyle(
+    color: context.colors.onBrandFill,
     fontWeight: FontWeight.bold,
   );
 }

@@ -12,8 +12,7 @@
 // Los formularios van en un PageView: se cambia tocando la pestaña o
 // deslizando, y la línea amarilla sigue a la página mientras se mueve.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
-import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/widgets/create_exercise_form.dart';
 import 'package:pingpro_front/widgets/create_training_form.dart';
@@ -61,7 +60,7 @@ class _PingproCreateScreenState extends State<PingproCreateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.page,
       body: SafeArea(
         child: Column(
           children: [
@@ -106,10 +105,10 @@ class _PingproCreateScreenState extends State<PingproCreateScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
+            icon: Icon(Icons.arrow_back, color: context.colors.onPage),
             onPressed: () => Navigator.pop(context),
           ),
-          const Expanded(child: Text('Crear para el catálogo', style: TextStyles.title)),
+          Expanded(child: Text('Crear para el catálogo', style: context.text.title)),
         ],
       ),
     );
@@ -123,8 +122,8 @@ class _PingproCreateScreenState extends State<PingproCreateScreen> {
       child: Center(
         child: Text(
           label,
-          style: TextStyles.paragraph.copyWith(
-            color: selected ? AppColors.textWhite : AppColors.textGray,
+          style: context.text.paragraph.copyWith(
+            color: selected ? context.colors.onPage : context.colors.muted,
           ),
         ),
       ),
@@ -139,7 +138,7 @@ class _PingproCreateScreenState extends State<PingproCreateScreen> {
       height: 2,
       child: Stack(
         children: [
-          Container(color: AppColors.secundary),
+          Container(color: context.colors.softFill),
           AnimatedBuilder(
             animation: _pageController,
             builder: (context, _) {
@@ -150,7 +149,7 @@ class _PingproCreateScreenState extends State<PingproCreateScreen> {
                 alignment: Alignment(-1 + 2 * page, 0),
                 child: FractionallySizedBox(
                   widthFactor: 0.5,
-                  child: Container(color: AppColors.primary),
+                  child: Container(color: context.colors.brand),
                 ),
               );
             },

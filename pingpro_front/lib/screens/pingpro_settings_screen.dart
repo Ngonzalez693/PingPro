@@ -6,14 +6,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/reminder_time.dart';
 import 'package:pingpro_front/core/services/app_preferences.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
 import 'package:pingpro_front/core/services/daily_reminder.dart';
 import 'package:pingpro_front/core/services/session_roles.dart';
 import 'package:pingpro_front/core/support_mail.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/widgets/change_password_dialog.dart';
 import 'package:pingpro_front/widgets/delete_account_dialog.dart';
 import 'package:pingpro_front/widgets/logout_dialog.dart';
@@ -166,7 +165,7 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.page,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.only(bottom: 24),
@@ -188,10 +187,10 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
+            icon: Icon(Icons.arrow_back, color: context.colors.onPage),
             onPressed: () => Navigator.pop(context),
           ),
-          const Expanded(child: Text('Configuración', style: TextStyles.title)),
+          Expanded(child: Text('Configuración', style: context.text.title)),
         ],
       ),
     );
@@ -208,7 +207,7 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
       SettingsTile(icon: Icons.lock_outline, title: 'Cambiar contraseña', onTap: _onChangePassword),
       SettingsTile(icon: Icons.logout, title: 'Cerrar sesión', onTap: _onLogout),
       // Separada y en rojo: es la única acción de Configuración que no se deshace.
-      const Divider(color: AppColors.textGray, indent: 16, endIndent: 16),
+      Divider(color: context.colors.muted, indent: 16, endIndent: 16),
       SettingsTile(
         icon: Icons.delete_forever_outlined,
         title: 'Eliminar cuenta',

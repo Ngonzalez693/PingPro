@@ -45,6 +45,15 @@ const _migrated = <String>[
   'lib/widgets/pull_to_refresh.dart',
   'lib/widgets/custom_bottom_navigation.dart',
   'lib/widgets/splash_view.dart',
+  'lib/screens/pingpro_welcome_screen.dart',
+  'lib/screens/pingpro_login_screen.dart',
+  'lib/screens/pingpro_register_screen.dart',
+  'lib/screens/pingpro_home_screen.dart',
+  'lib/screens/pingpro_exercises_screen.dart',
+  'lib/screens/pingpro_trainings_screen.dart',
+  'lib/screens/pingpro_create_screen.dart',
+  'lib/screens/pingpro_profile_screen.dart',
+  'lib/screens/pingpro_settings_screen.dart',
 ];
 
 final _roleColor = RegExp(r'AppColors\.(?!accent\b)');
