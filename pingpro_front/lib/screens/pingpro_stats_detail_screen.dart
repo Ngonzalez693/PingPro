@@ -5,12 +5,11 @@
 // Todo el cálculo está en core/stats_breakdown.dart; aquí solo se elige el
 // periodo y el aspecto del golpe, y se pinta.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/stats_state.dart';
 import 'package:pingpro_front/core/stats_breakdown.dart';
 import 'package:pingpro_front/core/stats_buckets.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/stats_events_model.dart';
 import 'package:pingpro_front/widgets/consistency_card.dart';
@@ -56,7 +55,7 @@ class _PingproStatsDetailScreenState extends State<PingproStatsDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.page,
       body: SafeArea(
         child: AnimatedBuilder(
           animation: Listenable.merge([
@@ -90,11 +89,11 @@ class _PingproStatsDetailScreenState extends State<PingproStatsDetailScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
+            icon: Icon(Icons.arrow_back, color: context.colors.onPage),
             onPressed: () => Navigator.pop(context),
           ),
           const Spacer(),
-          Text('Detalle', style: TextStyles.title),
+          Text('Detalle', style: context.text.title),
           const Spacer(),
           const SizedBox(width: 48),
         ],
@@ -120,7 +119,7 @@ class _PingproStatsDetailScreenState extends State<PingproStatsDetailScreen> {
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
         children: [
           if (noActivity) ...[
-            Text('Aún no hay actividad en este periodo', style: TextStyles.paragraph),
+            Text('Aún no hay actividad en este periodo', style: context.text.paragraph),
             const SizedBox(height: 16),
           ],
           _buildConsistency(stats.events, inPeriod),

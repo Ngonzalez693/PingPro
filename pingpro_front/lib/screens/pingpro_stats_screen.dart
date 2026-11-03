@@ -5,10 +5,9 @@
 // "Creados" es lo propio que no se ha borrado); las series las calcula
 // core/stats_series.dart. Esta pantalla solo elige periodo y tipo, y pinta.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/stat_type.dart';
 import 'package:pingpro_front/core/stats_buckets.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/widgets/labeled_tabs.dart';
 import 'package:pingpro_front/widgets/load_error_view.dart';
 import 'package:pingpro_front/widgets/pull_to_refresh.dart';
@@ -52,7 +51,7 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.page,
       body: SafeArea(
         child: AnimatedBuilder(
           animation: StatsState.instance,
@@ -75,9 +74,9 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
                       child: Row(
                         children: [
                           IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.arrow_back,
-                              color: AppColors.textWhite,
+                              color: context.colors.onPage,
                             ),
                             onPressed: () {
                               FocusScope.of(context).unfocus();
@@ -85,7 +84,7 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
                             },
                           ),
                           const Spacer(),
-                          Text('Estadísticas', style: TextStyles.title),
+                          Text('Estadísticas', style: context.text.title),
                           const Spacer(),
                           const SizedBox(width: 48),
                         ],
@@ -103,7 +102,7 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
                     ),
 
                     const SizedBox(height: 12),
-                    Text(statPeriodCaption(_period), style: TextStyles.caption),
+                    Text(statPeriodCaption(_period), style: context.text.caption),
                     const SizedBox(height: 8),
 
                     // ===== Gráfico principal (línea) =====
@@ -147,17 +146,17 @@ class _PingproStatsScreenState extends State<PingproStatsScreen> {
                         width: double.infinity,
                         child: OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.primary),
+                            side: BorderSide(color: context.colors.brand),
                           ),
                           onPressed:
                               () => Navigator.pushNamed(context, '/statsDetail'),
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.insights,
-                            color: AppColors.primary,
+                            color: context.colors.brand,
                           ),
-                          label: const Text(
+                          label: Text(
                             'Ver detalle',
-                            style: TextStyle(color: AppColors.primary),
+                            style: TextStyle(color: context.colors.brand),
                           ),
                         ),
                       ),

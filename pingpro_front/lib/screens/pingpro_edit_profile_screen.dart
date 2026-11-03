@@ -11,8 +11,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:pingpro_front/core/app_colors.dart';
-import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
 
 class PingproEditProfileScreen extends StatefulWidget {
@@ -107,8 +106,8 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
+      return Scaffold(
+        backgroundColor: context.colors.page,
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -116,7 +115,7 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
     final buttonLabel = _isEditing ? 'Guardar' : 'Editar información';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.page,
       body: SafeArea(
         child: Stack(
           children: [
@@ -128,7 +127,7 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
+                      icon: Icon(Icons.arrow_back, color: context.colors.onPage),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
@@ -139,7 +138,7 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
                   Center(
                     child: CircleAvatar(
                       radius: 60,
-                      backgroundColor: AppColors.widgetGrayBackground,
+                      backgroundColor: context.colors.card,
                       backgroundImage: _imageUrl != null
                           ? NetworkImage(_imageUrl!)
                           : const AssetImage('assets/images/avatar_placeholder.png')
@@ -158,14 +157,14 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
                               width: 220,
                               child: TextField(
                                 controller: _nameEditCtrl,
-                                style: TextStyles.title,
+                                style: context.text.title,
                                 decoration: const InputDecoration(
                                   hintText: 'Nombre',
                                   border: UnderlineInputBorder(),
                                 ),
                               ),
                             )
-                          : Text(_userName, style: TextStyles.title),
+                          : Text(_userName, style: context.text.title),
                       const SizedBox(width: 8),
                       GestureDetector(
                         onTap: _isEditing
@@ -174,14 +173,14 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
                         child: Icon(
                           Icons.edit,
                           size: 20,
-                          color: _isEditing ? AppColors.primary : Colors.grey,
+                          color: _isEditing ? context.colors.brand : Colors.grey,
                         ),
                       ),
                     ],
                   ),
 
                   const SizedBox(height: 12),
-                  Text('Correo: $_userEmail', style: TextStyles.paragraph),
+                  Text('Correo: $_userEmail', style: context.text.paragraph),
 
                   const SizedBox(height: 48),
 
@@ -190,7 +189,7 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
                     width: 220,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: context.colors.brandFill,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -211,7 +210,7 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
                           });
                         }
                       },
-                      child: Text(buttonLabel, style: TextStyles.buttons),
+                      child: Text(buttonLabel, style: context.text.buttons),
                     ),
                   ),
                 ],

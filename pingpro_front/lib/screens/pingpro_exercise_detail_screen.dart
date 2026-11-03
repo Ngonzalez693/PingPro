@@ -25,10 +25,9 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/motion.dart';
 import 'package:pingpro_front/core/stroke_codes.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/screens/pingpro_edit_exercise_screen.dart';
 import 'package:pingpro_front/widgets/confirm_action_dialog.dart';
@@ -183,7 +182,7 @@ class _PingproExerciseDetailScreenState
         content: const Text('Repetición guardada'),
         action: SnackBarAction(
           label: 'Deshacer',
-          textColor: AppColors.primary,
+          textColor: context.colors.brandFill,
           onPressed: () => _undoAndReport(messenger, id, session),
         ),
       ));
@@ -231,26 +230,26 @@ class _PingproExerciseDetailScreenState
           height: 200,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.background,
+            color: context.colors.page,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Descripción del ejercicio', style: TextStyles.subTitle),
+              Text('Descripción del ejercicio', style: context.text.subTitle),
               const SizedBox(height: 8),
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(ex.description, style: TextStyles.paragraph),
+                      Text(ex.description, style: context.text.paragraph),
                       const SizedBox(height: 16),
-                      Text('Pasos:', style: TextStyles.subTitle),
+                      Text('Pasos:', style: context.text.subTitle),
                       const SizedBox(height: 8),
                       Text(
                         _buildSequenceDescription(ex),
-                        style: TextStyles.paragraph.copyWith(height: 1.5),
+                        style: context.text.paragraph.copyWith(height: 1.5),
                       ),
                     ],
                   ),
@@ -278,7 +277,7 @@ class _PingproExerciseDetailScreenState
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.widgetGrayBackground,
+              color: context.colors.card,
               shape: BoxShape.circle,
             ),
             child: IconButton(
@@ -294,7 +293,7 @@ class _PingproExerciseDetailScreenState
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: context.colors.brandFill,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: _buildDoneLabel(isCompleted),
@@ -317,7 +316,7 @@ class _PingproExerciseDetailScreenState
       child: Text(
         isCompleted ? '¡Listo!' : 'Hecho',
         key: ValueKey(isCompleted),
-        style: TextStyles.buttons,
+        style: context.text.buttons,
       ),
     );
   }
@@ -337,7 +336,7 @@ class _PingproExerciseDetailScreenState
               onPressed: () => _onUndoPressed(session),
               child: Text(
                 'Deshacer',
-                style: TextStyles.paragraph.copyWith(
+                style: context.text.paragraph.copyWith(
                   decoration: TextDecoration.underline,
                 ),
               ),
@@ -369,7 +368,7 @@ class _PingproExerciseDetailScreenState
         final canUndo = canUndoInSession(ex.id, events, session);
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.page,
           body: SafeArea(
             child: Column(
               children: [
@@ -385,13 +384,13 @@ class _PingproExerciseDetailScreenState
                       children: [
                         IconButton(
                           onPressed: _onBackPressed,
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.arrow_back,
-                            color: AppColors.textWhite,
+                            color: context.colors.onPage,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Expanded(child: Text(ex.name, style: TextStyles.title)),
+                        Expanded(child: Text(ex.name, style: context.text.title)),
                         if (canManage(isOwn: ex.isOwn, isAdmin: _isAdmin))
                           ContentActionsMenu(
                             onEdit: () => _onEditPressed(ex),
