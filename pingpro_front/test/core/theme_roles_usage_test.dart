@@ -2,76 +2,26 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-// Archivos que ya toman sus colores de los roles del tema. Si uno vuelve a
-// usar un color de rol de AppColors o un estilo de TextStyles, en modo claro
-// se vería con el color oscuro.
-const _migrated = <String>[
-  'lib/main.dart',
-  'lib/widgets/change_password_dialog.dart',
-  'lib/widgets/confirm_action_dialog.dart',
-  'lib/widgets/delete_account_dialog.dart',
-  'lib/widgets/forgot_password_dialog.dart',
-  'lib/widgets/logout_dialog.dart',
-  'lib/widgets/stroke_picker_dialog.dart',
-  'lib/widgets/exercise_picker_sheet.dart',
-  'lib/widgets/content_actions_menu.dart',
-  'lib/widgets/exercise_done.dart',
-  'lib/widgets/count_bars.dart',
-  'lib/widgets/sessions_chart.dart',
-  'lib/widgets/statistics_chart.dart',
-  'lib/widgets/statistics_secundary_cart.dart',
-  'lib/widgets/consistency_card.dart',
-  'lib/widgets/exercise_rank_list.dart',
-  'lib/widgets/summary_icon.dart',
-  'lib/widgets/stroke_arrows_painter.dart',
-  'lib/widgets/pingpong_table.dart',
-  'lib/widgets/dragged_row_decorator.dart',
-  'lib/widgets/create_training_form.dart',
-  'lib/widgets/create_exercise_form.dart',
-  'lib/widgets/image_option_picker.dart',
-  'lib/core/form_styles.dart',
-  'lib/widgets/exercise_card.dart',
-  'lib/widgets/training_card.dart',
-  'lib/widgets/load_error_view.dart',
-  'lib/widgets/settings_tile.dart',
-  'lib/widgets/settings_switch_tile.dart',
-  'lib/widgets/settings_section_header.dart',
-  'lib/widgets/choice_pill.dart',
-  'lib/widgets/favorite_icon.dart',
-  'lib/widgets/plus_button.dart',
-  'lib/widgets/skeleton_box.dart',
-  'lib/widgets/skeleton_shimmer.dart',
-  'lib/widgets/bouncing_ball_indicator.dart',
-  'lib/widgets/pull_to_refresh.dart',
-  'lib/widgets/custom_bottom_navigation.dart',
-  'lib/widgets/splash_view.dart',
-  'lib/screens/pingpro_welcome_screen.dart',
-  'lib/screens/pingpro_login_screen.dart',
-  'lib/screens/pingpro_register_screen.dart',
-  'lib/screens/pingpro_home_screen.dart',
-  'lib/screens/pingpro_exercises_screen.dart',
-  'lib/screens/pingpro_trainings_screen.dart',
-  'lib/screens/pingpro_create_screen.dart',
-  'lib/screens/pingpro_profile_screen.dart',
-  'lib/screens/pingpro_settings_screen.dart',
-  'lib/screens/pingpro_exercise_detail_screen.dart',
-  'lib/screens/pingpro_training_detail_screen.dart',
-  'lib/screens/pingpro_exercise_preview_screen.dart',
-  'lib/screens/pingpro_create_sequence_screen.dart',
-  'lib/screens/pingpro_edit_profile_screen.dart',
-  'lib/screens/pingpro_edit_exercise_screen.dart',
-  'lib/screens/pingpro_edit_training_screen.dart',
-  'lib/screens/pingpro_stats_screen.dart',
-  'lib/screens/pingpro_stats_detail_screen.dart',
-];
+// Los únicos que pueden usar los colores de rol de AppColors directamente: la
+// paleta en sí (de donde sale el modo oscuro) y la tarjeta del visor 3D, que
+// es gris en los dos temas. Cualquier otro uso se vería con el color oscuro en
+// modo claro.
+const _fixed = <String>{
+  'lib/core/app_colors.dart',
+  'lib/core/pingpro_colors.dart',
+  'lib/widgets/exercise_animation_view.dart',
+};
 
 final _roleColor = RegExp(r'AppColors\.(?!accent\b)');
 
 void main() {
-  test('los archivos migrados no usan colores de rol ni TextStyles', () {
+  test('fuera de la paleta nadie usa colores de rol ni TextStyles', () {
     final offenders = <String>[];
-    for (final path in _migrated) {
-      final lines = File(path).readAsLinesSync();
+    final files = Directory('lib').listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart'));
+    for (final file in files) {
+      final path = file.path.replaceAll(r'\', '/');
+      if (_fixed.contains(path)) continue;
+      final lines = file.readAsLinesSync();
       for (var i = 0; i < lines.length; i++) {
         if (_roleColor.hasMatch(lines[i]) || lines[i].contains('TextStyles.')) {
           offenders.add('$path:${i + 1}: ${lines[i].trim()}');
