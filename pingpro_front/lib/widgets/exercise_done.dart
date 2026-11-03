@@ -5,8 +5,7 @@
 // Se abre con barrierDismissible: false para que el usuario confirme
 // explícitamente y no cierre por accidente sin registrar el avance.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
-import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 
 class ExerciseDone extends StatelessWidget {
   final VoidCallback onFinalize;
@@ -16,12 +15,12 @@ class ExerciseDone extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppColors.widgetGrayBackground,
+      backgroundColor: context.colors.card,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       contentPadding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       content: Text(
         '¡Excelente!\na seguir entrenando',
-        style: TextStyles.titleBlack,
+        style: context.text.titleBlack,
         textAlign: TextAlign.center,
       ),
       actionsAlignment: MainAxisAlignment.center,
@@ -29,12 +28,12 @@ class ExerciseDone extends StatelessWidget {
         TextButton(
           onPressed: onFinalize,
           style: TextButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.textBlack,
+            backgroundColor: context.colors.brandFill,
+            foregroundColor: context.colors.onBrandFill,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
-          child: const Text('Finalizar', style: TextStyles.buttons),
+          child: Text('Finalizar', style: context.text.buttons),
         ),
       ],
     );

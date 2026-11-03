@@ -4,9 +4,8 @@
 // cerrarlo, para corregir y reintentar; el aviso de éxito lo da quien lo abre.
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 
 /// Devuelve true solo si la contraseña se cambió.
 Future<bool> showChangePasswordDialog(BuildContext context) async {
@@ -78,7 +77,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
       controller: controller,
       enabled: !_isSaving,
       obscureText: true,
-      style: TextStyles.paragraphBlack,
+      style: context.text.paragraphBlack,
       decoration: InputDecoration(hintText: hint, errorText: errorText),
     );
   }
@@ -88,8 +87,8 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
     return PopScope(
       canPop: !_isSaving,
       child: AlertDialog(
-        backgroundColor: AppColors.widgetBackground,
-        title: const Text('Cambiar contraseña', style: TextStyles.subTitleBlack),
+        backgroundColor: context.colors.softFill,
+        title: Text('Cambiar contraseña', style: context.text.subTitleBlack),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -103,18 +102,18 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
         actions: [
           TextButton(
             onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar', style: TextStyles.paragraphBlack),
+            child: Text('Cancelar', style: context.text.paragraphBlack),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            style: ElevatedButton.styleFrom(backgroundColor: context.colors.brandFill),
             onPressed: _isSaving ? null : _onSavePressed,
             child: _isSaving
-                ? const SizedBox(
+                ? SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textBlack),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onBrandFill),
                   )
-                : const Text('Guardar', style: TextStyles.buttons),
+                : Text('Guardar', style: context.text.buttons),
           ),
         ],
       ),

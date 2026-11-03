@@ -41,7 +41,8 @@ import 'package:pingpro_front/widgets/reduce_motion_scope.dart';
 import 'package:pingpro_front/widgets/splash_view.dart';
 import 'package:pingpro_front/widgets/startup_splash.dart';
 import 'package:pingpro_front/widgets/swipeable_tabs.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
+import 'package:pingpro_front/core/pingpro_colors.dart';
 import 'package:pingpro_front/core/app_licenses.dart';
 import 'package:pingpro_front/core/motion.dart';
 import 'package:pingpro_front/core/services/app_preferences.dart';
@@ -88,7 +89,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'PingPro',
-      theme: ThemeData(scaffoldBackgroundColor: AppColors.background),
+      theme: buildAppTheme(PingProColors.dark),
       debugShowCheckedModeBanner: false,
       localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: appSupportedLocales,

@@ -4,10 +4,9 @@
 // usuario corrija el email y reintente; el aviso de éxito lo da el login.
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/email_validation.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 
 /// Devuelve true solo si se pidió el correo de recuperación.
 Future<bool> showForgotPasswordDialog(
@@ -75,15 +74,15 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppColors.widgetBackground,
-      title: const Text('Recuperar contraseña', style: TextStyles.subTitleBlack),
+      backgroundColor: context.colors.softFill,
+      title: Text('Recuperar contraseña', style: context.text.subTitleBlack),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Te enviaremos un enlace para elegir una contraseña nueva.',
-            style: TextStyles.paragraphBlack,
+            style: context.text.paragraphBlack,
           ),
           const SizedBox(height: 16),
           TextField(
@@ -91,7 +90,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
             enabled: !_isSending,
             autofocus: true,
             keyboardType: TextInputType.emailAddress,
-            style: TextStyles.paragraphBlack,
+            style: context.text.paragraphBlack,
             decoration: InputDecoration(hintText: 'Email', errorText: _error),
             onSubmitted: (_) => _onSendPressed(),
           ),
@@ -100,21 +99,21 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
       actions: [
         TextButton(
           onPressed: _isSending ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Cancelar', style: TextStyles.paragraphBlack),
+          child: Text('Cancelar', style: context.text.paragraphBlack),
         ),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          style: ElevatedButton.styleFrom(backgroundColor: context.colors.brandFill),
           onPressed: _isSending ? null : _onSendPressed,
           child: _isSending
-              ? const SizedBox(
+              ? SizedBox(
                   height: 20,
                   width: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: AppColors.textBlack,
+                    color: context.colors.onBrandFill,
                   ),
                 )
-              : const Text('Enviar', style: TextStyles.buttons),
+              : Text('Enviar', style: context.text.buttons),
         ),
       ],
     );

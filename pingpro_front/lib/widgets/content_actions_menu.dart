@@ -3,8 +3,7 @@
 // Quién lo ve lo decide la pantalla (canManage en session_roles.dart); aquí
 // solo están las dos opciones.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
-import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 
 enum _ContentAction { edit, delete }
 
@@ -17,13 +16,13 @@ class ContentActionsMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<_ContentAction>(
-      icon: const Icon(Icons.more_vert, color: AppColors.textWhite),
+      icon: Icon(Icons.more_vert, color: context.colors.onPage),
       tooltip: 'Más opciones',
-      color: AppColors.widgetBackground,
+      color: context.colors.softFill,
       onSelected: (action) => action == _ContentAction.edit ? onEdit() : onDelete(),
-      itemBuilder: (_) => const [
-        PopupMenuItem(value: _ContentAction.edit, child: Text('Editar', style: TextStyles.paragraphBlack)),
-        PopupMenuItem(value: _ContentAction.delete, child: Text('Eliminar', style: TextStyles.paragraphBlack)),
+      itemBuilder: (menuContext) => [
+        PopupMenuItem(value: _ContentAction.edit, child: Text('Editar', style: menuContext.text.paragraphBlack)),
+        PopupMenuItem(value: _ContentAction.delete, child: Text('Eliminar', style: menuContext.text.paragraphBlack)),
       ],
     );
   }

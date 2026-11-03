@@ -7,9 +7,8 @@
 // sabría que la cuenta ya no existe.
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 
 /// Devuelve true solo si la cuenta se eliminó (y la sesión ya está cerrada).
 Future<bool> showDeleteAccountDialog(BuildContext context) async {
@@ -75,7 +74,7 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
       controller: _passwordCtrl,
       enabled: !_isDeleting,
       obscureText: true,
-      style: TextStyles.paragraphBlack,
+      style: context.text.paragraphBlack,
       decoration: InputDecoration(
         hintText: 'Contraseña actual',
         errorText: _error,
@@ -87,15 +86,15 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
 
   Widget _buildDeleteButton() {
     return ElevatedButton(
-      style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+      style: ElevatedButton.styleFrom(backgroundColor: context.colors.danger),
       onPressed: _isDeleting ? null : _onDeletePressed,
       child: _isDeleting
-          ? const SizedBox(
+          ? SizedBox(
               height: 20,
               width: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textBlack),
+              child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onBrandFill),
             )
-          : const Text('Eliminar', style: TextStyles.buttons),
+          : Text('Eliminar', style: context.text.buttons),
     );
   }
 
@@ -104,16 +103,16 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
     return PopScope(
       canPop: !_isDeleting,
       child: AlertDialog(
-        backgroundColor: AppColors.widgetBackground,
-        title: const Text('Eliminar cuenta', style: TextStyles.subTitleBlack),
+        backgroundColor: context.colors.softFill,
+        title: Text('Eliminar cuenta', style: context.text.subTitleBlack),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'Se borrarán tu cuenta, tus ejercicios y entrenamientos, tus '
               'favoritos y tu historial de estadísticas. El catálogo de PingPro '
               'no se toca. Esta acción no se puede deshacer.',
-              style: TextStyles.paragraphBlack,
+              style: context.text.paragraphBlack,
             ),
             const SizedBox(height: 16),
             _buildPasswordField(),
@@ -122,7 +121,7 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
         actions: [
           TextButton(
             onPressed: _isDeleting ? null : () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar', style: TextStyles.paragraphBlack),
+            child: Text('Cancelar', style: context.text.paragraphBlack),
           ),
           _buildDeleteButton(),
         ],
