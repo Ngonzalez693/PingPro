@@ -8,8 +8,7 @@
 // 'Técnico', 'Táctico', 'Estrategia') contra el campo `category` de Firestore.
 // Un cambio de nombre o una tilde distinta deja la pestaña vacía sin avisar.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
-import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/widgets/choice_pill.dart';
@@ -86,7 +85,7 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
                 Expanded(
                   child: Text(
                     'Ejercicios',
-                    style: TextStyles.title,
+                    style: context.text.title,
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -101,15 +100,15 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: 'Buscar',
-                prefixIcon: Icon(Icons.search, color: AppColors.secundary),
+                prefixIcon: Icon(Icons.search, color: context.colors.softText),
                 filled: true,
-                fillColor: AppColors.textGray,
+                fillColor: context.colors.muted,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
               ),
-              style: TextStyle(color: AppColors.secundary),
+              style: TextStyle(color: context.colors.softText),
             ),
           ),
 
@@ -227,9 +226,9 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
     );
   }
 
-  // Más chico que TextStyles.buttons: con 16 px no entran en el ancho fijo.
-  static const _tabTextStyle = TextStyle(
-    color: AppColors.textBlack,
+  // Más chico que el estilo `buttons`: con 16 px no entran en el ancho fijo.
+  TextStyle get _tabTextStyle => TextStyle(
+    color: context.colors.onBrandFill,
     fontWeight: FontWeight.bold,
   );
 }

@@ -21,12 +21,11 @@
 // ve la nueva. El menú ⋮ (dueño o, en el catálogo, admin) abre la edición o lo
 // elimina; mientras se elimina, las acciones quedan bloqueadas.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/motion.dart';
 import 'package:pingpro_front/core/session_progress.dart';
 import 'package:pingpro_front/core/services/current_session.dart';
 import 'package:pingpro_front/core/services/stats_state.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/widgets/exercise_card.dart';
@@ -150,29 +149,29 @@ class _PingproTrainingDetailScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Descripción del Entrenamiento', style: TextStyles.titleBlack),
+        Text('Descripción del Entrenamiento', style: context.text.titleBlack),
         const SizedBox(height: 8),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               flex: 2,
-              child: Text(training.description, style: TextStyles.paragraphBlack),
+              child: Text(training.description, style: context.text.paragraphBlack),
             ),
             const SizedBox(width: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Categoría:', style: TextStyles.buttons),
+                Text('Categoría:', style: context.text.buttons),
                 Text(
                   _categoryDescriptions[training.category] ?? training.category,
-                  style: TextStyles.paragraphBlack,
+                  style: context.text.paragraphBlack,
                 ),
                 const SizedBox(height: 8),
-                Text('Duración:', style: TextStyles.buttons),
+                Text('Duración:', style: context.text.buttons),
                 Text(
                   '$totalDuration min ($perExercise min por ejercicio)',
-                  style: TextStyles.paragraphBlack,
+                  style: context.text.paragraphBlack,
                 ),
               ],
             ),
@@ -186,7 +185,7 @@ class _PingproTrainingDetailScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Progreso del entrenamiento', style: TextStyles.subTitleBlack),
+        Text('Progreso del entrenamiento', style: context.text.subTitleBlack),
         const SizedBox(height: 8),
         // `begin` solo se usa la primera vez: al entrar se llena desde 0 y,
         // en los cambios siguientes, avanza desde donde estaba.
@@ -199,8 +198,8 @@ class _PingproTrainingDetailScreenState
             child: LinearProgressIndicator(
               value: value,
               minHeight: 10,
-              backgroundColor: AppColors.widgetGrayBackground,
-              color: AppColors.primary,
+              backgroundColor: context.colors.card,
+              color: context.colors.brand,
             ),
           ),
         ),
@@ -210,7 +209,7 @@ class _PingproTrainingDetailScreenState
           child: Text(
             '$doneCount de $total ejercicios completados',
             key: ValueKey(doneCount),
-            style: TextStyles.paragraphBlack,
+            style: context.text.paragraphBlack,
           ),
         ),
       ],
@@ -230,7 +229,7 @@ class _PingproTrainingDetailScreenState
           child: Container(
             height: 60,
             decoration: BoxDecoration(
-              color: AppColors.widgetGrayBackground,
+              color: context.colors.card,
               borderRadius: BorderRadius.circular(8),
             ),
             alignment: Alignment.center,
@@ -252,7 +251,7 @@ class _PingproTrainingDetailScreenState
               child: Text(
                 next.name,
                 key: ValueKey(next.id),
-                style: TextStyles.subTitleBlack,
+                style: context.text.subTitleBlack,
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -264,7 +263,7 @@ class _PingproTrainingDetailScreenState
         PressableScale(
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: context.colors.brandFill,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -272,7 +271,7 @@ class _PingproTrainingDetailScreenState
             onPressed: () => _onNextPressed(exercises, done),
             child: Text(
               allDone ? 'Completado' : 'Realizar siguiente',
-              style: TextStyles.buttons,
+              style: context.text.buttons,
             ),
           ),
         ),
@@ -283,7 +282,7 @@ class _PingproTrainingDetailScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.page,
       body: SafeArea(
         child: AnimatedBuilder(
           animation: Listenable.merge([
@@ -357,12 +356,12 @@ class _PingproTrainingDetailScreenState
                     child: Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
+                          icon: Icon(Icons.arrow_back, color: context.colors.onPage),
                           onPressed: _onBackPressed,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Text(training.name, style: TextStyles.title),
+                          child: Text(training.name, style: context.text.title),
                         ),
                         if (canManage(isOwn: training.isOwn, isAdmin: _isAdmin))
                           ContentActionsMenu(
@@ -392,7 +391,7 @@ class _PingproTrainingDetailScreenState
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppColors.widgetBackground,
+                        color: context.colors.softFill,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       padding: const EdgeInsets.all(16),
@@ -419,7 +418,7 @@ class _PingproTrainingDetailScreenState
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: Text('Ejercicios', style: TextStyles.subTitle),
+                      child: Text('Ejercicios', style: context.text.subTitle),
                     ),
                   ),
                 ),

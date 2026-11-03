@@ -26,7 +26,6 @@
 // reordenan arrastrando su asa en la lista, como en el formulario de
 // entrenamiento.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
 import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/stroke_codes.dart';
 import 'package:pingpro_front/core/table_geometry.dart';
@@ -147,7 +146,7 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.page,
       body: SafeArea(
         child: Column(
           children: [
@@ -165,7 +164,7 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
     return Row(
       children: [
         IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
+          icon: Icon(Icons.arrow_back, color: context.colors.onPage),
           onPressed: () => Navigator.pop(context),
         ),
         Text('Secuencia', style: context.text.subTitle),
@@ -246,14 +245,14 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
       dense: true,
       leading: ReorderableDragStartListener(
         index: i,
-        child: Icon(Icons.drag_handle, color: dragging ? foreground : AppColors.textGray),
+        child: Icon(Icons.drag_handle, color: dragging ? foreground : context.colors.muted),
       ),
       title: Text(
         '${i + 1}. ${describeStep(_strokes[i].step)}',
         style: context.text.paragraph.copyWith(color: foreground),
       ),
       trailing: IconButton(
-        icon: Icon(Icons.close, color: dragging ? foreground : AppColors.textGray),
+        icon: Icon(Icons.close, color: dragging ? foreground : context.colors.muted),
         tooltip: 'Quitar golpe ${i + 1}',
         onPressed: () => _removeStroke(i),
       ),
@@ -265,8 +264,8 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.textBlack,
+          backgroundColor: context.colors.brandFill,
+          foregroundColor: context.colors.onBrandFill,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
         ),

@@ -7,11 +7,10 @@
 // también se cierre. Al crear, si ya hay un ejercicio con los mismos golpes
 // (propio o del catálogo) se pide confirmar antes de guardarlo.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/duplicate_content.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/stroke_codes.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/widgets/confirm_action_dialog.dart';
 import 'package:pingpro_front/widgets/exercise_animation_view.dart';
@@ -57,7 +56,7 @@ class _PingproExercisePreviewScreenState extends State<PingproExercisePreviewScr
   Widget build(BuildContext context) {
     final exercise = widget.draft.toPreviewModel();
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.page,
       body: SafeArea(
         child: Column(
           children: [
@@ -77,10 +76,10 @@ class _PingproExercisePreviewScreenState extends State<PingproExercisePreviewScr
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
+            icon: Icon(Icons.arrow_back, color: context.colors.onPage),
             onPressed: _saving ? null : () => Navigator.pop<bool>(context, false),
           ),
-          Expanded(child: Text(name, style: TextStyles.title)),
+          Expanded(child: Text(name, style: context.text.title)),
         ],
       ),
     );
@@ -91,12 +90,12 @@ class _PingproExercisePreviewScreenState extends State<PingproExercisePreviewScr
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       children: [
-        const Text('Pasos', style: TextStyles.subTitle),
+        Text('Pasos', style: context.text.subTitle),
         const SizedBox(height: 8),
         for (var i = 0; i < sequence.length; i++)
           Padding(
             padding: const EdgeInsets.only(bottom: 4),
-            child: Text('${i + 1}. ${describeStep(sequence[i])}', style: TextStyles.paragraph),
+            child: Text('${i + 1}. ${describeStep(sequence[i])}', style: context.text.paragraph),
           ),
       ],
     );
@@ -109,19 +108,19 @@ class _PingproExercisePreviewScreenState extends State<PingproExercisePreviewScr
         children: [
           Expanded(
             child: OutlinedButton(
-              style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.primary)),
+              style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.brand)),
               onPressed: _saving ? null : () => Navigator.pop<bool>(context, false),
-              child: const Text('Volver a editar', style: TextStyle(color: AppColors.primary)),
+              child: Text('Volver a editar', style: TextStyle(color: context.colors.brand)),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              style: ElevatedButton.styleFrom(backgroundColor: context.colors.brandFill),
               onPressed: _saving ? null : _save,
               child: _saving
                   ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(widget.draft.isEdit ? 'Guardar' : 'Crear', style: TextStyles.buttons),
+                  : Text(widget.draft.isEdit ? 'Guardar' : 'Crear', style: context.text.buttons),
             ),
           ),
         ],

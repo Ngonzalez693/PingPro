@@ -7,9 +7,8 @@
 // Después del alta manda al login en vez de entrar directo, aunque
 // signupViaBackend ya deja la sesión iniciada.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/email_validation.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
 import 'package:pingpro_front/widgets/custom_text_field.dart';
 import 'package:pingpro_front/widgets/fade_slide_in.dart';
@@ -43,31 +42,31 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.widgetGrayBackground,
+        backgroundColor: context.colors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         contentPadding: const EdgeInsets.all(24),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.check_circle, color: AppColors.primary, size: 56),
+            Icon(Icons.check_circle, color: context.colors.brand, size: 56),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               '¡Registro exitoso!',
               textAlign: TextAlign.center,
-              style: TextStyles.titleBlack,
+              style: context.text.titleBlack,
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Tu cuenta fue creada correctamente. Inicia sesión para continuar.',
               textAlign: TextAlign.center,
-              style: TextStyles.paragraphBlack,
+              style: context.text.paragraphBlack,
             ),
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: context.colors.brandFill,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
@@ -130,8 +129,8 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
 
   Widget _buildRegisterButton() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
+      return Center(
+        child: CircularProgressIndicator(color: context.colors.brand),
       );
     }
     return PressableScale(
@@ -139,15 +138,15 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
         width: double.infinity,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.textBlack,
+            backgroundColor: context.colors.brandFill,
+            foregroundColor: context.colors.onBrandFill,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
           ),
           onPressed: _onRegisterPressed,
-          child: Text('Crear cuenta', style: TextStyles.buttons),
+          child: Text('Crear cuenta', style: context.text.buttons),
         ),
       ),
     );
@@ -164,7 +163,7 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.page,
       body: SafeArea(
         child: ListView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -184,7 +183,7 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
               child: Center(
                 child: Text(
                   'Crear cuenta',
-                  style: TextStyles.title,
+                  style: context.text.title,
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -232,14 +231,14 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
                 children: [
                   Text(
                     '¿Ya tienes cuenta? ',
-                    style: TextStyle(color: AppColors.textGray),
+                    style: TextStyle(color: context.colors.muted),
                   ),
                   GestureDetector(
                     onTap: () =>
                         Navigator.of(context).pushReplacementNamed('/login'),
                     child: Text(
                       'Iniciar sesión',
-                      style: TextStyles.loginRegister,
+                      style: context.text.loginRegister,
                     ),
                   ),
                 ],

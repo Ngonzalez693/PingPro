@@ -4,9 +4,8 @@
 // backend. Tras autenticar vuelve a la raíz y es AuthWrapper quien decide la
 // pantalla; también mantiene la sesión en los siguientes arranques.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/email_validation.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
 import 'package:pingpro_front/widgets/custom_text_field.dart';
 import 'package:pingpro_front/widgets/fade_slide_in.dart';
@@ -79,8 +78,8 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
 
   Widget _buildLoginButton() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
+      return Center(
+        child: CircularProgressIndicator(color: context.colors.brand),
       );
     }
     return PressableScale(
@@ -88,15 +87,15 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
         width: double.infinity,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.textBlack,
+            backgroundColor: context.colors.brandFill,
+            foregroundColor: context.colors.onBrandFill,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
           ),
           onPressed: _onLoginPressed,
-          child: Text('Iniciar sesión', style: TextStyles.buttons),
+          child: Text('Iniciar sesión', style: context.text.buttons),
         ),
       ),
     );
@@ -112,7 +111,7 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.page,
       body: SafeArea(
         child: ListView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -132,7 +131,7 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
               child: Center(
                 child: Text(
                   'Iniciar sesión',
-                  style: TextStyles.title,
+                  style: context.text.title,
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -174,7 +173,7 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
                 onPressed: _onForgotPasswordPressed,
                 child: Text(
                   '¿Olvidaste tu contraseña?',
-                  style: TextStyle(color: AppColors.secundary),
+                  style: TextStyle(color: context.colors.softText),
                 ),
               ),
             ),
@@ -188,14 +187,14 @@ class _PingproLoginScreenState extends State<PingproLoginScreen> {
                 children: [
                   Text(
                     '¿No tienes cuenta? ',
-                    style: TextStyle(color: AppColors.textGray),
+                    style: TextStyle(color: context.colors.muted),
                   ),
                   GestureDetector(
                     onTap:
                         () => Navigator.of(
                           context,
                         ).pushReplacementNamed('/register'),
-                    child: Text('Regístrate', style: TextStyles.loginRegister),
+                    child: Text('Regístrate', style: context.text.loginRegister),
                   ),
                 ],
               ),

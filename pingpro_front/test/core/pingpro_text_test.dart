@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pingpro_front/core/pingpro_colors.dart';
 import 'package:pingpro_front/core/pingpro_text.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 
 // Un color distinto por rol: así se ve qué rol tomó cada estilo.
 const _distinct = PingProColors(
@@ -23,20 +22,25 @@ const _distinct = PingProColors(
 );
 
 void main() {
-  test('con la paleta oscura cada estilo es igual al de hoy', () {
+  // Los tamaños y pesos de siempre: el cambio a roles solo tocó el color.
+  test('cada estilo conserva su tamaño y su peso', () {
     const text = PingProText(PingProColors.dark);
 
-    expect(text.title, TextStyles.title);
-    expect(text.titleBlack, TextStyles.titleBlack);
-    expect(text.subTitle, TextStyles.subTitle);
-    expect(text.subTitleBlack, TextStyles.subTitleBlack);
-    expect(text.buttons, TextStyles.buttons);
-    expect(text.paragraph, TextStyles.paragraph);
-    expect(text.paragraphBlack, TextStyles.paragraphBlack);
-    expect(text.aditional, TextStyles.aditional);
-    expect(text.caption, TextStyles.caption);
-    expect(text.brandTitle, TextStyles.brandTitle);
-    expect(text.loginRegister, TextStyles.loginRegister);
+    for (final style in [text.title, text.titleBlack]) {
+      expect((style.fontSize, style.fontWeight), (24, FontWeight.bold));
+    }
+    for (final style in [text.subTitle, text.subTitleBlack]) {
+      expect((style.fontSize, style.fontWeight), (20, FontWeight.bold));
+    }
+    expect((text.buttons.fontSize, text.buttons.fontWeight), (16, FontWeight.bold));
+    for (final style in [text.paragraph, text.paragraphBlack]) {
+      expect((style.fontSize, style.fontWeight), (16, null));
+    }
+    for (final style in [text.aditional, text.caption]) {
+      expect((style.fontSize, style.fontWeight), (14, null));
+    }
+    expect((text.brandTitle.fontFamily, text.brandTitle.fontSize), ('Anta', 28));
+    expect((text.loginRegister.fontSize, text.loginRegister.fontWeight), (null, FontWeight.bold));
   });
 
   test('cada estilo toma su rol', () {

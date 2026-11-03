@@ -4,9 +4,8 @@
 // AnimatedSwitcher aparte, para que el bloque inferior no se deslice junto con
 // la imagen. Al terminar pasa al splash, que a su vez lleva al login.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/motion.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/screens/pingpro_splash_screen.dart';
 
 class PingproWelcomeScreen extends StatefulWidget {
@@ -67,7 +66,7 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
   Widget build(BuildContext context) {
     final page = _pages[_currentPage];
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.page,
       body: SafeArea(
         child: Column(
           children: [
@@ -94,7 +93,7 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
             ),
             // El texto y el botón cambian con animación fade
             Container(
-              color: AppColors.background,
+              color: context.colors.page,
               padding: const EdgeInsets.symmetric(
                 horizontal: 24.0,
                 vertical: 32.0,
@@ -112,7 +111,7 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
                   children: [
                     Text(
                       page.title,
-                      style: TextStyles.title,
+                      style: context.text.title,
                       textAlign: TextAlign.center,
                     ),
                     if (page.description.isNotEmpty)
@@ -120,7 +119,7 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
                         padding: const EdgeInsets.only(top: 12.0),
                         child: Text(
                           page.description,
-                          style: TextStyles.paragraph,
+                          style: context.text.paragraph,
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -129,8 +128,8 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
                     SizedBox(height: 24),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.textBlack,
+                        backgroundColor: context.colors.brandFill,
+                        foregroundColor: context.colors.onBrandFill,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(32),
                         ),
@@ -170,8 +169,8 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
           decoration: BoxDecoration(
             color:
                 _currentPage == index
-                    ? AppColors.widgetBackgroundSelected
-                    : AppColors.widgetBackground,
+                    ? context.colors.brandFill
+                    : context.colors.softFill,
             borderRadius: BorderRadius.circular(8),
           ),
         ),

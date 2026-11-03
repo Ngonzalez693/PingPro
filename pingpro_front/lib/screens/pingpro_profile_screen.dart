@@ -12,11 +12,10 @@
 // ExercisesState/TrainingsState.
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/services/session_roles.dart';
 import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/screens/pingpro_create_screen.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/widgets/load_error_view.dart';
 import 'package:pingpro_front/widgets/pull_to_refresh.dart';
 import 'package:pingpro_front/widgets/statistics_chart.dart';
@@ -95,10 +94,10 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
       child: SizedBox(
         width: double.infinity,
         child: OutlinedButton.icon(
-          style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.primary)),
+          style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.brand)),
           onPressed: _openCatalogCreate,
-          icon: const Icon(Icons.library_add, color: AppColors.primary),
-          label: const Text('Crear contenido del catálogo', style: TextStyle(color: AppColors.primary)),
+          icon: Icon(Icons.library_add, color: context.colors.brand),
+          label: Text('Crear contenido del catálogo', style: TextStyle(color: context.colors.brand)),
         ),
       ),
     );
@@ -122,8 +121,8 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: TextStyles.title),
-                Text('Ver perfil', style: TextStyles.paragraph),
+                Text(name, style: context.text.title),
+                Text('Ver perfil', style: context.text.paragraph),
               ],
             ),
           ),
@@ -156,7 +155,7 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
     final name = user?.displayName ?? 'Usuario';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.page,
       body: SafeArea(
         child: AnimatedBuilder(
           animation: Listenable.merge([
@@ -202,9 +201,9 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                         children: [
                           Expanded(child: _buildProfileLink(name)),
                           IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.settings,
-                              color: AppColors.textWhite,
+                              color: context.colors.onPage,
                             ),
                             onPressed: () => Navigator.pushNamed(context, '/settings'),
                           ),
@@ -221,9 +220,9 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Estadísticas', style: TextStyles.subTitle),
+                          Text('Estadísticas', style: context.text.subTitle),
                           const SizedBox(height: 4),
-                          Text(recentActivityCaption(), style: TextStyles.caption),
+                          Text(recentActivityCaption(), style: context.text.caption),
                         ],
                       ),
                     ),
@@ -271,7 +270,7 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                     const SizedBox(height: 16),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('Actividad reciente', style: TextStyles.title),
+                      child: Text('Actividad reciente', style: context.text.title),
                     ),
 
                     // Últimos ejercicios (lista vertical)
@@ -280,7 +279,7 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         'Últimos ejercicios',
-                        style: TextStyles.subTitle,
+                        style: context.text.subTitle,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -301,11 +300,11 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                         ),
                       )
                     else if (recentExercises.isEmpty)
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           'Aún no has hecho ningún ejercicio. ¡Comienza ahora!',
-                          style: TextStyles.paragraph,
+                          style: context.text.paragraph,
                         ),
                       )
                     else
@@ -351,7 +350,7 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         'Últimos entrenamientos',
-                        style: TextStyles.subTitle,
+                        style: context.text.subTitle,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -376,11 +375,11 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                         ),
                       )
                     else if (recentTrainings.isEmpty)
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           'Aún no has realizado ningún entrenamiento. ¡Pruébalos ahora!',
-                          style: TextStyles.paragraph,
+                          style: context.text.paragraph,
                         ),
                       )
                     else
