@@ -1,34 +1,33 @@
 // Confirmación de cierre de sesión (antes vivía en Editar perfil).
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
-import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 
 /// Devuelve true solo si el usuario confirma "Sí, salir".
 Future<bool> showLogoutDialog(BuildContext context) async {
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (dialogContext) => AlertDialog(
-      backgroundColor: AppColors.widgetGrayBackground,
+      backgroundColor: dialogContext.colors.card,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       contentPadding: const EdgeInsets.all(24),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             '¿Quieres cerrar sesión?',
             textAlign: TextAlign.center,
-            style: TextStyles.paragraphBlack,
+            style: dialogContext.text.paragraphBlack,
           ),
           const SizedBox(height: 24),
           _dialogButton(
-            label: const Text('Sí, salir', style: TextStyles.buttons),
-            color: AppColors.primary,
+            label: Text('Sí, salir', style: dialogContext.text.buttons),
+            color: dialogContext.colors.brandFill,
             onPressed: () => Navigator.pop(dialogContext, true),
           ),
           const SizedBox(height: 12),
           _dialogButton(
-            label: const Text('Volver', style: TextStyles.paragraphBlack),
-            color: AppColors.widgetGrayBackground,
+            label: Text('Volver', style: dialogContext.text.paragraphBlack),
+            color: dialogContext.colors.card,
             onPressed: () => Navigator.pop(dialogContext, false),
           ),
         ],

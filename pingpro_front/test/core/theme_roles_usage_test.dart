@@ -7,6 +7,15 @@ import 'package:flutter_test/flutter_test.dart';
 // se vería con el color oscuro.
 const _migrated = <String>[
   'lib/main.dart',
+  'lib/widgets/change_password_dialog.dart',
+  'lib/widgets/confirm_action_dialog.dart',
+  'lib/widgets/delete_account_dialog.dart',
+  'lib/widgets/forgot_password_dialog.dart',
+  'lib/widgets/logout_dialog.dart',
+  'lib/widgets/stroke_picker_dialog.dart',
+  'lib/widgets/exercise_picker_sheet.dart',
+  'lib/widgets/content_actions_menu.dart',
+  'lib/widgets/exercise_done.dart',
 ];
 
 final _roleColor = RegExp(r'AppColors\.(?!accent\b)');

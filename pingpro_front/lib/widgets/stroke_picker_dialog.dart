@@ -14,9 +14,8 @@
 // los chips ocupaban unos 900 px y en un móvil había que hacer scroll dentro
 // del diálogo.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/stroke_codes.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 
 /// Lo que elige el usuario en el diálogo.
 typedef StrokeChoice = ({int hit, int rotation});
@@ -71,8 +70,8 @@ class _StrokePickerDialogState extends State<StrokePickerDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppColors.widgetBackground,
-      title: const Text('Elegir golpe', style: TextStyles.subTitleBlack),
+      backgroundColor: context.colors.softFill,
+      title: Text('Elegir golpe', style: context.text.subTitleBlack),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -92,12 +91,12 @@ class _StrokePickerDialogState extends State<StrokePickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar', style: TextStyles.paragraphBlack),
+          child: Text('Cancelar', style: context.text.paragraphBlack),
         ),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          style: ElevatedButton.styleFrom(backgroundColor: context.colors.brandFill),
           onPressed: _isComplete ? _confirm : null,
-          child: const Text('Añadir', style: TextStyles.buttons),
+          child: Text('Añadir', style: context.text.buttons),
         ),
       ],
     );

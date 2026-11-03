@@ -8,9 +8,8 @@
 // los del catálogo: el backend rechaza que uno del catálogo use ejercicios
 // privados, porque para el resto de usuarios no existirían.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 
 /// Abre la hoja. Devuelve el ejercicio elegido, o null si se cierra sin elegir.
@@ -18,7 +17,7 @@ Future<ExerciseModel?> showExercisePicker(BuildContext context, {bool catalogOnl
   return showModalBottomSheet<ExerciseModel>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: AppColors.tab,
+    backgroundColor: context.colors.tabBar,
     builder: (_) => ExercisePickerSheet(catalogOnly: catalogOnly),
   );
 }
@@ -53,7 +52,7 @@ class _ExercisePickerSheetState extends State<ExercisePickerSheet> {
 
   Widget _buildList(List<ExerciseModel> all) {
     if (all.isEmpty) {
-      return const Center(child: Text('No hay ejercicios disponibles', style: TextStyles.paragraph));
+      return Center(child: Text('No hay ejercicios disponibles', style: context.text.paragraph));
     }
     final own = widget.catalogOnly ? <ExerciseModel>[] : all.where((e) => e.isOwn).toList();
     final catalog = all.where((e) => !e.isOwn).toList();
@@ -73,16 +72,16 @@ class _ExercisePickerSheetState extends State<ExercisePickerSheet> {
   Widget _buildHeader(String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-      child: Text(title, style: TextStyles.subTitle),
+      child: Text(title, style: context.text.subTitle),
     );
   }
 
   Widget _buildTile(ExerciseModel exercise) {
     return ListTile(
-      title: Text(exercise.name, style: TextStyles.paragraph),
-      subtitle: Text(exercise.category, style: const TextStyle(color: AppColors.textGray)),
+      title: Text(exercise.name, style: context.text.paragraph),
+      subtitle: Text(exercise.category, style: TextStyle(color: context.colors.muted)),
       trailing: exercise.isOwn
-          ? const Chip(label: Text('Propio'), backgroundColor: AppColors.primary)
+          ? Chip(label: const Text('Propio'), backgroundColor: context.colors.brandFill)
           : null,
       onTap: () => Navigator.pop(context, exercise),
     );
