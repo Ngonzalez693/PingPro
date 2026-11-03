@@ -11,8 +11,7 @@
 // El parámetro `done` se recibe pero no se usa en el layout: hoy la tarjeta no
 // muestra de ninguna forma que el ejercicio esté completado.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
-import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/screens/pingpro_exercise_detail_screen.dart';
 import 'package:pingpro_front/widgets/favorite_icon.dart';
@@ -55,10 +54,10 @@ class ExerciseCard extends StatelessWidget {
           Container(
             height: 1,
             width: double.infinity,
-            color: AppColors.primary,
+            color: context.colors.brand,
           ),
         Container(
-          color: AppColors.background,
+          color: context.colors.page,
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -87,7 +86,7 @@ class ExerciseCard extends StatelessWidget {
                   children: [
                     Text(
                       exercise.name,
-                      style: TextStyles.subTitle,
+                      style: context.text.subTitle,
                     ),
                     const SizedBox(height: 8),
                     Container(
@@ -96,12 +95,12 @@ class ExerciseCard extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.primary,
+                        color: context.colors.brandFill,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
                         exercise.category,
-                        style: TextStyles.buttons.copyWith(fontSize: 14),
+                        style: context.text.buttons.copyWith(fontSize: 14),
                       ),
                     ),
                   ],
@@ -117,7 +116,7 @@ class ExerciseCard extends StatelessWidget {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: AppColors.widgetGrayBackground,
+                      color: context.colors.card,
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
@@ -143,13 +142,13 @@ class ExerciseCard extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.textGray,
+                          color: context.colors.muted,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Ver',
                           style: TextStyle(
-                            color: AppColors.textWhite,
+                            color: context.colors.onPage,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),

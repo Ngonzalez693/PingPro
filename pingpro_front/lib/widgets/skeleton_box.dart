@@ -3,7 +3,7 @@
 // El color solo importa como máscara: dentro de un SkeletonShimmer el
 // degradado lo repinta encima.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 
 class SkeletonBox extends StatelessWidget {
   final double? width;
@@ -23,7 +23,7 @@ class SkeletonBox extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: AppColors.skeletonBase,
+        color: context.colors.skeletonBase,
         borderRadius: BorderRadius.circular(radius),
       ),
     );

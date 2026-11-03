@@ -27,9 +27,9 @@
 // entrenamiento.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/stroke_codes.dart';
 import 'package:pingpro_front/core/table_geometry.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/sequence_step_model.dart';
 import 'package:pingpro_front/widgets/dragged_row_decorator.dart';
 import 'package:pingpro_front/widgets/pingpong_table.dart';
@@ -168,7 +168,7 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
           icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
           onPressed: () => Navigator.pop(context),
         ),
-        const Text('Secuencia', style: TextStyles.subTitle),
+        Text('Secuencia', style: context.text.subTitle),
       ],
     );
   }
@@ -199,6 +199,7 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
     return StrokeArrowsPainter(
       table: _table,
       arrows: [for (final s in _strokes) s.arrow],
+      colors: context.colors,
       dragging: dragging,
       snapped: dragging == null ? null : snapTarget(dragging.end),
     );
@@ -217,12 +218,12 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
 
   Widget _buildStrokeList() {
     if (_strokes.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 32),
           child: Text(
             'Arrastra desde un + de tu lado hasta un punto del campo del rival',
-            style: TextStyles.paragraph,
+            style: context.text.paragraph,
             textAlign: TextAlign.center,
           ),
         ),
@@ -231,7 +232,7 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
     return ReorderableListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       buildDefaultDragHandles: false,
-      proxyDecorator: (_, i, __) => draggedRowBackground(_buildStrokeRow(i, dragging: true)),
+      proxyDecorator: (_, i, __) => draggedRowBackground(context, _buildStrokeRow(i, dragging: true)),
       itemCount: _strokes.length,
       onReorder: _reorderStroke,
       itemBuilder: (context, i) => _buildStrokeRow(i),
@@ -239,7 +240,7 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
   }
 
   Widget _buildStrokeRow(int i, {bool dragging = false}) {
-    final foreground = rowForeground(dragging: dragging);
+    final foreground = rowForeground(context, dragging: dragging);
     return ListTile(
       key: ValueKey(_strokes[i].key),
       dense: true,
@@ -249,7 +250,7 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
       ),
       title: Text(
         '${i + 1}. ${describeStep(_strokes[i].step)}',
-        style: TextStyles.paragraph.copyWith(color: foreground),
+        style: context.text.paragraph.copyWith(color: foreground),
       ),
       trailing: IconButton(
         icon: Icon(Icons.close, color: dragging ? foreground : AppColors.textGray),
@@ -270,7 +271,7 @@ class _PingproCreateSequenceScreenState extends State<PingproCreateSequenceScree
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
         ),
         onPressed: _strokes.isEmpty ? null : _submit,
-        child: const Text('Subir y ver', style: TextStyles.buttons),
+        child: Text('Subir y ver', style: context.text.buttons),
       ),
     );
   }

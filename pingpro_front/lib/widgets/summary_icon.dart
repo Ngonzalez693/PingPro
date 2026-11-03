@@ -2,8 +2,7 @@
 // creados). Se usa suelto en Perfil y agrupado en SummaryIconRow.
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:pingpro_front/core/app_colors.dart';
-import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 
 class SummaryIcon extends StatelessWidget {
   final String assetPath;
@@ -26,7 +25,7 @@ class SummaryIcon extends StatelessWidget {
           width: 64,
           height: 64,
           decoration: BoxDecoration(
-            color: AppColors.widgetGrayBackground,
+            color: context.colors.card,
             shape: BoxShape.circle,
           ),
           child: Stack(
@@ -44,14 +43,14 @@ class SummaryIcon extends StatelessWidget {
                 bottom: 1,
                 child: Text(
                   '$count',
-                  style: TextStyles.title.copyWith(color: AppColors.textBlack),
+                  style: context.text.titleBlack,
                 ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 6),
-        Text(label, style: TextStyles.buttons),
+        Text(label, style: context.text.buttons),
       ],
     );
   }

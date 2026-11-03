@@ -5,7 +5,8 @@
 // igual en cualquier pantalla. Los puntos de golpeo y las flechas los pone el
 // editor de secuencias encima, usando core/table_geometry.dart.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
+import 'package:pingpro_front/core/pingpro_colors.dart';
 import 'package:pingpro_front/core/table_geometry.dart';
 
 class PingPongTable extends StatelessWidget {
@@ -15,16 +16,20 @@ class PingPongTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: tableAspectRatio,
-      child: CustomPaint(painter: _TablePainter()),
+      child: CustomPaint(painter: _TablePainter(context.colors)),
     );
   }
 }
 
 class _TablePainter extends CustomPainter {
+  final PingProColors colors;
+
+  const _TablePainter(this.colors);
+
   @override
   void paint(Canvas canvas, Size size) {
     final line = Paint()
-      ..color = AppColors.textGray
+      ..color = colors.muted
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
@@ -37,12 +42,12 @@ class _TablePainter extends CustomPainter {
 
     // La red, más marcada: es la frontera entre tu campo y el del rival.
     final net = Paint()
-      ..color = AppColors.textWhite
+      ..color = colors.onPage
       ..strokeWidth = 3;
     final netDy = size.height * netY;
     canvas.drawLine(Offset(0, netDy), Offset(size.width, netDy), net);
   }
 
   @override
-  bool shouldRepaint(_TablePainter oldDelegate) => false;
+  bool shouldRepaint(_TablePainter oldDelegate) => oldDelegate.colors != colors;
 }

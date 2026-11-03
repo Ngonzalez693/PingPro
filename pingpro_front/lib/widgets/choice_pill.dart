@@ -5,8 +5,7 @@
 // Se achica al presionarla y el color cambia con una transición corta, así
 // al elegir otra opción la nueva se enciende mientras la anterior se apaga.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
-import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/widgets/pressable_scale.dart';
 
 class ChoicePill extends StatelessWidget {
@@ -14,7 +13,7 @@ class ChoicePill extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
   final double? width;
-  final TextStyle textStyle;
+  final TextStyle? textStyle;
 
   const ChoicePill({
     super.key,
@@ -22,7 +21,7 @@ class ChoicePill extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.width,
-    this.textStyle = TextStyles.buttons,
+    this.textStyle,
   });
 
   @override
@@ -36,11 +35,11 @@ class ChoicePill extends StatelessWidget {
           width: width,
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: selected ? AppColors.primary : AppColors.secundary,
+            color: selected ? context.colors.brandFill : context.colors.softFill,
             borderRadius: BorderRadius.circular(20),
           ),
           alignment: Alignment.center,
-          child: Text(label, style: textStyle),
+          child: Text(label, style: textStyle ?? context.text.buttons),
         ),
       ),
     );

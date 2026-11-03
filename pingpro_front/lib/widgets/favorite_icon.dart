@@ -4,7 +4,7 @@
 // La key del icono cambia con el estado, así AnimatedSwitcher hace la
 // transición al marcar y al desmarcar.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/motion.dart';
 
 class FavoriteIcon extends StatelessWidget {
@@ -23,7 +23,7 @@ class FavoriteIcon extends StatelessWidget {
       child: Icon(
         isFavorite ? Icons.favorite : Icons.favorite_border,
         key: ValueKey(isFavorite),
-        color: AppColors.primary,
+        color: context.colors.brand,
         size: size,
       ),
     );

@@ -4,8 +4,8 @@
 // no deja sitio al texto.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/stats_breakdown.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 
 class CountBars extends StatelessWidget {
   final String title;
@@ -19,49 +19,49 @@ class CountBars extends StatelessWidget {
     final max = entries.fold(0, (m, e) => e.count > m ? e.count : m);
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.widgetGrayBackground,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: TextStyles.subTitleBlack),
+          Text(title, style: context.text.subTitleBlack),
           if (header != null) ...[const SizedBox(height: 8), header!],
           const SizedBox(height: 8),
-          for (final entry in entries) _buildRow(entry, max),
+          for (final entry in entries) _buildRow(context, entry, max),
         ],
       ),
     );
   }
 
-  Widget _buildRow(CountEntry entry, int max) {
+  Widget _buildRow(BuildContext context, CountEntry entry, int max) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          SizedBox(width: 120, child: Text(entry.label, style: TextStyles.aditional)),
+          SizedBox(width: 120, child: Text(entry.label, style: context.text.aditional)),
           Expanded(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: max == 0 ? 0 : entry.count / max,
                 minHeight: 10,
-                backgroundColor: AppColors.secundary,
-                color: AppColors.primary,
+                backgroundColor: context.colors.softFill,
+                color: context.colors.brand,
               ),
             ),
           ),
           SizedBox(
             width: 32,
-            child: Text('${entry.count}', style: TextStyles.aditional, textAlign: TextAlign.right),
+            child: Text('${entry.count}', style: context.text.aditional, textAlign: TextAlign.right),
           ),
           SizedBox(
             width: 72,
             child: entry.reinforce
                 ? Text(
                     'a reforzar',
-                    style: TextStyles.aditional.copyWith(color: AppColors.accent),
+                    style: context.text.aditional.copyWith(color: AppColors.accent),
                     textAlign: TextAlign.right,
                   )
                 : null,

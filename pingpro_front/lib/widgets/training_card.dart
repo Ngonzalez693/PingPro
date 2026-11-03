@@ -4,8 +4,7 @@
 // Como ExerciseCard, es puramente presentacional: la navegación llega por
 // `onTap`. La imagen también es un asset local, con la misma limitación.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
-import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/widgets/pressable_scale.dart';
 
@@ -28,7 +27,7 @@ class TrainingCard extends StatelessWidget {
           width: 120,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: AppColors.background,
+            color: context.colors.page,
           ),
           child: Column(
             children: [
@@ -47,8 +46,8 @@ class TrainingCard extends StatelessWidget {
               Container(
                 height: 40,
                 width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: AppColors.widgetGrayBackground,
+                decoration: BoxDecoration(
+                  color: context.colors.card,
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(16),
                     bottomRight: Radius.circular(16),
@@ -57,7 +56,7 @@ class TrainingCard extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Text(
                   training.name,       // usa `name` o `type` según tu modelo
-                  style: TextStyles.aditional,
+                  style: context.text.aditional,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

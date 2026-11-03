@@ -15,7 +15,7 @@
 // Todas las pantallas pasan por aquí, así que el indicador (está previsto uno
 // propio, con la raqueta y la pelota) se cambia solo en este archivo.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/motion.dart';
 
 /// Cuánto hay que tirar (ya con la resistencia aplicada) para recargar.
@@ -204,15 +204,15 @@ class _Indicator extends StatelessWidget {
       width: _indicatorSize,
       height: _indicatorSize,
       padding: const EdgeInsets.all(10),
-      decoration: const BoxDecoration(
-        color: AppColors.tab,
+      decoration: BoxDecoration(
+        color: context.colors.tabBar,
         shape: BoxShape.circle,
         boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 6, offset: Offset(0, 2))],
       ),
       child: CircularProgressIndicator(
         value: progress,
         strokeWidth: 2.5,
-        color: AppColors.primary,
+        color: context.colors.brand,
       ),
     );
   }

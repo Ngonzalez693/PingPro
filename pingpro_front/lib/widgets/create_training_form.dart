@@ -14,12 +14,11 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/duplicate_content.dart';
 import 'package:pingpro_front/core/form_styles.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
 import 'package:pingpro_front/core/services/trainings_state.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/core/training_options.dart';
 import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
@@ -220,7 +219,7 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
         const SizedBox(height: 12),
         _buildTextField(_description, 'Descripción (opcional)', maxLines: 3),
         const SizedBox(height: 20),
-        const Text('Imagen', style: TextStyles.subTitle),
+        Text('Imagen', style: context.text.subTitle),
         const SizedBox(height: 8),
         ImageOptionPicker(
           images: trainingImages,
@@ -240,18 +239,18 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
     return TextField(
       controller: controller,
       maxLines: maxLines,
-      style: TextStyles.paragraphBlack,
-      decoration: formInputDecoration(hint),
+      style: context.text.paragraphBlack,
+      decoration: formInputDecoration(context, hint),
     );
   }
 
   Widget _buildCategory() {
     return DropdownButtonFormField<String>(
       value: _category,
-      decoration: formInputDecoration('Categoría'),
+      decoration: formInputDecoration(context, 'Categoría'),
       items: [
         for (final c in trainingCategories)
-          DropdownMenuItem(value: c, child: Text(c, style: TextStyles.paragraphBlack)),
+          DropdownMenuItem(value: c, child: Text(c, style: context.text.paragraphBlack)),
       ],
       onChanged: (c) {
         if (c != null) setState(() => _category = c);
@@ -269,12 +268,12 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
           controller: _minutes,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          style: TextStyles.paragraphBlack,
-          decoration: formInputDecoration('Minutos por ejercicio'),
+          style: context.text.paragraphBlack,
+          decoration: formInputDecoration(context, 'Minutos por ejercicio'),
         ),
         if (total != null) ...[
           const SizedBox(height: 6),
-          Text('Duración total: $total min', style: TextStyles.paragraph),
+          Text('Duración total: $total min', style: context.text.paragraph),
         ],
       ],
     );
@@ -283,11 +282,11 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
   Widget _buildExercisesHeader() {
     return Row(
       children: [
-        const Expanded(child: Text('Ejercicios', style: TextStyles.subTitle)),
+        Expanded(child: Text('Ejercicios', style: context.text.subTitle)),
         TextButton.icon(
           onPressed: _addExercise,
-          icon: const Icon(Icons.add, color: AppColors.primary),
-          label: const Text('Agregar ejercicio', style: TextStyle(color: AppColors.primary)),
+          icon: Icon(Icons.add, color: context.colors.brand),
+          label: Text('Agregar ejercicio', style: TextStyle(color: context.colors.brand)),
         ),
       ],
     );
@@ -295,9 +294,9 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
 
   Widget _buildExerciseList() {
     if (_entries.isEmpty) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.symmetric(vertical: 12),
-        child: Text('Todavía no hay ejercicios', style: TextStyle(color: AppColors.textGray)),
+        child: Text('Todavía no hay ejercicios', style: TextStyle(color: context.colors.muted)),
       );
     }
     // Dentro de otro ListView: sin scroll propio y a la altura de su contenido.
@@ -305,7 +304,7 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       buildDefaultDragHandles: false,
-      proxyDecorator: (_, i, __) => draggedRowBackground(_buildEntry(i, dragging: true)),
+      proxyDecorator: (_, i, __) => draggedRowBackground(context, _buildEntry(i, dragging: true)),
       onReorder: _reorder,
       children: [for (var i = 0; i < _entries.length; i++) _buildEntry(i)],
     );
@@ -313,21 +312,21 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
 
   Widget _buildEntry(int index, {bool dragging = false}) {
     final exercise = _entries[index].exercise;
-    final foreground = rowForeground(dragging: dragging);
+    final foreground = rowForeground(context, dragging: dragging);
     return ListTile(
       key: ValueKey(_entries[index].key),
       contentPadding: EdgeInsets.zero,
       leading: ReorderableDragStartListener(
         index: index,
-        child: Icon(Icons.drag_handle, color: dragging ? foreground : AppColors.textGray),
+        child: Icon(Icons.drag_handle, color: dragging ? foreground : context.colors.muted),
       ),
-      title: Text('${index + 1}. ${exercise.name}', style: TextStyles.paragraph.copyWith(color: foreground)),
+      title: Text('${index + 1}. ${exercise.name}', style: context.text.paragraph.copyWith(color: foreground)),
       // Sobre el fondo claro del arrastre, el amarillo de "Propio" no se leería.
       subtitle: exercise.isOwn
-          ? Text('Propio', style: TextStyle(color: dragging ? foreground : AppColors.primary))
+          ? Text('Propio', style: TextStyle(color: dragging ? foreground : context.colors.brand))
           : null,
       trailing: IconButton(
-        icon: Icon(Icons.close, color: dragging ? foreground : AppColors.textGray),
+        icon: Icon(Icons.close, color: dragging ? foreground : context.colors.muted),
         tooltip: 'Quitar ejercicio ${index + 1}',
         onPressed: () => _removeAt(index),
       ),
@@ -338,15 +337,15 @@ class _CreateTrainingFormState extends State<CreateTrainingForm> {
     return Center(
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.textBlack,
+          backgroundColor: context.colors.brandFill,
+          foregroundColor: context.colors.onBrandFill,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 12),
         ),
         onPressed: _canSave ? _save : null,
         child: _saving
             ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
-            : Text(widget.initial == null ? 'Crear' : 'Guardar', style: TextStyles.buttons),
+            : Text(widget.initial == null ? 'Crear' : 'Guardar', style: context.text.buttons),
       ),
     );
   }

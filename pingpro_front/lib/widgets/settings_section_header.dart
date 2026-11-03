@@ -1,6 +1,6 @@
 // Encabezado de sección de Configuración ("CUENTA", "ACERCA DE").
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 
 class SettingsSectionHeader extends StatelessWidget {
   final String title;
@@ -13,7 +13,7 @@ class SettingsSectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
       child: Text(
         title.toUpperCase(),
-        style: TextStyles.caption.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1),
+        style: context.text.caption.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1),
       ),
     );
   }

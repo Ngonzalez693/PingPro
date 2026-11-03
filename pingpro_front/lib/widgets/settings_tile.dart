@@ -4,8 +4,7 @@
 // Solo las tocables rebotan al presionar: en una de lectura sería engañoso.
 // `destructive` la pinta de rojo: acciones que no se deshacen.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
-import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/widgets/pressable_scale.dart';
 
 class SettingsTile extends StatelessWidget {
@@ -28,12 +27,12 @@ class SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = destructive ? AppColors.danger : AppColors.textWhite;
+    final color = destructive ? context.colors.danger : context.colors.onPage;
     final tile = ListTile(
       leading: Icon(icon, color: color),
-      title: Text(title, style: TextStyles.paragraph.copyWith(color: color)),
-      subtitle: subtitle == null ? null : Text(subtitle!, style: TextStyles.caption),
-      trailing: trailing ?? (onTap == null ? null : const Icon(Icons.chevron_right, color: AppColors.textGray)),
+      title: Text(title, style: context.text.paragraph.copyWith(color: color)),
+      subtitle: subtitle == null ? null : Text(subtitle!, style: context.text.caption),
+      trailing: trailing ?? (onTap == null ? null : Icon(Icons.chevron_right, color: context.colors.muted)),
       onTap: onTap,
     );
     return onTap == null ? tile : PressableScale(child: tile);

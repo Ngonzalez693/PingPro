@@ -4,7 +4,7 @@
 // pantalla anuncia el estado (activado o no) y no deja una segunda parada de
 // foco para el mismo control.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/widgets/settings_tile.dart';
 
 class SettingsSwitchTile extends StatelessWidget {
@@ -30,7 +30,7 @@ class SettingsSwitchTile extends StatelessWidget {
         icon: icon,
         title: title,
         subtitle: subtitle,
-        trailing: Switch(value: value, onChanged: onChanged, activeColor: AppColors.primary),
+        trailing: Switch(value: value, onChanged: onChanged, activeColor: context.colors.brand),
         onTap: () => onChanged(!value),
       ),
     );

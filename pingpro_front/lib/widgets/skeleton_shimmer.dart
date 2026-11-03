@@ -4,7 +4,7 @@
 // brillan sincronizadas, como si fueran una sola superficie.
 // Con animaciones reducidas no brilla: queda el gris de las cajas.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 
 class SkeletonShimmer extends StatefulWidget {
   final Widget child;
@@ -70,10 +70,10 @@ class _SkeletonShimmerState extends State<SkeletonShimmer>
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: const [
-        AppColors.skeletonBase,
-        AppColors.skeletonHighlight,
-        AppColors.skeletonBase,
+      colors: [
+        context.colors.skeletonBase,
+        context.colors.skeletonHighlight,
+        context.colors.skeletonBase,
       ],
       stops: [center - 0.3, center, center + 0.3],
       tileMode: TileMode.clamp,
