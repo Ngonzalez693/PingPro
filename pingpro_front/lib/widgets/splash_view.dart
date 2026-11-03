@@ -2,7 +2,7 @@
 // de navegación, para que la compartan el splash entre el onboarding y el
 // login (PingproSplashScreen) y el del arranque con sesión (StartupSplash).
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/text_styles.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/widgets/bouncing_ball_indicator.dart';
 
 class SplashView extends StatelessWidget {
@@ -20,7 +20,7 @@ class SplashView extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'PingPro',
-              style: TextStyles.brandTitle.copyWith(fontSize: 40),
+              style: context.text.brandTitle.copyWith(fontSize: 40),
             ),
             const SizedBox(height: 32),
             const BouncingBallIndicator(),

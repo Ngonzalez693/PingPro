@@ -10,7 +10,7 @@
 //
 // Sin estado propio: `currentIndex` y `onTap` los controla HomeNavigation.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/motion.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -46,7 +46,7 @@ class CustomBottomNavigation extends StatelessWidget {
       child: Container(
         height: _barHeight,
         decoration: BoxDecoration(
-          color: AppColors.tab,
+          color: context.colors.tabBar,
           boxShadow: [
             BoxShadow(
               color: Colors.black,
@@ -121,7 +121,7 @@ class CustomBottomNavigation extends StatelessWidget {
         duration: motionDuration(context, _iconAnimation),
         style: TextStyle(
           fontSize: 11,
-          color: isSelected ? AppColors.primary : AppColors.textWhite,
+          color: isSelected ? context.colors.brand : context.colors.onPage,
         ),
         child: Text(label, maxLines: 1),
       ),

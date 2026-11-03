@@ -4,7 +4,7 @@
 // lienzo y decide con core/table_geometry.dart (originAt) si empezaron sobre
 // uno de estos botones. Así la flecha puede seguir al dedo fuera del botón.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 
 class PlusButton extends StatelessWidget {
   /// Diámetro. Lo usa el editor para centrar el botón en su punto de la mesa.
@@ -17,13 +17,13 @@ class PlusButton extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(
-        color: AppColors.widgetGrayBackground,
+      decoration: BoxDecoration(
+        color: context.colors.card,
         shape: BoxShape.circle,
       ),
-      child: const Icon(
+      child: Icon(
         Icons.add,
-        color: AppColors.textWhite,
+        color: context.colors.onPage,
         size: 20,
       ),
     );

@@ -30,6 +30,21 @@ const _migrated = <String>[
   'lib/widgets/create_exercise_form.dart',
   'lib/widgets/image_option_picker.dart',
   'lib/core/form_styles.dart',
+  'lib/widgets/exercise_card.dart',
+  'lib/widgets/training_card.dart',
+  'lib/widgets/load_error_view.dart',
+  'lib/widgets/settings_tile.dart',
+  'lib/widgets/settings_switch_tile.dart',
+  'lib/widgets/settings_section_header.dart',
+  'lib/widgets/choice_pill.dart',
+  'lib/widgets/favorite_icon.dart',
+  'lib/widgets/plus_button.dart',
+  'lib/widgets/skeleton_box.dart',
+  'lib/widgets/skeleton_shimmer.dart',
+  'lib/widgets/bouncing_ball_indicator.dart',
+  'lib/widgets/pull_to_refresh.dart',
+  'lib/widgets/custom_bottom_navigation.dart',
+  'lib/widgets/splash_view.dart',
 ];
 
 final _roleColor = RegExp(r'AppColors\.(?!accent\b)');

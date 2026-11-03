@@ -6,12 +6,10 @@
 // término `4 * height * t * (1 - t)` levanta la pelota en el centro del salto.
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
 
 class BouncingBallIndicator extends StatefulWidget {
   final double dotSize;
   final double ballSize;
-  final Color dotColor;
   final Color ballColor;
   final Duration duration;
 
@@ -19,7 +17,6 @@ class BouncingBallIndicator extends StatefulWidget {
     super.key,
     this.dotSize = 12,
     this.ballSize = 16,
-    this.dotColor = AppColors.secundary,
     this.ballColor = Colors.white,
     this.duration = const Duration(milliseconds: 1200),
   });
