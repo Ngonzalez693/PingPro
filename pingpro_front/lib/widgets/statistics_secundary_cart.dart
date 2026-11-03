@@ -8,7 +8,7 @@
 // "secondary_chart"); la clase sí se llama StatisticsSecondaryChart.
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/chart_axis.dart';
 
 class StatisticsSecondaryChart extends StatelessWidget {
@@ -29,7 +29,7 @@ class StatisticsSecondaryChart extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.widgetGrayBackground,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
@@ -54,7 +54,7 @@ class StatisticsSecondaryChart extends StatelessWidget {
                         BarChartRodData(
                           toY: values[i].toDouble(),
                           width: 14,
-                          color: AppColors.primary,
+                          color: context.colors.brand,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ],

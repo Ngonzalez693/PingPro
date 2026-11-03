@@ -10,7 +10,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/chart_axis.dart';
 import 'package:pingpro_front/core/chart_reveal.dart';
 
@@ -75,7 +75,7 @@ class _StatisticsChartState extends State<StatisticsChart>
     return Container(
       height: 160, // 🔹 misma altura que usabas
       decoration: BoxDecoration(
-        color: AppColors.widgetGrayBackground,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
@@ -125,10 +125,10 @@ class _StatisticsChartState extends State<StatisticsChart>
       barWidth: 3,
       gradient: LinearGradient(
         colors: [
-          AppColors.primary,
-          AppColors.primary,
-          AppColors.primary.withValues(alpha: 0),
-          AppColors.primary.withValues(alpha: 0),
+          context.colors.brand,
+          context.colors.brand,
+          context.colors.brand.withValues(alpha: 0),
+          context.colors.brand.withValues(alpha: 0),
         ],
         stops: revealStops(progress),
       ),
