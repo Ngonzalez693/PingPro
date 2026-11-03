@@ -8,16 +8,16 @@
 // La fila se reconstruye en vez de cambiar colores por tema porque la capa del
 // arrastre copia los temas de la lista, y esos ganarían al de este fondo.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 
 /// Color del texto y los iconos de una fila, arrastrada o no.
-Color rowForeground({required bool dragging}) =>
-    dragging ? AppColors.textBlack : AppColors.textWhite;
+Color rowForeground(BuildContext context, {required bool dragging}) =>
+    dragging ? context.colors.onCard : context.colors.onPage;
 
 /// Fondo de la fila arrastrada.
-Widget draggedRowBackground(Widget row) {
+Widget draggedRowBackground(BuildContext context, Widget row) {
   return Material(
-    color: AppColors.secundary,
+    color: context.colors.softFill,
     elevation: 4,
     borderRadius: BorderRadius.circular(8),
     child: row,

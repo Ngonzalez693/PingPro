@@ -9,7 +9,7 @@
 // Recibe las posiciones en coordenadas de mesa y el rectángulo de la mesa en
 // el lienzo, así que todo sigue en su sitio si cambia el tamaño.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/pingpro_colors.dart';
 import 'package:pingpro_front/core/table_geometry.dart';
 
 /// Una flecha: índice en strokeOrigins del que sale y dónde termina
@@ -24,9 +24,12 @@ class StrokeArrowsPainter extends CustomPainter {
   /// Destino al que se engancharía la flecha arrastrada, si la hay.
   final StrokeTarget? snapped;
 
+  final PingProColors colors;
+
   const StrokeArrowsPainter({
     required this.table,
     required this.arrows,
+    required this.colors,
     this.dragging,
     this.snapped,
   });
@@ -40,7 +43,7 @@ class StrokeArrowsPainter extends CustomPainter {
     _drawTargets(canvas);
 
     for (var i = 0; i < arrows.length; i++) {
-      _drawArrow(canvas, arrows[i], AppColors.primary);
+      _drawArrow(canvas, arrows[i], colors.brand);
       _drawBadge(canvas, toCanvas(arrows[i].end, table), i + 1);
     }
 
@@ -48,19 +51,19 @@ class StrokeArrowsPainter extends CustomPainter {
     if (live == null) return;
     final target = snapped;
     if (target == null) {
-      _drawArrow(canvas, live, AppColors.textGray);
+      _drawArrow(canvas, live, colors.muted);
       return;
     }
     final snappedArrow = (originIndex: live.originIndex, end: target.position);
-    _drawArrow(canvas, snappedArrow, AppColors.primary.withValues(alpha: 0.6));
+    _drawArrow(canvas, snappedArrow, colors.brand.withValues(alpha: 0.6));
   }
 
   void _drawTargets(Canvas canvas) {
     final ring = Paint()
-      ..color = AppColors.textGray
+      ..color = colors.muted
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
-    final fill = Paint()..color = AppColors.primary;
+    final fill = Paint()..color = colors.brand;
 
     for (final target in strokeTargets) {
       final center = toCanvas(target.position, table);
@@ -85,12 +88,12 @@ class StrokeArrowsPainter extends CustomPainter {
   }
 
   void _drawBadge(Canvas canvas, Offset at, int number) {
-    canvas.drawCircle(at, _badgeRadius, Paint()..color = AppColors.primary);
+    canvas.drawCircle(at, _badgeRadius, Paint()..color = colors.brandFill);
 
     final label = TextPainter(
       text: TextSpan(
         text: '$number',
-        style: const TextStyle(color: AppColors.textBlack, fontSize: 12, fontWeight: FontWeight.bold),
+        style: TextStyle(color: colors.onBrandFill, fontSize: 12, fontWeight: FontWeight.bold),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
@@ -99,5 +102,7 @@ class StrokeArrowsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(StrokeArrowsPainter old) =>
-      old.table != table || old.arrows != arrows || old.dragging != dragging || old.snapped != snapped;
+      old.table != table || old.arrows != arrows || old.dragging != dragging ||
+      old.snapped != snapped ||
+      old.colors != colors;
 }

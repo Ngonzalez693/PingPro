@@ -23,6 +23,13 @@ const _migrated = <String>[
   'lib/widgets/consistency_card.dart',
   'lib/widgets/exercise_rank_list.dart',
   'lib/widgets/summary_icon.dart',
+  'lib/widgets/stroke_arrows_painter.dart',
+  'lib/widgets/pingpong_table.dart',
+  'lib/widgets/dragged_row_decorator.dart',
+  'lib/widgets/create_training_form.dart',
+  'lib/widgets/create_exercise_form.dart',
+  'lib/widgets/image_option_picker.dart',
+  'lib/core/form_styles.dart',
 ];
 
 final _roleColor = RegExp(r'AppColors\.(?!accent\b)');

@@ -9,10 +9,9 @@
 //      guarda y vuelve al detalle.
 // Si en la vista previa se vuelve atrás, el editor sigue con lo dibujado.
 import 'package:flutter/material.dart';
-import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/exercise_options.dart';
 import 'package:pingpro_front/core/form_styles.dart';
-import 'package:pingpro_front/core/text_styles.dart';
 import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/models/exercise_draft_model.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
@@ -135,7 +134,7 @@ class _CreateExerciseFormState extends State<CreateExerciseForm> {
         const SizedBox(height: 12),
         _buildTextField(_description, 'Descripción (opcional)', maxLines: 3),
         const SizedBox(height: 20),
-        const Text('Imagen', style: TextStyles.subTitle),
+        Text('Imagen', style: context.text.subTitle),
         const SizedBox(height: 8),
         ImageOptionPicker(
           images: exerciseImages,
@@ -152,18 +151,18 @@ class _CreateExerciseFormState extends State<CreateExerciseForm> {
     return TextField(
       controller: controller,
       maxLines: maxLines,
-      style: TextStyles.paragraphBlack,
-      decoration: formInputDecoration(hint),
+      style: context.text.paragraphBlack,
+      decoration: formInputDecoration(context, hint),
     );
   }
 
   Widget _buildCategory() {
     return DropdownButtonFormField<String>(
       value: _category,
-      decoration: formInputDecoration('Categoría'),
+      decoration: formInputDecoration(context, 'Categoría'),
       items: [
         for (final c in exerciseCategories)
-          DropdownMenuItem(value: c, child: Text(c, style: TextStyles.paragraphBlack)),
+          DropdownMenuItem(value: c, child: Text(c, style: context.text.paragraphBlack)),
       ],
       onChanged: (c) {
         if (c != null) setState(() => _category = c);
@@ -175,14 +174,14 @@ class _CreateExerciseFormState extends State<CreateExerciseForm> {
     return Center(
       child: ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.textBlack,
+          backgroundColor: context.colors.brandFill,
+          foregroundColor: context.colors.onBrandFill,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
         ),
         onPressed: _canContinue ? _openEditor : null,
         icon: const Icon(Icons.arrow_forward),
-        label: const Text('Siguiente', style: TextStyles.buttons),
+        label: Text('Siguiente', style: context.text.buttons),
       ),
     );
   }
