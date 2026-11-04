@@ -5,8 +5,15 @@ import 'package:flutter/services.dart';
 import 'package:pingpro_front/core/pingpro_colors.dart';
 import 'package:pingpro_front/core/pingpro_text.dart';
 
+// Las hojas y los menús toman su fondo de aquí y no al abrirse: así un cambio
+// de tema con uno abierto también les llega.
 ThemeData buildAppTheme(PingProColors colors) {
-  return ThemeData(scaffoldBackgroundColor: colors.page, extensions: [colors]);
+  return ThemeData(
+    scaffoldBackgroundColor: colors.page,
+    bottomSheetTheme: BottomSheetThemeData(backgroundColor: colors.tabBar),
+    popupMenuTheme: PopupMenuThemeData(color: colors.softFill),
+    extensions: [colors],
+  );
 }
 
 // Iconos de la barra de estado según el fondo: oscuros sobre la crema, claros

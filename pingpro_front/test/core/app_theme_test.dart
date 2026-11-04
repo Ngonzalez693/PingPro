@@ -72,4 +72,14 @@ void main() {
 
     expect(seen, PingProColors.light);
   });
+  // Si cada hoja o menú pasara su color al abrirse, quedaría fijo aunque el
+  // tema cambie con la hoja abierta.
+  test('las hojas y los menús toman la paleta del tema', () {
+    for (final palette in [PingProColors.dark, PingProColors.light]) {
+      final theme = buildAppTheme(palette);
+
+      expect(theme.bottomSheetTheme.backgroundColor, palette.tabBar);
+      expect(theme.popupMenuTheme.color, palette.softFill);
+    }
+  });
 }

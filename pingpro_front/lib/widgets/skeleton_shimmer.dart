@@ -5,6 +5,7 @@
 // Con animaciones reducidas no brilla: queda el gris de las cajas.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_theme.dart';
+import 'package:pingpro_front/core/pingpro_colors.dart';
 
 class SkeletonShimmer extends StatefulWidget {
   final Widget child;
@@ -46,6 +47,7 @@ class _SkeletonShimmerState extends State<SkeletonShimmer>
       // Las cajas ya son grises (SkeletonBox): sin el degradado no hay brillo.
       return Semantics(label: 'Cargando', child: widget.child);
     }
+    final colors = context.colors;
     return Semantics(
       label: 'Cargando',
       child: AnimatedBuilder(
@@ -54,7 +56,7 @@ class _SkeletonShimmerState extends State<SkeletonShimmer>
         builder: (context, child) {
           return ShaderMask(
             blendMode: BlendMode.srcATop,
-            shaderCallback: (bounds) => _gradientAt(_controller.value)
+            shaderCallback: (bounds) => _gradientAt(_controller.value, colors)
                 .createShader(bounds),
             child: child,
           );
@@ -65,15 +67,15 @@ class _SkeletonShimmerState extends State<SkeletonShimmer>
 
   // La franja clara entra por la izquierda y sale por la derecha: los stops
   // van de -1 a 2 para que empiece y termine fuera de la caja.
-  LinearGradient _gradientAt(double t) {
+  LinearGradient _gradientAt(double t, PingProColors colors) {
     final center = -1 + 3 * t;
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [
-        context.colors.skeletonBase,
-        context.colors.skeletonHighlight,
-        context.colors.skeletonBase,
+        colors.skeletonBase,
+        colors.skeletonHighlight,
+        colors.skeletonBase,
       ],
       stops: [center - 0.3, center, center + 0.3],
       tileMode: TileMode.clamp,
