@@ -173,6 +173,8 @@ class _PingproExerciseDetailScreenState
     setState(() => _actionLoading = true);
     final id = widget.exercise.id;
     final messenger = ScaffoldMessenger.of(context);
+    // Antes del await, como el messenger: después la pantalla puede no estar.
+    final undoColor = context.colors.brandFill;
 
     try {
       final session = CurrentSession.instance.sessionFor(StatsState.instance.events);
@@ -182,7 +184,7 @@ class _PingproExerciseDetailScreenState
         content: const Text('Repetición guardada'),
         action: SnackBarAction(
           label: 'Deshacer',
-          textColor: context.colors.brandFill,
+          textColor: undoColor,
           onPressed: () => _undoAndReport(messenger, id, session),
         ),
       ));

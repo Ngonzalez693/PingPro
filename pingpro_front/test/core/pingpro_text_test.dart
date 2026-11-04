@@ -19,6 +19,7 @@ const _distinct = PingProColors(
   skeletonBase: Color(0xFF00000C),
   skeletonHighlight: Color(0xFF00000D),
   danger: Color(0xFF00000E),
+  hairline: Color(0xFF00000F),
 );
 
 void main() {

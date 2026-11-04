@@ -41,4 +41,45 @@ void main() {
   test('el fondo de las pantallas es el de la paleta', () {
     expect(buildAppTheme(PingProColors.dark).scaffoldBackgroundColor, AppColors.background);
   });
+  test('iconos oscuros sobre la crema y claros sobre negro', () {
+    final light = overlayStyleFor(PingProColors.light);
+    final dark = overlayStyleFor(PingProColors.dark);
+
+    expect(light.statusBarIconBrightness, Brightness.dark);
+    expect(dark.statusBarIconBrightness, Brightness.light);
+    // La barra de botones de Android es del sistema: no se toca.
+    expect(light.systemNavigationBarColor, isNull);
+    expect(dark.systemNavigationBarColor, isNull);
+  });
+
+  testWidgets('Sistema sigue al teléfono', (tester) async {
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+    late PingProColors seen;
+    await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(PingProColors.light),
+      darkTheme: buildAppTheme(PingProColors.dark),
+      themeMode: ThemeMode.system,
+      home: Builder(builder: (context) {
+        seen = context.colors;
+        return const SizedBox();
+      }),
+    ));
+    expect(seen, PingProColors.dark);
+
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
+    await tester.pumpAndSettle();
+
+    expect(seen, PingProColors.light);
+  });
+  // Si cada hoja o menú pasara su color al abrirse, quedaría fijo aunque el
+  // tema cambie con la hoja abierta.
+  test('las hojas y los menús toman la paleta del tema', () {
+    for (final palette in [PingProColors.dark, PingProColors.light]) {
+      final theme = buildAppTheme(palette);
+
+      expect(theme.bottomSheetTheme.backgroundColor, palette.tabBar);
+      expect(theme.popupMenuTheme.color, palette.softFill);
+    }
+  });
 }

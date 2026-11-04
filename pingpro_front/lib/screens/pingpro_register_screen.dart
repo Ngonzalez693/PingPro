@@ -41,38 +41,38 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        backgroundColor: context.colors.card,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: dialogContext.colors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         contentPadding: const EdgeInsets.all(24),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle, color: context.colors.brand, size: 56),
+            Icon(Icons.check_circle, color: dialogContext.colors.brand, size: 56),
             const SizedBox(height: 12),
             Text(
               '¡Registro exitoso!',
               textAlign: TextAlign.center,
-              style: context.text.titleBlack,
+              style: dialogContext.text.titleBlack,
             ),
             const SizedBox(height: 8),
             Text(
               'Tu cuenta fue creada correctamente. Inicia sesión para continuar.',
               textAlign: TextAlign.center,
-              style: context.text.paragraphBlack,
+              style: dialogContext.text.paragraphBlack,
             ),
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: context.colors.brandFill,
+                  backgroundColor: dialogContext.colors.brandFill,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => Navigator.of(dialogContext).pop(),
                 child: const Text(
                   'Continuar',
                   style: TextStyle(

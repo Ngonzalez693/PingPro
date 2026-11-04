@@ -18,7 +18,6 @@ class ContentActionsMenu extends StatelessWidget {
     return PopupMenuButton<_ContentAction>(
       icon: Icon(Icons.more_vert, color: context.colors.onPage),
       tooltip: 'Más opciones',
-      color: context.colors.softFill,
       onSelected: (action) => action == _ContentAction.edit ? onEdit() : onDelete(),
       itemBuilder: (menuContext) => [
         PopupMenuItem(value: _ContentAction.edit, child: Text('Editar', style: menuContext.text.paragraphBlack)),

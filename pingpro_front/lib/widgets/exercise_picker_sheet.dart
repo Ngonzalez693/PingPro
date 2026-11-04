@@ -17,7 +17,6 @@ Future<ExerciseModel?> showExercisePicker(BuildContext context, {bool catalogOnl
   return showModalBottomSheet<ExerciseModel>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: context.colors.tabBar,
     builder: (_) => ExercisePickerSheet(catalogOnly: catalogOnly),
   );
 }

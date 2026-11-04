@@ -2,9 +2,10 @@
 // de por valor: `textWhite` deja de ser blanco en modo claro. Los widgets los
 // leen del tema con `context.colors` (ver app_theme.dart).
 //
-// `dark` es el aspecto de siempre, tomado de AppColors. La lima tiene dos
-// roles con el mismo valor en oscuro: `brandFill` cuando es un fondo (botones,
-// etiquetas) y `brand` cuando es texto o línea, que en claro no se vería.
+// `dark` es el aspecto de siempre, tomado de AppColors; `light` es la opción
+// "crema" del diseño. La lima tiene dos roles con el mismo valor en oscuro:
+// `brandFill` cuando es un fondo (botones, etiquetas) y `brand` cuando es texto
+// o línea, que en claro pasa a oliva porque la lima sobre crema no se ve.
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_colors.dart';
 
@@ -24,6 +25,10 @@ class PingProColors extends ThemeExtension<PingProColors> {
   final Color skeletonHighlight;
   final Color danger;
 
+  // Separa superficies del mismo color, como la barra de pestañas de la
+  // pantalla en modo claro. Transparente en oscuro.
+  final Color hairline;
+
   const PingProColors({
     required this.page,
     required this.tabBar,
@@ -39,6 +44,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
     required this.skeletonBase,
     required this.skeletonHighlight,
     required this.danger,
+    required this.hairline,
   });
 
   static const dark = PingProColors(
@@ -56,6 +62,25 @@ class PingProColors extends ThemeExtension<PingProColors> {
     skeletonBase: AppColors.skeletonBase,
     skeletonHighlight: AppColors.skeletonHighlight,
     danger: AppColors.danger,
+    hairline: Color(0x00000000),
+  );
+
+  static const light = PingProColors(
+    page: Color(0xFFFBFFEA),
+    tabBar: Color(0xFFFBFFEA),
+    onPage: Color(0xFF1B1D00),
+    card: Color(0xFFFFFFFF),
+    onCard: Color(0xFF1B1D00),
+    muted: Color(0xFF6B6F55),
+    brand: Color(0xFF5C6300),
+    brandFill: AppColors.primary,
+    onBrandFill: Color(0xFF000000),
+    softFill: Color(0xFFFFFFFF),
+    softText: Color(0xFF5C6300),
+    skeletonBase: Color(0xFFECEEDD),
+    skeletonHighlight: Color(0xFFF7F8EE),
+    danger: Color(0xFFB3261E),
+    hairline: Color(0x335C6300),
   );
 
   @override
@@ -74,6 +99,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
     Color? skeletonBase,
     Color? skeletonHighlight,
     Color? danger,
+    Color? hairline,
   }) {
     return PingProColors(
       page: page ?? this.page,
@@ -90,6 +116,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
       skeletonBase: skeletonBase ?? this.skeletonBase,
       skeletonHighlight: skeletonHighlight ?? this.skeletonHighlight,
       danger: danger ?? this.danger,
+      hairline: hairline ?? this.hairline,
     );
   }
 
@@ -113,6 +140,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
       skeletonBase: mix(skeletonBase, other.skeletonBase),
       skeletonHighlight: mix(skeletonHighlight, other.skeletonHighlight),
       danger: mix(danger, other.danger),
+      hairline: mix(hairline, other.hairline),
     );
   }
 }

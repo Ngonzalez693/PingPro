@@ -19,6 +19,7 @@ import 'package:pingpro_front/widgets/logout_dialog.dart';
 import 'package:pingpro_front/widgets/settings_section_header.dart';
 import 'package:pingpro_front/widgets/settings_switch_tile.dart';
 import 'package:pingpro_front/widgets/settings_tile.dart';
+import 'package:pingpro_front/widgets/theme_mode_selector.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PingproSettingsScreen extends StatefulWidget {
@@ -250,6 +251,7 @@ class _PingproSettingsScreenState extends State<PingproSettingsScreen> {
     final prefs = AppPreferences.instance;
     return [
       const SettingsSectionHeader(title: 'Apariencia y accesibilidad'),
+      ThemeModeSelector(preferences: prefs),
       ListenableBuilder(
         listenable: prefs,
         builder: (context, _) => SettingsSwitchTile(

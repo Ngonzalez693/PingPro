@@ -36,6 +36,7 @@ import 'package:pingpro_front/screens/pingpro_exercises_screen.dart';
 import 'package:pingpro_front/screens/pingpro_create_screen.dart';
 import 'package:pingpro_front/screens/pingpro_trainings_screen.dart';
 import 'package:pingpro_front/screens/pingpro_profile_screen.dart';
+import 'package:pingpro_front/widgets/always_dark.dart';
 import 'package:pingpro_front/widgets/custom_bottom_navigation.dart';
 import 'package:pingpro_front/widgets/reduce_motion_scope.dart';
 import 'package:pingpro_front/widgets/splash_view.dart';
@@ -87,22 +88,38 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Escucha a AppPreferences para cambiar de tema en vivo desde Configuración.
+    return ListenableBuilder(
+      listenable: AppPreferences.instance,
+      builder: (context, _) => _buildApp(AppPreferences.instance.themeMode),
+    );
+  }
+
+  Widget _buildApp(ThemeMode themeMode) {
     return MaterialApp(
       title: 'PingPro',
-      theme: buildAppTheme(PingProColors.dark),
+      theme: buildAppTheme(PingProColors.light),
+      darkTheme: buildAppTheme(PingProColors.dark),
+      themeMode: themeMode,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: appSupportedLocales,
-      builder: (context, child) =>
-          ReduceMotionScope(preferences: AppPreferences.instance, child: child!),
+      builder: (context, child) => ReduceMotionScope(
+        preferences: AppPreferences.instance,
+        child: AnnotatedRegion<SystemUiOverlayStyle>(
+          value: overlayStyleFor(context.colors),
+          child: child!,
+        ),
+      ),
       // Sin `initialRoute`: con él, Navigator construía la pila ['/', '/welcome']
       // y el onboarding tapaba a AuthWrapper, así que una sesión abierta
       // terminaba igualmente en Welcome. Quien decide al arrancar es AuthWrapper.
       routes: {
-        '/welcome': (ctx) => const PingproWelcomeScreen(),
-        '/login': (ctx) => const PingproLoginScreen(),
-        '/register': (ctx) => const PingproRegisterScreen(),
-        '/splash': (ctx) => const PingproSplashScreen(),
+        // Siempre oscuras: ver AlwaysDark.
+        '/welcome': (ctx) => const AlwaysDark(child: PingproWelcomeScreen()),
+        '/login': (ctx) => const AlwaysDark(child: PingproLoginScreen()),
+        '/register': (ctx) => const AlwaysDark(child: PingproRegisterScreen()),
+        '/splash': (ctx) => const AlwaysDark(child: PingproSplashScreen()),
         '/home': (ctx) => const HomeNavigation(),
         '/exercises': (ctx) => const PingproExercisesScreen(),
         // Rutas con argumentos: se pasan por pushNamed(arguments: ...) y se
@@ -202,20 +219,26 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   // Mientras Firebase recupera la sesión se ve ya la cara del splash: con
   // sesión, el paso a StartupSplash no se nota.
+  //
+  // Splash y bienvenida van en AlwaysDark; cada uno con su clave para que
+  // AnimatedSwitcher los distinga y siga fundiendo de uno a otro.
   Widget _screenFor(AsyncSnapshot<User?> snapshot) {
     if (snapshot.connectionState == ConnectionState.waiting) {
-      return const SplashView();
+      return const AlwaysDark(key: ValueKey('splash'), child: SplashView());
     }
     final user = snapshot.data;
     _resetStoresIfUserChanged(user?.uid);
     if (user == null) {
       _startupDone = true;
-      return const PingproWelcomeScreen();
+      return const AlwaysDark(key: ValueKey('welcome'), child: PingproWelcomeScreen());
     }
     if (_startupDone) return const HomeNavigation();
-    return StartupSplash(
-      load: _loadStores,
-      onReady: () => setState(() => _startupDone = true),
+    return AlwaysDark(
+      key: const ValueKey('startup'),
+      child: StartupSplash(
+        load: _loadStores,
+        onReady: () => setState(() => _startupDone = true),
+      ),
     );
   }
 }

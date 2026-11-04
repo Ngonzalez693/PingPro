@@ -1,11 +1,30 @@
 // Tema de la app y acceso corto a sus colores y tipografías desde cualquier
 // widget: `context.colors.page`, `context.text.title`.
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pingpro_front/core/pingpro_colors.dart';
 import 'package:pingpro_front/core/pingpro_text.dart';
 
+// Las hojas y los menús toman su fondo de aquí y no al abrirse: así un cambio
+// de tema con uno abierto también les llega.
 ThemeData buildAppTheme(PingProColors colors) {
-  return ThemeData(scaffoldBackgroundColor: colors.page, extensions: [colors]);
+  return ThemeData(
+    scaffoldBackgroundColor: colors.page,
+    bottomSheetTheme: BottomSheetThemeData(backgroundColor: colors.tabBar),
+    popupMenuTheme: PopupMenuThemeData(color: colors.softFill),
+    extensions: [colors],
+  );
+}
+
+// Iconos de la barra de estado según el fondo: oscuros sobre la crema, claros
+// sobre negro. Solo la barra de arriba: la de botones de Android es del sistema.
+SystemUiOverlayStyle overlayStyleFor(PingProColors colors) {
+  final lightPage = colors.page.computeLuminance() > 0.5;
+  return SystemUiOverlayStyle(
+    statusBarColor: const Color(0x00000000),
+    statusBarIconBrightness: lightPage ? Brightness.dark : Brightness.light,
+    statusBarBrightness: lightPage ? Brightness.light : Brightness.dark,
+  );
 }
 
 extension PingProThemeContext on BuildContext {
