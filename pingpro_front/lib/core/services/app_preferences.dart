@@ -18,11 +18,13 @@ class AppPreferences extends ChangeNotifier {
   static const _reminderEnabledKey = 'reminderEnabled';
   // La hora se guarda como minutos desde las 00:00: un solo int.
   static const _reminderMinutesKey = 'reminderMinutes';
+  static const _themeModeKey = 'themeMode';
   static const _defaultReminderTime = TimeOfDay(hour: 19, minute: 0);
 
   bool _reduceMotion = false;
   bool _reminderEnabled = false;
   TimeOfDay _reminderTime = _defaultReminderTime;
+  ThemeMode _themeMode = ThemeMode.dark;
 
   /// "Reducir animaciones" de Configuración. ReduceMotionScope la suma al
   /// ajuste del sistema.
@@ -34,6 +36,9 @@ class AppPreferences extends ChangeNotifier {
   /// Hora local del recordatorio diario.
   TimeOfDay get reminderTime => _reminderTime;
 
+  /// "Tema" de Configuración: oscuro (el de siempre), claro o el del teléfono.
+  ThemeMode get themeMode => _themeMode;
+
   // Si no se puede leer se queda con los valores por defecto: una preferencia
   // perdida no debe impedir que la app arranque.
   Future<void> load() async {
@@ -43,6 +48,8 @@ class AppPreferences extends ChangeNotifier {
       _reminderEnabled = prefs.getBool(_reminderEnabledKey) ?? false;
       final minutes = prefs.getInt(_reminderMinutesKey);
       if (minutes != null) _reminderTime = TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60);
+      // Un valor que no se reconoce (otra versión, archivo dañado) es oscuro.
+      _themeMode = ThemeMode.values.asNameMap()[prefs.getString(_themeModeKey)] ?? ThemeMode.dark;
     } catch (e) {
       debugPrint('AppPreferences load error: $e');
     }
@@ -68,6 +75,13 @@ class AppPreferences extends ChangeNotifier {
     _reminderTime = time;
     notifyListeners();
     await _save((prefs) => prefs.setInt(_reminderMinutesKey, time.hour * 60 + time.minute));
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    if (mode == _themeMode) return;
+    _themeMode = mode;
+    notifyListeners();
+    await _save((prefs) => prefs.setString(_themeModeKey, mode.name));
   }
 
   // Si no se puede guardar, el valor vale igual hasta cerrar la app.

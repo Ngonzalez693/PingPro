@@ -85,4 +85,38 @@ void main() {
 
     expect(notified, 0);
   });
+  test('sin nada guardado el tema es oscuro', () async {
+    final prefs = await loaded({});
+
+    expect(prefs.themeMode, ThemeMode.dark);
+  });
+
+  test('guarda y recupera el tema', () async {
+    final prefs = await loaded({});
+
+    await prefs.setThemeMode(ThemeMode.light);
+
+    final nextLaunch = AppPreferences.forTesting();
+    await nextLaunch.load();
+    expect(nextLaunch.themeMode, ThemeMode.light);
+    expect((await SharedPreferences.getInstance()).getString('themeMode'), 'light');
+  });
+
+  // Un valor de otra versión o corrupto no debe impedir que la app arranque.
+  test('un valor desconocido se lee como oscuro', () async {
+    final prefs = await loaded({'themeMode': 'sepia'});
+
+    expect(prefs.themeMode, ThemeMode.dark);
+  });
+
+  test('cambiar el tema avisa a quien escucha', () async {
+    final prefs = await loaded({});
+    var notified = 0;
+    prefs.addListener(() => notified++);
+
+    await prefs.setThemeMode(ThemeMode.system);
+    await prefs.setThemeMode(ThemeMode.system);
+
+    expect(notified, 1);
+  });
 }
