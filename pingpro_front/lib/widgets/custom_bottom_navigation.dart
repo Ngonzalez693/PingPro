@@ -47,6 +47,8 @@ class CustomBottomNavigation extends StatelessWidget {
         height: _barHeight,
         decoration: BoxDecoration(
           color: context.colors.tabBar,
+          // En claro separa la barra crema de la pantalla, del mismo color.
+          border: Border(top: BorderSide(color: context.colors.hairline)),
           boxShadow: [
             BoxShadow(
               color: Colors.black,
@@ -107,6 +109,10 @@ class CustomBottomNavigation extends StatelessWidget {
         child: SvgPicture.asset(
           'assets/icons/${icon}_${isSelected ? 'selected' : 'unselected'}.svg',
           height: 26,
+          colorFilter: ColorFilter.mode(
+            isSelected ? context.colors.brand : context.colors.onPage,
+            BlendMode.srcIn,
+          ),
         ),
       ),
     );

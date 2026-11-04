@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pingpro_front/core/app_colors.dart';
+import 'package:pingpro_front/core/app_theme.dart';
+import 'package:pingpro_front/core/pingpro_colors.dart';
 import 'package:pingpro_front/widgets/custom_bottom_navigation.dart';
 
 const _labels = ['Inicio', 'Ejercicios', 'Crear', 'Entrenamientos', 'Perfil'];
@@ -40,5 +43,32 @@ void main() {
 
     expect(_colorOf(tester, 'Crear'), AppColors.primary);
     expect(_colorOf(tester, 'Inicio'), isNot(AppColors.primary));
+  });
+  // Los SVG traen el color dibujado (lima el activo, blanco el resto): en la
+  // barra crema no se verían, así que se pintan con los del tema.
+  testWidgets('los iconos toman el color del tema', (tester) async {
+    final palette = PingProColors.dark.copyWith(brand: const Color(0xFF5C6300), onPage: const Color(0xFF1B1D00));
+    await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(palette),
+      home: Scaffold(bottomNavigationBar: CustomBottomNavigation(currentIndex: 0, onTap: (_) {})),
+    ));
+    await tester.pumpAndSettle();
+
+    final icons = tester.widgetList<SvgPicture>(find.byType(SvgPicture)).toList();
+    expect(icons.first.colorFilter, const ColorFilter.mode(Color(0xFF5C6300), BlendMode.srcIn));
+    expect(icons[1].colorFilter, const ColorFilter.mode(Color(0xFF1B1D00), BlendMode.srcIn));
+  });
+
+  testWidgets('en claro la barra tiene una línea fina arriba', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(PingProColors.light),
+      home: Scaffold(bottomNavigationBar: CustomBottomNavigation(currentIndex: 0, onTap: (_) {})),
+    ));
+
+    final bar = tester.widget<Container>(
+      find.descendant(of: find.byType(CustomBottomNavigation), matching: find.byType(Container)).first,
+    );
+    final border = (bar.decoration! as BoxDecoration).border! as Border;
+    expect(border.top.color, PingProColors.light.hairline);
   });
 }
