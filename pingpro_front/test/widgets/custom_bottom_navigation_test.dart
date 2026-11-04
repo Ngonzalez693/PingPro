@@ -68,7 +68,21 @@ void main() {
     final bar = tester.widget<Container>(
       find.descendant(of: find.byType(CustomBottomNavigation), matching: find.byType(Container)).first,
     );
-    final border = (bar.decoration! as BoxDecoration).border! as Border;
+    // Por encima y no como borde: un borde, aunque sea transparente, empuja el
+    // contenido un píxel hacia abajo y cambiaría la barra en oscuro.
+    final border = (bar.foregroundDecoration! as BoxDecoration).border! as Border;
     expect(border.top.color, PingProColors.light.hairline);
+  });
+  // Pintar el SVG con un filtro le cuesta suavizado en los bordes: en oscuro,
+  // donde ya trae su color, se dibuja tal cual para que no cambie nada.
+  testWidgets('en oscuro los iconos se dibujan sin filtro', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(PingProColors.dark),
+      home: Scaffold(bottomNavigationBar: CustomBottomNavigation(currentIndex: 0, onTap: (_) {})),
+    ));
+
+    for (final icon in tester.widgetList<SvgPicture>(find.byType(SvgPicture))) {
+      expect(icon.colorFilter, isNull);
+    }
   });
 }
