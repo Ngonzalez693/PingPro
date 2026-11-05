@@ -50,7 +50,7 @@ class CustomBottomNavigation extends StatelessWidget {
           color: context.colors.tabBar,
           boxShadow: [
             BoxShadow(
-              color: Colors.black,
+              color: context.colors.shadow,
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),

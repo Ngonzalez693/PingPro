@@ -32,4 +32,10 @@ void main() {
 
     expect(offenders, isEmpty);
   });
+  // Una sombra negra fija se ve como una mancha sobre la crema del modo claro.
+  test('las sombras salen del tema', () {
+    for (final path in ['lib/widgets/custom_bottom_navigation.dart', 'lib/widgets/pull_to_refresh.dart']) {
+      expect(File(path).readAsStringSync(), isNot(contains('Colors.black')), reason: path);
+    }
+  });
 }

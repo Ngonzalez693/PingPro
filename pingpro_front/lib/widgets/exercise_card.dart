@@ -142,13 +142,13 @@ class ExerciseCard extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: context.colors.muted,
+                          color: context.colors.pillFill,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           'Ver',
                           style: TextStyle(
-                            color: context.colors.onPage,
+                            color: context.colors.onPill,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),

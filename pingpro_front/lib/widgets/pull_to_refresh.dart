@@ -207,7 +207,14 @@ class _Indicator extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colors.tabBar,
         shape: BoxShape.circle,
-        boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 6, offset: Offset(0, 2))],
+        // La misma opacidad que la sombra de siempre (54 %), sobre la del tema.
+        boxShadow: [
+          BoxShadow(
+            color: context.colors.shadow.withValues(alpha: context.colors.shadow.a * 0.54),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: CircularProgressIndicator(
         value: progress,
