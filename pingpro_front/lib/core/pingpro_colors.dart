@@ -29,6 +29,20 @@ class PingProColors extends ThemeExtension<PingProColors> {
   // pantalla en modo claro. Transparente en oscuro.
   final Color hairline;
 
+  // Roles de sitios puntuales que en claro necesitan otro color que el de su
+  // rol general (el campo de búsqueda, la pastilla "Ver", el texto sobre el
+  // rojo, las pistas vacías de las barras, las etiquetas de la gráfica
+  // semanal y las sombras). En oscuro valen lo mismo que antes.
+  final Color fieldFill;
+  final Color fieldText;
+  final Color pillFill;
+  final Color onPill;
+  final Color onDanger;
+  final Color track;
+  final Color inset;
+  final Color chartLabel;
+  final Color shadow;
+
   const PingProColors({
     required this.page,
     required this.tabBar,
@@ -45,6 +59,15 @@ class PingProColors extends ThemeExtension<PingProColors> {
     required this.skeletonHighlight,
     required this.danger,
     required this.hairline,
+    required this.fieldFill,
+    required this.fieldText,
+    required this.pillFill,
+    required this.onPill,
+    required this.onDanger,
+    required this.track,
+    required this.inset,
+    required this.chartLabel,
+    required this.shadow,
   });
 
   static const dark = PingProColors(
@@ -63,6 +86,15 @@ class PingProColors extends ThemeExtension<PingProColors> {
     skeletonHighlight: AppColors.skeletonHighlight,
     danger: AppColors.danger,
     hairline: Color(0x00000000),
+    fieldFill: AppColors.textGray,
+    fieldText: AppColors.secundary,
+    pillFill: AppColors.textGray,
+    onPill: AppColors.textWhite,
+    onDanger: AppColors.textBlack,
+    track: AppColors.secundary,
+    inset: AppColors.widgetGrayBackground,
+    chartLabel: Color(0xFFFFFFFF),
+    shadow: Color(0xFF000000),
   );
 
   static const light = PingProColors(
@@ -81,6 +113,15 @@ class PingProColors extends ThemeExtension<PingProColors> {
     skeletonHighlight: Color(0xFFF7F8EE),
     danger: Color(0xFFB3261E),
     hairline: Color(0x335C6300),
+    fieldFill: Color(0xFFFFFFFF),
+    fieldText: Color(0xFF1B1D00),
+    pillFill: Color(0xFF5C6300),
+    onPill: Color(0xFFFFFFFF),
+    onDanger: Color(0xFFFFFFFF),
+    track: Color(0xFFECEEDD),
+    inset: Color(0xFFECEEDD),
+    chartLabel: Color(0xFF6B6F55),
+    shadow: Color(0x261B1D00),
   );
 
   @override
@@ -100,6 +141,15 @@ class PingProColors extends ThemeExtension<PingProColors> {
     Color? skeletonHighlight,
     Color? danger,
     Color? hairline,
+    Color? fieldFill,
+    Color? fieldText,
+    Color? pillFill,
+    Color? onPill,
+    Color? onDanger,
+    Color? track,
+    Color? inset,
+    Color? chartLabel,
+    Color? shadow,
   }) {
     return PingProColors(
       page: page ?? this.page,
@@ -117,6 +167,15 @@ class PingProColors extends ThemeExtension<PingProColors> {
       skeletonHighlight: skeletonHighlight ?? this.skeletonHighlight,
       danger: danger ?? this.danger,
       hairline: hairline ?? this.hairline,
+      fieldFill: fieldFill ?? this.fieldFill,
+      fieldText: fieldText ?? this.fieldText,
+      pillFill: pillFill ?? this.pillFill,
+      onPill: onPill ?? this.onPill,
+      onDanger: onDanger ?? this.onDanger,
+      track: track ?? this.track,
+      inset: inset ?? this.inset,
+      chartLabel: chartLabel ?? this.chartLabel,
+      shadow: shadow ?? this.shadow,
     );
   }
 
@@ -141,6 +200,15 @@ class PingProColors extends ThemeExtension<PingProColors> {
       skeletonHighlight: mix(skeletonHighlight, other.skeletonHighlight),
       danger: mix(danger, other.danger),
       hairline: mix(hairline, other.hairline),
+      fieldFill: mix(fieldFill, other.fieldFill),
+      fieldText: mix(fieldText, other.fieldText),
+      pillFill: mix(pillFill, other.pillFill),
+      onPill: mix(onPill, other.onPill),
+      onDanger: mix(onDanger, other.onDanger),
+      track: mix(track, other.track),
+      inset: mix(inset, other.inset),
+      chartLabel: mix(chartLabel, other.chartLabel),
+      shadow: mix(shadow, other.shadow),
     );
   }
 }

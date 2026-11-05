@@ -19,6 +19,15 @@ const _other = PingProColors(
   skeletonHighlight: Color(0xFF123456),
   danger: Color(0xFF123456),
   hairline: Color(0xFF123456),
+  fieldFill: Color(0xFF123456),
+  fieldText: Color(0xFF123456),
+  pillFill: Color(0xFF123456),
+  onPill: Color(0xFF123456),
+  onDanger: Color(0xFF123456),
+  track: Color(0xFF123456),
+  inset: Color(0xFF123456),
+  chartLabel: Color(0xFF123456),
+  shadow: Color(0xFF123456),
 );
 
 void main() {
@@ -43,6 +52,15 @@ void main() {
     expect(dark.danger, AppColors.danger);
     // En oscuro la línea fina no se ve: el modo oscuro queda como estaba.
     expect(dark.hairline.a, 0);
+    expect(dark.fieldFill, AppColors.textGray);
+    expect(dark.fieldText, AppColors.secundary);
+    expect(dark.pillFill, AppColors.textGray);
+    expect(dark.onPill, AppColors.textWhite);
+    expect(dark.onDanger, AppColors.textBlack);
+    expect(dark.track, AppColors.secundary);
+    expect(dark.inset, AppColors.widgetGrayBackground);
+    expect(dark.chartLabel, const Color(0xFFFFFFFF));
+    expect(dark.shadow, const Color(0xFF000000));
   });
 
   test('los valores claros son los del diseño', () {
@@ -63,6 +81,15 @@ void main() {
     expect(light.skeletonHighlight, const Color(0xFFF7F8EE));
     expect(light.danger, const Color(0xFFB3261E));
     expect(light.hairline, const Color(0x335C6300));
+    expect(light.fieldFill, const Color(0xFFFFFFFF));
+    expect(light.fieldText, const Color(0xFF1B1D00));
+    expect(light.pillFill, const Color(0xFF5C6300));
+    expect(light.onPill, const Color(0xFFFFFFFF));
+    expect(light.onDanger, const Color(0xFFFFFFFF));
+    expect(light.track, const Color(0xFFECEEDD));
+    expect(light.inset, const Color(0xFFECEEDD));
+    expect(light.chartLabel, const Color(0xFF6B6F55));
+    expect(light.shadow, const Color(0x261B1D00));
   });
 
   // 4,5 es el mínimo para leer texto chico cómodo (WCAG AA).
@@ -83,6 +110,10 @@ void main() {
       'onBrandFill/brandFill': (light.onBrandFill, light.brandFill),
       'danger/page': (light.danger, light.page),
       'softText/page': (light.softText, light.page),
+      'fieldText/fieldFill': (light.fieldText, light.fieldFill),
+      'onPill/pillFill': (light.onPill, light.pillFill),
+      'onDanger/danger': (light.onDanger, light.danger),
+      'chartLabel/card': (light.chartLabel, light.card),
     };
     for (final MapEntry(:key, value: (fg, bg)) in pairs.entries) {
       expect(contrast(fg, bg), greaterThanOrEqualTo(4.5), reason: key);
@@ -92,5 +123,17 @@ void main() {
   test('lerp en los extremos devuelve cada paleta', () {
     expect(PingProColors.dark.lerp(_other, 0).page, PingProColors.dark.page);
     expect(PingProColors.dark.lerp(_other, 1).page, _other.page);
+  });
+  // Las pistas vacías de las barras no llevan texto: basta con que se vean
+  // sobre la tarjeta blanca.
+  test('en claro las pistas se ven', () {
+    const light = PingProColors.light;
+    double contrast(Color a, Color b) {
+      final la = a.computeLuminance(), lb = b.computeLuminance();
+      return ((la > lb ? la : lb) + 0.05) / ((la > lb ? lb : la) + 0.05);
+    }
+
+    expect(contrast(light.track, light.card), greaterThanOrEqualTo(1.1));
+    expect(contrast(light.inset, light.softFill), greaterThanOrEqualTo(1.1));
   });
 }
