@@ -15,6 +15,8 @@ void main() {
           body: SummaryIcon(assetPath: 'assets/icons/exercise_unselected.svg', count: 3, label: 'Ejercicios'),
         ),
       ));
+      // Cambiar de tema funde los colores: hay que esperar a que termine.
+      await tester.pumpAndSettle();
 
       expect(tester.widget<Text>(find.text('Ejercicios')).style!.color, palette.onPage);
     }
