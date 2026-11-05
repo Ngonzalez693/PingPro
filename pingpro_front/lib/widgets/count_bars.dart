@@ -47,7 +47,7 @@ class CountBars extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: max == 0 ? 0 : entry.count / max,
                 minHeight: 10,
-                backgroundColor: context.colors.softFill,
+                backgroundColor: context.colors.track,
                 color: context.colors.brand,
               ),
             ),

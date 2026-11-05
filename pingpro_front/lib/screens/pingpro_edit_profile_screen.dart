@@ -220,7 +220,7 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
             // Overlay de guardado
             if (_saving)
               Container(
-                color: Colors.black,
+                color: context.colors.page,
                 child: const Center(
                   child: CircularProgressIndicator(),
                 ),

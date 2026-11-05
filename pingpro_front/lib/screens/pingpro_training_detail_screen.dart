@@ -198,7 +198,7 @@ class _PingproTrainingDetailScreenState
             child: LinearProgressIndicator(
               value: value,
               minHeight: 10,
-              backgroundColor: context.colors.card,
+              backgroundColor: context.colors.inset,
               color: context.colors.brand,
             ),
           ),
@@ -229,7 +229,7 @@ class _PingproTrainingDetailScreenState
           child: Container(
             height: 60,
             decoration: BoxDecoration(
-              color: context.colors.card,
+              color: context.colors.inset,
               borderRadius: BorderRadius.circular(8),
             ),
             alignment: Alignment.center,

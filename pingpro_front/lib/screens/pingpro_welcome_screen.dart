@@ -6,7 +6,6 @@
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/motion.dart';
-import 'package:pingpro_front/screens/pingpro_splash_screen.dart';
 
 class PingproWelcomeScreen extends StatefulWidget {
   const PingproWelcomeScreen({super.key});
@@ -55,10 +54,9 @@ class _PingproWelcomeScreenState extends State<PingproWelcomeScreen> {
         );
       }
     } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => PingproSplashScreen()),
-      );
+      // Por nombre: la ruta '/splash' de main.dart lo mantiene oscuro aunque
+      // la app esté en claro, y una ruta armada aquí se saltaría eso.
+      Navigator.pushNamed(context, '/splash');
     }
   }
 

@@ -20,6 +20,15 @@ const _distinct = PingProColors(
   skeletonHighlight: Color(0xFF00000D),
   danger: Color(0xFF00000E),
   hairline: Color(0xFF00000F),
+  fieldFill: Color(0xFF000010),
+  fieldText: Color(0xFF000011),
+  pillFill: Color(0xFF000012),
+  onPill: Color(0xFF000013),
+  onDanger: Color(0xFF000014),
+  track: Color(0xFF000015),
+  inset: Color(0xFF000016),
+  chartLabel: Color(0xFF000017),
+  shadow: Color(0xFF000018),
 );
 
 void main() {

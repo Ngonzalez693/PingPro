@@ -2,7 +2,9 @@
 //
 // Lo usan bienvenida, login, registro y los splash: sus imágenes y el logo
 // están dibujados sobre negro, y la pantalla de arranque de Android también es
-// negra. Los diálogos que se abren desde dentro heredan este tema.
+// negra. Los diálogos que se abren desde dentro heredan este tema, pero no las
+// pantallas que se empujan con el Navigator: esas van en las rutas de main.dart,
+// envueltas aquí, y se abren por nombre.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pingpro_front/core/app_theme.dart';

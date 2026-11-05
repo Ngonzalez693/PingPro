@@ -100,15 +100,15 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: 'Buscar',
-                prefixIcon: Icon(Icons.search, color: context.colors.softText),
+                prefixIcon: Icon(Icons.search, color: context.colors.fieldText),
                 filled: true,
-                fillColor: context.colors.muted,
+                fillColor: context.colors.fieldFill,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
               ),
-              style: TextStyle(color: context.colors.softText),
+              style: TextStyle(color: context.colors.fieldText),
             ),
           ),
 

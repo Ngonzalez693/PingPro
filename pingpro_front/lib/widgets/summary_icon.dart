@@ -37,6 +37,9 @@ class SummaryIcon extends StatelessWidget {
                 assetPath,
                 width: 28,
                 height: 28,
+                // Sobre el círculo blanco del modo claro, el icono blanco no se
+                // vería: se tiñe con los colores del tema (ver iconTint).
+                colorFilter: iconTint(context.colors, accent: assetPath.endsWith('_selected.svg')),
                 ),
               ),
               Positioned(
@@ -50,7 +53,9 @@ class SummaryIcon extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        Text(label, style: context.text.buttons),
+        // Debajo del círculo, sobre la pantalla: el estilo de los botones, con el
+        // color del texto de la pantalla (el negro de botón no se veía en oscuro).
+        Text(label, style: context.text.buttons.copyWith(color: context.colors.onPage)),
       ],
     );
   }

@@ -92,9 +92,9 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
           ? SizedBox(
               height: 20,
               width: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onBrandFill),
+              child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onDanger),
             )
-          : Text('Eliminar', style: context.text.buttons),
+          : Text('Eliminar', style: context.text.buttons.copyWith(color: context.colors.onDanger)),
     );
   }
 

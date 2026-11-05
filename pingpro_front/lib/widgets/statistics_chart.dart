@@ -30,7 +30,7 @@ class StatisticsChart extends StatefulWidget {
 
 class _StatisticsChartState extends State<StatisticsChart>
     with SingleTickerProviderStateMixin {
-  static const _labelStyle = TextStyle(fontSize: 11, color: Colors.white);
+  TextStyle get _labelStyle => TextStyle(fontSize: 11, color: context.colors.chartLabel);
 
   late final AnimationController _reveal = AnimationController(
     vsync: this,

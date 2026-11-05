@@ -73,11 +73,9 @@ class _PingproRegisterScreenState extends State<PingproRegisterScreen> {
                   ),
                 ),
                 onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text(
+                child: Text(
                   'Continuar',
-                  style: TextStyle(
-                    color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold,
-                  ),
+                  style: dialogContext.text.buttons,
                 ),
               ),
             ),
