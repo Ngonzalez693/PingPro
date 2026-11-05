@@ -12,7 +12,6 @@
 import 'package:flutter/material.dart';
 import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/motion.dart';
-import 'package:pingpro_front/core/pingpro_colors.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 /// Alto de la barra. Es también el alto del área pulsable de cada pestaña.
@@ -114,19 +113,10 @@ class CustomBottomNavigation extends StatelessWidget {
         child: SvgPicture.asset(
           'assets/icons/${icon}_${isSelected ? 'selected' : 'unselected'}.svg',
           height: 26,
-          colorFilter: _iconTint(context, isSelected),
+          colorFilter: iconTint(context.colors, accent: isSelected),
         ),
       ),
     );
-  }
-
-  // Los SVG vienen dibujados con los colores del tema oscuro (lima el activo,
-  // blanco el resto). Pintarlos con un filtro le quita suavizado a los bordes,
-  // así que solo se filtran cuando el tema pide otro color, como en claro.
-  ColorFilter? _iconTint(BuildContext context, bool isSelected) {
-    final wanted = isSelected ? context.colors.brand : context.colors.onPage;
-    final drawn = isSelected ? PingProColors.dark.brand : PingProColors.dark.onPage;
-    return wanted == drawn ? null : ColorFilter.mode(wanted, BlendMode.srcIn);
   }
 
   // "Entrenamientos" no cabe en un quinto de algunas pantallas estrechas: en

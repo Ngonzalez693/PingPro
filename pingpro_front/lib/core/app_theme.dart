@@ -27,6 +27,16 @@ SystemUiOverlayStyle overlayStyleFor(PingProColors colors) {
   );
 }
 
+// Los SVG de assets/icons vienen pintados con los colores del tema oscuro:
+// lima los de acento (`_selected`) y blanco el resto. Teñirlos con un filtro
+// les quita suavizado en los bordes, así que solo se tiñen cuando el tema pide
+// otro color, como en claro.
+ColorFilter? iconTint(PingProColors colors, {required bool accent}) {
+  final wanted = accent ? colors.brand : colors.onPage;
+  final drawn = accent ? PingProColors.dark.brand : PingProColors.dark.onPage;
+  return wanted == drawn ? null : ColorFilter.mode(wanted, BlendMode.srcIn);
+}
+
 extension PingProThemeContext on BuildContext {
   // Sin la extensión (un widget montado suelto en un test, sin MaterialApp)
   // se usa la paleta oscura, que es la de siempre.

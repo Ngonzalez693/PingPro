@@ -37,6 +37,9 @@ class SummaryIcon extends StatelessWidget {
                 assetPath,
                 width: 28,
                 height: 28,
+                // Sobre el círculo blanco del modo claro, el icono blanco no se
+                // vería: se tiñe con los colores del tema (ver iconTint).
+                colorFilter: iconTint(context.colors, accent: assetPath.endsWith('_selected.svg')),
                 ),
               ),
               Positioned(
