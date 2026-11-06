@@ -28,6 +28,7 @@ const _other = PingProColors(
   inset: Color(0xFF123456),
   chartLabel: Color(0xFF123456),
   shadow: Color(0xFF123456),
+  outline: Color(0xFF123456),
 );
 
 void main() {
@@ -52,6 +53,7 @@ void main() {
     expect(dark.danger, AppColors.danger);
     // En oscuro la línea fina no se ve: el modo oscuro queda como estaba.
     expect(dark.hairline.a, 0);
+    expect(dark.outline.a, 0);
     expect(dark.fieldFill, AppColors.textGray);
     expect(dark.fieldText, AppColors.secundary);
     expect(dark.pillFill, AppColors.textGray);
@@ -81,6 +83,7 @@ void main() {
     expect(light.skeletonHighlight, const Color(0xFFF7F8EE));
     expect(light.danger, const Color(0xFFB3261E));
     expect(light.hairline, const Color(0x335C6300));
+    expect(light.outline, const Color(0x2E1B1D00));
     expect(light.fieldFill, const Color(0xFFFFFFFF));
     expect(light.fieldText, const Color(0xFF1B1D00));
     expect(light.pillFill, const Color(0xFF5C6300));
@@ -123,6 +126,7 @@ void main() {
   test('lerp en los extremos devuelve cada paleta', () {
     expect(PingProColors.dark.lerp(_other, 0).page, PingProColors.dark.page);
     expect(PingProColors.dark.lerp(_other, 1).page, _other.page);
+    expect(PingProColors.dark.lerp(_other, 1).outline, _other.outline);
   });
   // Las pistas vacías de las barras no llevan texto: basta con que se vean
   // sobre la tarjeta blanca.

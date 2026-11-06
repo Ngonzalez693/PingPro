@@ -43,6 +43,10 @@ class PingProColors extends ThemeExtension<PingProColors> {
   final Color chartLabel;
   final Color shadow;
 
+  // Contorno fino de las superficies blancas, que en claro se pierden sobre
+  // la crema. Transparente en oscuro, donde no se dibuja.
+  final Color outline;
+
   const PingProColors({
     required this.page,
     required this.tabBar,
@@ -68,6 +72,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
     required this.inset,
     required this.chartLabel,
     required this.shadow,
+    required this.outline,
   });
 
   static const dark = PingProColors(
@@ -95,6 +100,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
     inset: AppColors.widgetGrayBackground,
     chartLabel: Color(0xFFFFFFFF),
     shadow: Color(0xFF000000),
+    outline: Color(0x00000000),
   );
 
   static const light = PingProColors(
@@ -122,6 +128,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
     inset: Color(0xFFECEEDD),
     chartLabel: Color(0xFF6B6F55),
     shadow: Color(0x261B1D00),
+    outline: Color(0x2E1B1D00),
   );
 
   @override
@@ -150,6 +157,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
     Color? inset,
     Color? chartLabel,
     Color? shadow,
+    Color? outline,
   }) {
     return PingProColors(
       page: page ?? this.page,
@@ -176,6 +184,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
       inset: inset ?? this.inset,
       chartLabel: chartLabel ?? this.chartLabel,
       shadow: shadow ?? this.shadow,
+      outline: outline ?? this.outline,
     );
   }
 
@@ -209,6 +218,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
       inset: mix(inset, other.inset),
       chartLabel: mix(chartLabel, other.chartLabel),
       shadow: mix(shadow, other.shadow),
+      outline: mix(outline, other.outline),
     );
   }
 }

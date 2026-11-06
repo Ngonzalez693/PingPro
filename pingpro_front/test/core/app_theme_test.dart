@@ -82,4 +82,33 @@ void main() {
       expect(theme.popupMenuTheme.color, palette.softFill);
     }
   });
+
+  // Un borde transparente de 1 px igual movería el contenido: en oscuro no
+  // tiene que haber borde.
+  test('en oscuro no hay contorno y en claro es fino y suave', () {
+    const dark = PingProColors.dark;
+    expect(surfaceOutlineSide(dark), isNull);
+    expect(surfaceOutline(dark), isNull);
+    expect(outlinedFieldBorder(dark, 12).borderSide, BorderSide.none);
+
+    const light = PingProColors.light;
+    expect(surfaceOutlineSide(light), BorderSide(color: light.outline));
+    expect(surfaceOutline(light), Border.all(color: light.outline));
+    expect(
+      outlinedFieldBorder(light, 12),
+      OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: light.outline)),
+    );
+  });
+
+  test('los diálogos y los menús llevan el contorno solo en claro', () {
+    final dark = buildAppTheme(PingProColors.dark);
+    expect(dark.dialogTheme.shape, isNull);
+    expect(dark.popupMenuTheme.shape, isNull);
+
+    const light = PingProColors.light;
+    final theme = buildAppTheme(light);
+    final side = BorderSide(color: light.outline);
+    expect(theme.dialogTheme.shape, RoundedRectangleBorder(borderRadius: BorderRadius.circular(28), side: side));
+    expect(theme.popupMenuTheme.shape, RoundedRectangleBorder(borderRadius: BorderRadius.circular(4), side: side));
+  });
 }
