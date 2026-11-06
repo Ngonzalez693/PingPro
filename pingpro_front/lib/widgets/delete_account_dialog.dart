@@ -86,7 +86,11 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
 
   Widget _buildDeleteButton() {
     return ElevatedButton(
-      style: ElevatedButton.styleFrom(backgroundColor: context.colors.danger),
+      // Deshabilitado mientras borra: sigue rojo para que se vea el indicador.
+      style: ElevatedButton.styleFrom(
+        backgroundColor: context.colors.danger,
+        disabledBackgroundColor: context.colors.danger,
+      ),
       onPressed: _isDeleting ? null : _onDeletePressed,
       child: _isDeleting
           ? SizedBox(
