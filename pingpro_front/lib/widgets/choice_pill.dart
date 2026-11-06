@@ -26,6 +26,9 @@ class ChoicePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Por delante y no en `decoration`: un borde ahí corre el texto 1 px al
+    // animar la selección.
+    final outline = selected ? null : surfaceOutline(context.colors);
     return PressableScale(
       child: GestureDetector(
         onTap: onTap,
@@ -38,6 +41,9 @@ class ChoicePill extends StatelessWidget {
             color: selected ? context.colors.brandFill : context.colors.softFill,
             borderRadius: BorderRadius.circular(20),
           ),
+          foregroundDecoration: outline == null
+              ? null
+              : BoxDecoration(border: outline, borderRadius: BorderRadius.circular(20)),
           alignment: Alignment.center,
           child: Text(label, style: textStyle ?? context.text.buttons),
         ),

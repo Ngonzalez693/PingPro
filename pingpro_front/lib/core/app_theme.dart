@@ -7,11 +7,19 @@ import 'package:pingpro_front/core/pingpro_text.dart';
 
 // Las hojas y los menús toman su fondo de aquí y no al abrirse: así un cambio
 // de tema con uno abierto también les llega.
+//
+// Los diálogos y los menús son blancos en claro: llevan el contorno con los
+// radios por defecto de Material 3 (28 y 4). En oscuro no se toca su forma.
 ThemeData buildAppTheme(PingProColors colors) {
+  final outline = surfaceOutlineSide(colors);
   return ThemeData(
     scaffoldBackgroundColor: colors.page,
     bottomSheetTheme: BottomSheetThemeData(backgroundColor: colors.tabBar),
-    popupMenuTheme: PopupMenuThemeData(color: colors.softFill),
+    popupMenuTheme: PopupMenuThemeData(
+      color: colors.softFill,
+      shape: outline == null ? null : _rounded(4, outline),
+    ),
+    dialogTheme: DialogThemeData(shape: outline == null ? null : _rounded(28, outline)),
     extensions: [colors],
   );
 }
@@ -35,6 +43,28 @@ ColorFilter? iconTint(PingProColors colors, {required bool accent}) {
   final wanted = accent ? colors.brand : colors.onPage;
   final drawn = accent ? PingProColors.dark.brand : PingProColors.dark.onPage;
   return wanted == drawn ? null : ColorFilter.mode(wanted, BlendMode.srcIn);
+}
+
+RoundedRectangleBorder _rounded(double radius, BorderSide side) =>
+    RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius), side: side);
+
+// En oscuro no hay contorno, ni siquiera transparente: un borde de 1 px mueve
+// el contenido y oscuro tiene que quedar igual.
+BorderSide? surfaceOutlineSide(PingProColors colors) =>
+    colors.outline.a == 0 ? null : BorderSide(color: colors.outline);
+
+Border? surfaceOutline(PingProColors colors) {
+  final side = surfaceOutlineSide(colors);
+  return side == null ? null : Border.fromBorderSide(side);
+}
+
+// Va en `border`, `enabledBorder` y `focusedBorder`: con solo `border`, Material
+// le pondría sus propios colores al contorno.
+OutlineInputBorder outlinedFieldBorder(PingProColors colors, double radius) {
+  return OutlineInputBorder(
+    borderRadius: BorderRadius.circular(radius),
+    borderSide: surfaceOutlineSide(colors) ?? BorderSide.none,
+  );
 }
 
 extension PingProThemeContext on BuildContext {

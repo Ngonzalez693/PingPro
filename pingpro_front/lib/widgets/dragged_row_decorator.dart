@@ -19,7 +19,10 @@ Widget draggedRowBackground(BuildContext context, Widget row) {
   return Material(
     color: context.colors.softFill,
     elevation: 4,
-    borderRadius: BorderRadius.circular(8),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+      side: surfaceOutlineSide(context.colors) ?? BorderSide.none,
+    ),
     child: row,
   );
 }

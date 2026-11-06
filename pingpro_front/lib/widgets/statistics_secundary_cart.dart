@@ -31,6 +31,7 @@ class StatisticsSecondaryChart extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colors.card,
         borderRadius: BorderRadius.circular(12),
+        border: surfaceOutline(context.colors),
       ),
       padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
       child: Column(

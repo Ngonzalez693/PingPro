@@ -27,6 +27,7 @@ class SummaryIcon extends StatelessWidget {
           decoration: BoxDecoration(
             color: context.colors.card,
             shape: BoxShape.circle,
+            border: surfaceOutline(context.colors),
           ),
           child: Stack(
             alignment: Alignment.center,

@@ -29,6 +29,7 @@ const _distinct = PingProColors(
   inset: Color(0xFF000016),
   chartLabel: Color(0xFF000017),
   shadow: Color(0xFF000018),
+  outline: Color(0xFF000019),
 );
 
 void main() {

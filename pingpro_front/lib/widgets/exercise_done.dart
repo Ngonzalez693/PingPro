@@ -16,7 +16,10 @@ class ExerciseDone extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: context.colors.card,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: surfaceOutlineSide(context.colors) ?? BorderSide.none,
+      ),
       contentPadding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       content: Text(
         '¡Excelente!\na seguir entrenando',
