@@ -38,4 +38,9 @@ void main() {
       expect(File(path).readAsStringSync(), isNot(contains('Colors.black')), reason: path);
     }
   });
+
+  test('el lápiz de editar perfil sale del tema', () {
+    final source = File('lib/screens/pingpro_edit_profile_screen.dart').readAsStringSync();
+    expect(source, isNot(contains('Colors.grey')));
+  });
 }

@@ -173,7 +173,7 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
                         child: Icon(
                           Icons.edit,
                           size: 20,
-                          color: _isEditing ? context.colors.brand : Colors.grey,
+                          color: _isEditing ? context.colors.brand : context.colors.muted,
                         ),
                       ),
                     ],
