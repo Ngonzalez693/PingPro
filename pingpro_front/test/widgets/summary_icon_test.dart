@@ -39,4 +39,19 @@ void main() {
     expect(await tintWith(PingProColors.dark), isNull);
     expect(await tintWith(PingProColors.light), ColorFilter.mode(PingProColors.light.onPage, BlendMode.srcIn));
   });
+
+  testWidgets('en claro el círculo lleva contorno y en oscuro no', (tester) async {
+    for (final palette in [PingProColors.dark, PingProColors.light]) {
+      await tester.pumpWidget(MaterialApp(
+        theme: buildAppTheme(palette),
+        home: const Scaffold(
+          body: SummaryIcon(assetPath: 'assets/icons/exercise_unselected.svg', count: 3, label: 'Ejercicios'),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      final circle = tester.widget<Container>(find.byType(Container).first).decoration as BoxDecoration;
+      expect(circle.border, surfaceOutline(palette));
+    }
+  });
 }

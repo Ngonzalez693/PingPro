@@ -136,13 +136,20 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
 
                   // Avatar (cambiar la foto vuelve con Supabase Storage)
                   Center(
-                    child: CircleAvatar(
-                      radius: 60,
-                      backgroundColor: context.colors.card,
-                      backgroundImage: _imageUrl != null
-                          ? NetworkImage(_imageUrl!)
-                          : const AssetImage('assets/images/avatar_placeholder.png')
-                              as ImageProvider,
+                    child: DecoratedBox(
+                      position: DecorationPosition.foreground,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: surfaceOutline(context.colors),
+                      ),
+                      child: CircleAvatar(
+                        radius: 60,
+                        backgroundColor: context.colors.card,
+                        backgroundImage: _imageUrl != null
+                            ? NetworkImage(_imageUrl!)
+                            : const AssetImage('assets/images/avatar_placeholder.png')
+                                as ImageProvider,
+                      ),
                     ),
                   ),
 

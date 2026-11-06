@@ -103,10 +103,9 @@ class _PingproExercisesScreenState extends State<PingproExercisesScreen> {
                 prefixIcon: Icon(Icons.search, color: context.colors.fieldText),
                 filled: true,
                 fillColor: context.colors.fieldFill,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
+                border: outlinedFieldBorder(context.colors, 12),
+                enabledBorder: outlinedFieldBorder(context.colors, 12),
+                focusedBorder: outlinedFieldBorder(context.colors, 12),
               ),
               style: TextStyle(color: context.colors.fieldText),
             ),

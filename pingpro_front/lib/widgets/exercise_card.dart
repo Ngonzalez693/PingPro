@@ -118,6 +118,7 @@ class ExerciseCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: context.colors.card,
                       shape: BoxShape.circle,
+                      border: surfaceOutline(context.colors),
                     ),
                     child: IconButton(
                       onPressed: onFavoritePressed,
