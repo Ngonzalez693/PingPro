@@ -8,7 +8,10 @@ Future<bool> showLogoutDialog(BuildContext context) async {
     context: context,
     builder: (dialogContext) => AlertDialog(
       backgroundColor: dialogContext.colors.card,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: surfaceOutlineSide(dialogContext.colors) ?? BorderSide.none,
+      ),
       contentPadding: const EdgeInsets.all(24),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -28,6 +31,7 @@ Future<bool> showLogoutDialog(BuildContext context) async {
           _dialogButton(
             label: Text('Volver', style: dialogContext.text.paragraphBlack),
             color: dialogContext.colors.card,
+            side: surfaceOutlineSide(dialogContext.colors),
             onPressed: () => Navigator.pop(dialogContext, false),
           ),
         ],
@@ -37,12 +41,18 @@ Future<bool> showLogoutDialog(BuildContext context) async {
   return confirmed ?? false;
 }
 
-Widget _dialogButton({required Widget label, required Color color, required VoidCallback onPressed}) {
+Widget _dialogButton({
+  required Widget label,
+  required Color color,
+  BorderSide? side,
+  required VoidCallback onPressed,
+}) {
   return SizedBox(
     width: double.infinity,
     child: ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
+        side: side,
         padding: const EdgeInsets.symmetric(vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
       ),

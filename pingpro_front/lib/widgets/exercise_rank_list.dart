@@ -24,6 +24,7 @@ class ExerciseRankList extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colors.card,
         borderRadius: BorderRadius.circular(12),
+        border: surfaceOutline(context.colors),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(

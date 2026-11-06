@@ -20,6 +20,7 @@ class TrainingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final outline = surfaceOutline(context.colors);
     return PressableScale(
       child: GestureDetector(
         onTap: onTap,
@@ -29,6 +30,10 @@ class TrainingCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             color: context.colors.page,
           ),
+          // Por delante, para rodear la imagen y la franja del nombre juntas.
+          foregroundDecoration: outline == null
+              ? null
+              : BoxDecoration(border: outline, borderRadius: BorderRadius.circular(16)),
           child: Column(
             children: [
               ClipRRect(

@@ -393,6 +393,7 @@ class _PingproTrainingDetailScreenState
                       decoration: BoxDecoration(
                         color: context.colors.softFill,
                         borderRadius: BorderRadius.circular(12),
+                        border: surfaceOutline(context.colors),
                       ),
                       padding: const EdgeInsets.all(16),
                       child: Column(
