@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pingpro_front/core/app_theme.dart';
+import 'package:pingpro_front/core/pingpro_colors.dart';
 import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/screens/pingpro_create_screen.dart';
 
@@ -49,5 +51,17 @@ void main() {
 
     final left = tester.getTopLeft(trainingName).dx;
     expect(left, inInclusiveRange(0, screenWidth - 1));
+  });
+
+  // La línea de fondo del indicador era blanca: sobre la crema de claro no se
+  // veía. Usa el color de las pistas vacías, que en oscuro es el mismo de antes.
+  testWidgets('la línea de fondo del indicador usa el color de las pistas', (tester) async {
+    for (final palette in [PingProColors.dark, PingProColors.light]) {
+      await open(tester, MaterialApp(theme: buildAppTheme(palette), home: const PingproCreateScreen()));
+      await tester.pumpAndSettle();
+
+      final track = find.byWidgetPredicate((w) => w is Container && w.color == palette.track);
+      expect(track, findsOneWidget, reason: palette == PingProColors.dark ? 'oscuro' : 'claro');
+    }
   });
 }
