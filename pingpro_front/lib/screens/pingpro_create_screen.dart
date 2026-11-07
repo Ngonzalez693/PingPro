@@ -138,7 +138,7 @@ class _PingproCreateScreenState extends State<PingproCreateScreen> {
       height: 2,
       child: Stack(
         children: [
-          Container(color: context.colors.softFill),
+          Container(color: context.colors.track),
           AnimatedBuilder(
             animation: _pageController,
             builder: (context, _) {
