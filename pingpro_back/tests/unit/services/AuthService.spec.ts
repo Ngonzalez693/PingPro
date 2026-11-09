@@ -3,7 +3,7 @@ import { AuthService } from '../../../src/services/AuthService';
 
 // Se mockea el módulo para que ningún test arranque el SDK de Firebase.
 jest.mock('../../../src/config/firebase', () => ({
-  auth: { deleteUser: jest.fn() },
+  auth: { deleteUser: jest.fn(), updateUser: jest.fn() },
 }));
 
 const deleteUser = jest.mocked(auth.deleteUser);
@@ -31,5 +31,25 @@ describe('AuthService.deleteUser', () => {
     deleteUser.mockRejectedValue(failure);
 
     await expect(new AuthService().deleteUser('u1')).rejects.toBe(failure);
+  });
+});
+
+describe('AuthService.setPhotoURL', () => {
+  const updateUser = jest.mocked(auth.updateUser);
+
+  beforeEach(() => {
+    updateUser.mockReset();
+  });
+
+  it('pone la foto en la cuenta de Auth', async () => {
+    await new AuthService().setPhotoURL('u1', 'https://a/b.png');
+
+    expect(updateUser).toHaveBeenCalledWith('u1', { photoURL: 'https://a/b.png' });
+  });
+
+  it('con null quita la foto', async () => {
+    await new AuthService().setPhotoURL('u1', null);
+
+    expect(updateUser).toHaveBeenCalledWith('u1', { photoURL: null });
   });
 });

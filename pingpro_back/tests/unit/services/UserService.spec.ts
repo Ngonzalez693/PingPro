@@ -6,6 +6,7 @@ function fakeRepo(): jest.Mocked<IUserRepository> {
     getById: jest.fn(),
     createWithUID: jest.fn(),
     update: jest.fn(),
+    setPhotoURL: jest.fn(),
     delete: jest.fn().mockResolvedValue(undefined),
   };
 }

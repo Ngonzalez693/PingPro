@@ -20,6 +20,11 @@ export class AuthService {
     return decoded.uid;
   }
 
+  // null quita la foto de la cuenta.
+  async setPhotoURL(uid: string, url: string | null): Promise<void> {
+    await auth.updateUser(uid, { photoURL: url });
+  }
+
   // Idempotente: si la cuenta ya no existe (reintento tras un borrado a
   // medias) el objetivo ya se cumplió, no es un error.
   async deleteUser(uid: string): Promise<void> {

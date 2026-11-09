@@ -81,6 +81,10 @@ export class PostgresUserRepository implements IUserRepository {
     }
   }
 
+  async setPhotoURL(id: string, url: string | null): Promise<void> {
+    await this.pool.query('UPDATE users SET photo_url = $2, updated_at = $3 WHERE id = $1', [id, url, new Date()]);
+  }
+
   async delete(id: string): Promise<void> {
     await this.pool.query('DELETE FROM users WHERE id = $1', [id]);
   }
