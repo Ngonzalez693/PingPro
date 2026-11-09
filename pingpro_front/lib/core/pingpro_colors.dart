@@ -47,6 +47,10 @@ class PingProColors extends ThemeExtension<PingProColors> {
   // la crema. Transparente en oscuro, donde no se dibuja.
   final Color outline;
 
+  // Fondo de las tarjetas oscuras sobre la pantalla, como las del perfil: el
+  // gris de la barra en oscuro y blanco con contorno en claro.
+  final Color panel;
+
   const PingProColors({
     required this.page,
     required this.tabBar,
@@ -73,6 +77,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
     required this.chartLabel,
     required this.shadow,
     required this.outline,
+    required this.panel,
   });
 
   static const dark = PingProColors(
@@ -101,6 +106,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
     chartLabel: Color(0xFFFFFFFF),
     shadow: Color(0xFF000000),
     outline: Color(0x00000000),
+    panel: AppColors.tab,
   );
 
   static const light = PingProColors(
@@ -129,6 +135,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
     chartLabel: Color(0xFF6B6F55),
     shadow: Color(0x261B1D00),
     outline: Color(0x2E1B1D00),
+    panel: Color(0xFFFFFFFF),
   );
 
   @override
@@ -158,6 +165,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
     Color? chartLabel,
     Color? shadow,
     Color? outline,
+    Color? panel,
   }) {
     return PingProColors(
       page: page ?? this.page,
@@ -185,6 +193,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
       chartLabel: chartLabel ?? this.chartLabel,
       shadow: shadow ?? this.shadow,
       outline: outline ?? this.outline,
+      panel: panel ?? this.panel,
     );
   }
 
@@ -219,6 +228,7 @@ class PingProColors extends ThemeExtension<PingProColors> {
       chartLabel: mix(chartLabel, other.chartLabel),
       shadow: mix(shadow, other.shadow),
       outline: mix(outline, other.outline),
+      panel: mix(panel, other.panel),
     );
   }
 }
