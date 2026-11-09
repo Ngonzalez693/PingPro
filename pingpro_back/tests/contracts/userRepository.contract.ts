@@ -67,6 +67,17 @@ export function userRepositoryContract(name: string, setup: ContractSetup<IUserR
       await expect(repo.update(MISSING_UID, patch)).rejects.toThrow();
     });
 
+    // update() no puede vaciar la foto (usa COALESCE): quitarla necesita null.
+    it('setPhotoURL guarda la foto y con null la quita', async () => {
+      await repo.createWithUID(UID, user);
+
+      await repo.setPhotoURL(UID, 'https://a/b.png');
+      expect((await repo.getById(UID))?.photoURL).toBe('https://a/b.png');
+
+      await repo.setPhotoURL(UID, null);
+      expect((await repo.getById(UID))?.photoURL).toBeUndefined();
+    });
+
     it('delete elimina el perfil', async () => {
       await repo.createWithUID(UID, user);
 

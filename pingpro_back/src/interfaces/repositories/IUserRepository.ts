@@ -10,5 +10,7 @@ export interface IUserRepository {
   getById(id: string): Promise<IUser | null>;
   createWithUID(uid: string, user: IUser): Promise<void>;
   update(id: string, user: Partial<IUser>): Promise<void>;
+  /** Pone o, con null, quita la foto: update() no puede vaciar un campo. */
+  setPhotoURL(id: string, url: string | null): Promise<void>;
   delete(id: string): Promise<void>;
 }
