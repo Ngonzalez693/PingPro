@@ -9,17 +9,21 @@ import { IUser } from '../interfaces/models/IUser';
 import type { IUserRepository } from '../interfaces/repositories/IUserRepository';
 import { HttpError } from '../utils/httpError';
 import type { AuthService } from './AuthService';
+import type { ProfilePhotoService } from './ProfilePhotoService';
 
 // De Auth solo hace falta borrar la cuenta. Pick en vez de la clase entera:
 // los tests pasan un falso sin arrancar firebase-admin, y `import type` no
 // carga config/firebase.
 type AccountDeleter = Pick<AuthService, 'deleteUser'>;
+// removeAllFor nunca lanza: si Supabase falla, la cuenta se borra igual.
+type PhotoCleaner = Pick<ProfilePhotoService, 'removeAllFor'>;
 
 export class UserService {
   // Los recibe de src/container.ts: el servicio solo conoce las interfaces.
   constructor(
     private readonly repo: IUserRepository,
     private readonly accounts: AccountDeleter,
+    private readonly photos: PhotoCleaner,
   ) {}
 
   async getById(id: string): Promise<IUser> {
@@ -40,11 +44,13 @@ export class UserService {
 
   async delete(id: string): Promise<void> {
     await this.getById(id); // validar existencia
+    await this.photos.removeAllFor(id);
     await this.repo.delete(id);
   }
 
   /**
-   * Elimina la cuenta entera: primero la fila de users (todo lo que cuelga de
+   * Elimina la cuenta entera: primero las fotos del bucket (sin bloquear si
+   * falla), luego la fila de users (todo lo que cuelga de
    * ella se borra en cascada; el catálogo, sin dueño, no se toca) y después la
    * cuenta de Firebase Auth.
    *
@@ -54,6 +60,7 @@ export class UserService {
    * sin ella y tiene que seguir hasta Auth.
    */
   async deleteAccount(uid: string): Promise<void> {
+    await this.photos.removeAllFor(uid);
     await this.repo.delete(uid);
     await this.accounts.deleteUser(uid);
   }

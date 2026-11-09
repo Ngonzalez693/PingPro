@@ -4,12 +4,13 @@
  * El documento users/{uid} se crea desde AuthController al registrarse, no
  * desde aquí: por eso POST '/' está bloqueado a propósito en el controller.
  */
-import { Router } from 'express';
+import express, { Router } from 'express';
 import UserController from '../controllers/UserController';
 import { validateBody } from '../middlewares/validation';
 import { userSchema, userUpdateSchema } from '../utils/user.validator';
 import authMiddleware from '../middlewares/authMiddleware';
 import { requireSelfOrRole } from '../middlewares/roleMiddleware';
+import { photoUploadLimiter } from '../middlewares/rateLimit';
 import { USER_ROLES } from '../utils/constants';
 
 const router = Router();
@@ -22,6 +23,14 @@ router.use(authMiddleware);
 router.get('/me', UserController.getMe);
 // Igual que GET /me, antes que '/:id'.
 router.delete('/me', UserController.deleteMe);
+// La foto llega como PNG en crudo (no JSON); el límite de 2 MB va solo aquí.
+router.put(
+  '/me/photo',
+  photoUploadLimiter,
+  express.raw({ type: 'image/png', limit: '2mb' }),
+  UserController.putMyPhoto,
+);
+router.delete('/me/photo', UserController.deleteMyPhoto);
 
 // No existe un listado de usuarios a propósito: exponía el correo de todos.
 // Si algún día hace falta un panel de administración, se reañade con

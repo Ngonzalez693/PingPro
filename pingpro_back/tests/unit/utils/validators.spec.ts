@@ -3,6 +3,7 @@ import { exerciseSchema } from '../../../src/utils/exercise.validator';
 import { trainingSchema } from '../../../src/utils/training.validator';
 import { completedSchema } from '../../../src/utils/completion.validator';
 import { STATS_MAX_DAYS, statsEventsQuerySchema } from '../../../src/utils/stats.validator';
+import { userUpdateSchema } from '../../../src/utils/user.validator';
 
 // Cuerpos válidos: cada caso cambia un solo campo para aislar la regla.
 const validStep = { hit: 1, rotation: 2, zone: 3, direction: 6, side: 1, ownZone: 3 };
@@ -193,5 +194,16 @@ describe('statsEventsQuerySchema', () => {
 
   it('rechaza parámetros desconocidos', () => {
     expect(statsEventsQuerySchema.validate({ from: daysAgo(1), uid: 'u2' }).error).toBeDefined();
+  });
+});
+
+describe('userUpdateSchema', () => {
+  // La foto solo cambia por PUT /api/users/me/photo: aquí ya no se acepta.
+  it('rechaza photoURL', () => {
+    expect(userUpdateSchema.validate({ photoURL: 'https://x/y.png' }).error).toBeDefined();
+  });
+
+  it('acepta el nombre', () => {
+    expect(userUpdateSchema.validate({ displayName: 'Ana' }).error).toBeUndefined();
   });
 });

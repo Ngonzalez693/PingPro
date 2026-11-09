@@ -19,7 +19,8 @@
     "lint:fix": "eslint src tests --fix",
     "format": "prettier --write src/**/*.ts",
     "db:migrate": "ts-node src/db/migrate.ts",
-    "db:import-firestore": "ts-node src/migration/cli.ts"
+    "db:import-firestore": "ts-node src/migration/cli.ts",
+    "avatars:cleanup-orphans": "ts-node src/scripts/cleanupOrphanAvatars.ts"
   },
   "keywords": [
     "node",
