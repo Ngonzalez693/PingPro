@@ -108,3 +108,24 @@ describe('createAvatarStorage', () => {
     expect(storage).toBeInstanceOf(SupabaseAvatarStorage);
   });
 });
+
+describe('Supabase en los tests', () => {
+  // tests/setup.ts las vacía antes de que nada cargue el .env: con las claves
+  // reales en el .env local, los tests subirían archivos al bucket de verdad.
+  it('las variables de Supabase llegan vacías a los tests', () => {
+    expect(process.env.SUPABASE_URL).toBe('');
+    expect(process.env.SUPABASE_SERVICE_ROLE_KEY).toBe('');
+    expect(createAvatarStorage(process.env)).toBeInstanceOf(UnconfiguredAvatarStorage);
+  });
+});
+
+describe('SupabaseAvatarStorage: tiempo límite', () => {
+  // Si Supabase se cuelga, borrar una cuenta no puede quedarse esperando.
+  it('cada petición lleva una señal para cortarla', async () => {
+    const { fn, calls } = fakeFetch();
+
+    await new SupabaseAvatarStorage(BASE, KEY, fn).remove(['u1/a.png']);
+
+    expect(calls[0].init.signal).toBeInstanceOf(AbortSignal);
+  });
+});

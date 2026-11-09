@@ -10,6 +10,9 @@ import type { IAvatarStorage } from '../../interfaces/storage/IAvatarStorage';
 import { UnconfiguredAvatarStorage } from './UnconfiguredAvatarStorage';
 
 const BUCKET = 'avatars';
+// Si Supabase acepta la conexión y no responde, fetch esperaría minutos:
+// borrar una cuenta no puede quedarse colgado por eso.
+const REQUEST_TIMEOUT_MS = 10_000;
 
 export class SupabaseAvatarStorage implements IAvatarStorage {
   constructor(
@@ -57,6 +60,7 @@ export class SupabaseAvatarStorage implements IAvatarStorage {
   private async request(op: string, path: string, init: RequestInit): Promise<Response> {
     const res = await this.fetchFn(`${this.baseUrl}${path}`, {
       ...init,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       headers: {
         ...(init.headers as Record<string, string>),
         Authorization: `Bearer ${this.serviceKey}`,

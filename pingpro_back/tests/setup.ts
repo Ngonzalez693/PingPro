@@ -17,3 +17,9 @@ process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
 // src/config/postgres.ts rechaza en tests cualquier base que no sea local y
 // *_test.
 process.env.DATABASE_URL = 'postgres://pingpro_test:pingpro_test@127.0.0.1:5433/pingpro_test';
+
+// Supabase Storage: vacías a propósito. Con las claves reales en el .env, los
+// tests subirían fotos al bucket de producción; vacías, createAvatarStorage
+// usa el almacenamiento no configurado (subir responde 503).
+process.env.SUPABASE_URL = '';
+process.env.SUPABASE_SERVICE_ROLE_KEY = '';
