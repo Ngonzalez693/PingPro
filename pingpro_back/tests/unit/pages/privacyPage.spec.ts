@@ -23,3 +23,12 @@ describe('renderPrivacyPage', () => {
     expect(html).toContain('&lt;script&gt;@x.com');
   });
 });
+
+describe('renderPrivacyPage: foto de perfil', () => {
+  it('dice que la foto se guarda y que se borra con la cuenta', () => {
+    const html = renderPrivacyPage();
+
+    expect(html).toContain('foto de perfil');
+    expect(html).toContain('se borra al quitarla o al eliminar tu cuenta');
+  });
+});

@@ -11,6 +11,14 @@ function fakeRepo(): jest.Mocked<IUserRepository> {
   };
 }
 
+function fakePhotos(calls?: string[]) {
+  return {
+    removeAllFor: jest.fn(async () => {
+      calls?.push('photos');
+    }),
+  };
+}
+
 describe('UserService.deleteAccount', () => {
   it('borra primero la fila y después la cuenta de Auth', async () => {
     const calls: string[] = [];
@@ -24,7 +32,7 @@ describe('UserService.deleteAccount', () => {
       }),
     };
 
-    await new UserService(repo, accounts).deleteAccount('u1');
+    await new UserService(repo, accounts, fakePhotos()).deleteAccount('u1');
 
     expect(repo.delete).toHaveBeenCalledWith('u1');
     expect(accounts.deleteUser).toHaveBeenCalledWith('u1');
@@ -36,7 +44,7 @@ describe('UserService.deleteAccount', () => {
     repo.delete.mockRejectedValue(new Error('db down'));
     const accounts = { deleteUser: jest.fn().mockResolvedValue(undefined) };
 
-    await expect(new UserService(repo, accounts).deleteAccount('u1')).rejects.toThrow('db down');
+    await expect(new UserService(repo, accounts, fakePhotos()).deleteAccount('u1')).rejects.toThrow('db down');
     expect(accounts.deleteUser).not.toHaveBeenCalled();
   });
 
@@ -45,9 +53,44 @@ describe('UserService.deleteAccount', () => {
     repo.getById.mockResolvedValue(null);
     const accounts = { deleteUser: jest.fn().mockResolvedValue(undefined) };
 
-    await new UserService(repo, accounts).deleteAccount('u1');
+    await new UserService(repo, accounts, fakePhotos()).deleteAccount('u1');
 
     expect(repo.getById).not.toHaveBeenCalled();
     expect(accounts.deleteUser).toHaveBeenCalledWith('u1');
+  });
+});
+
+describe('UserService: fotos al borrar', () => {
+  it('deleteAccount borra las fotos antes que la fila y la cuenta de Auth', async () => {
+    const calls: string[] = [];
+    const repo = fakeRepo();
+    repo.delete.mockImplementation(async () => {
+      calls.push('db');
+    });
+    const accounts = {
+      deleteUser: jest.fn(async () => {
+        calls.push('auth');
+      }),
+    };
+    const photos = fakePhotos(calls);
+
+    await new UserService(repo, accounts, photos).deleteAccount('u1');
+
+    expect(photos.removeAllFor).toHaveBeenCalledWith('u1');
+    expect(calls).toEqual(['photos', 'db', 'auth']);
+  });
+
+  it('el borrado de admin también borra las fotos antes que la fila', async () => {
+    const calls: string[] = [];
+    const repo = fakeRepo();
+    repo.getById.mockResolvedValue({ id: 'u1', email: 'a@b.c' });
+    repo.delete.mockImplementation(async () => {
+      calls.push('db');
+    });
+    const photos = fakePhotos(calls);
+
+    await new UserService(repo, { deleteUser: jest.fn() }, photos).delete('u1');
+
+    expect(calls).toEqual(['photos', 'db']);
   });
 });

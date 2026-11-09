@@ -71,7 +71,7 @@ const photosService = new ProfilePhotoService(repositories.users, createAvatarSt
 export const services = {
   auth: authService,
   photos: photosService,
-  users: new UserService(repositories.users, authService),
+  users: new UserService(repositories.users, authService, photosService),
   exercises: new ExerciseService(repositories.exercises, repositories.exerciseStates),
   trainings: new TrainingService(repositories.trainings, repositories.trainingStates, repositories.exercises),
   models3d: new Model3DService(repositories.models3d),

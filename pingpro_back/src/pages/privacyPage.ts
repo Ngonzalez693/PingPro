@@ -27,14 +27,17 @@ const BODY = `
   <p>Última actualización: 5 de octubre de 2026.</p>
   <h2>Qué datos guardamos</h2>
   <p>Tu correo y tu nombre de usuario, los ejercicios y entrenamientos que creas,
-  tus favoritos y el historial de ejercicios y entrenamientos que completas.</p>
+  tus favoritos y el historial de ejercicios y entrenamientos que completas.
+  Si pones una foto de perfil, también esa foto: solo la ves tú y
+  se borra al quitarla o al eliminar tu cuenta.</p>
   <h2>Para qué los usamos</h2>
   <p>Solo para que la app funcione y para mostrarte tus estadísticas. No
   mostramos publicidad. No vendemos tus datos ni los compartimos con terceros,
   salvo con los proveedores que hacen funcionar el servicio (ver abajo).</p>
   <h2>Dónde se guardan</h2>
   <p>La cuenta (correo y contraseña) en Firebase Authentication, de Google. El
-  resto, en una base de datos PostgreSQL alojada en Supabase, a la que accede el
+  resto, en una base de datos PostgreSQL alojada en Supabase (la foto de
+  perfil, en Supabase Storage), a la que accede el
   servidor de PingPro, alojado en Hostinger. Estos proveedores solo procesan los
   datos para prestar el servicio.</p>
   <h2>Cuánto tiempo</h2>
