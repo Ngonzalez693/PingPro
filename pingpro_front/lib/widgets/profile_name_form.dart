@@ -50,13 +50,24 @@ class _ProfileNameFormState extends State<ProfileNameForm> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _label(context, 'Nombre'),
-        TextField(
-          controller: _name,
-          autofocus: true,
-          enabled: !widget.saving,
-          textCapitalization: TextCapitalization.words,
-          style: context.text.paragraphBlack,
-          decoration: _nameDecoration(context),
+        Theme(
+          // Cursor, selección y asa con los colores del tema: los de Material
+          // por defecto son morados.
+          data: Theme.of(context).copyWith(
+            textSelectionTheme: TextSelectionThemeData(
+              cursorColor: context.colors.onCard,
+              selectionColor: context.colors.brand.withValues(alpha: 0.35),
+              selectionHandleColor: context.colors.brand,
+            ),
+          ),
+          child: TextField(
+            controller: _name,
+            autofocus: true,
+            enabled: !widget.saving,
+            textCapitalization: TextCapitalization.words,
+            style: context.text.paragraphBlack,
+            decoration: _nameDecoration(context),
+          ),
         ),
         const SizedBox(height: 12),
         _label(context, 'Correo'),

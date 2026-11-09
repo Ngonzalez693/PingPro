@@ -1,8 +1,9 @@
-// Edición de perfil: nombre (y foto cuando haya Storage).
+// Perfil del usuario: foto, nombre y correo, y la edición del nombre.
 // La contraseña y el cierre de sesión están en Configuración.
 //
-// El nombre se guarda en el backend (PUT /api/users/{uid}, vía AuthService) y
-// además en Firebase Auth.
+// En reposo se ve la tarjeta con los datos; tocar el nombre la cambia por el
+// formulario. El nombre se guarda en el backend (PUT /api/users/{uid}, vía
+// AuthService) y además en Firebase Auth.
 //
 // Cambiar la foto está desactivado hasta tener Supabase Storage: el bucket de
 // Firebase Storage nunca existió (pide el plan Blaze). El avatar muestra la
@@ -12,7 +13,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pingpro_front/core/app_theme.dart';
+import 'package:pingpro_front/core/motion.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
+import 'package:pingpro_front/widgets/profile_details_card.dart';
+import 'package:pingpro_front/widgets/profile_name_form.dart';
 
 class PingproEditProfileScreen extends StatefulWidget {
   const PingproEditProfileScreen({super.key});
@@ -28,13 +32,9 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
   String _userEmail = 'Cargando...';
   String? _imageUrl;
 
-  bool _editingName = false;
-  bool _isEditing = false;
-
-  final TextEditingController _nameEditCtrl = TextEditingController();
-
-  bool _loading = true;     // pantalla cargando
-  bool _saving = false;     // guardando cambios
+  bool _loading = true;
+  bool _editing = false;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -49,7 +49,6 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
         _userName = user.displayName ?? 'Usuario';
         _userEmail = user.email ?? '';
         _imageUrl = user.photoURL;
-        _nameEditCtrl.text = _userName;
 
         // Intento traer perfil extendido de tu backend (si falla, seguimos con Firebase)
         try {
@@ -57,7 +56,6 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
           _userName = profile['displayName'] ?? _userName;
           _userEmail = profile['email'] ?? _userEmail;
           _imageUrl = profile['photoURL'] ?? _imageUrl;
-          _nameEditCtrl.text = _userName;
         } catch (e) {
           if (kDebugMode) debugPrint('Error backend profile: $e');
         }
@@ -71,27 +69,24 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
     }
   }
 
-  Future<void> _saveChanges() async {
+  // Si falla se queda en el formulario, para no perder lo escrito.
+  Future<void> _saveName(String newName) async {
     if (_saving) return;
     setState(() => _saving = true);
 
-    final user = FirebaseAuth.instance.currentUser!;
-    final newName = _nameEditCtrl.text.trim();
-
     try {
-      // Nombre: primero el backend (users/{uid}) y después Firebase Auth, para
-      // no dejar Auth con un nombre que el perfil no llegó a guardar.
-      if (newName.isNotEmpty && newName != _userName) {
-        await _authService.updateProfile(displayName: newName);
-        await user.updateDisplayName(newName);
+      // Primero el backend (users/{uid}) y después Firebase Auth, para no dejar
+      // Auth con un nombre que el perfil no llegó a guardar.
+      await _authService.updateProfile(displayName: newName);
+      await FirebaseAuth.instance.currentUser!.updateDisplayName(newName);
+      if (!mounted) return;
+      setState(() {
         _userName = newName;
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Perfil actualizado')),
-        );
-      }
+        _editing = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Perfil actualizado')),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -108,133 +103,83 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
     if (_loading) {
       return Scaffold(
         backgroundColor: context.colors.page,
-        body: Center(child: CircularProgressIndicator()),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
-
-    final buttonLabel = _isEditing ? 'Guardar' : 'Editar información';
 
     return Scaffold(
       backgroundColor: context.colors.page,
       body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      icon: Icon(Icons.arrow_back, color: context.colors.onPage),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Avatar (cambiar la foto vuelve con Supabase Storage)
-                  Center(
-                    child: DecoratedBox(
-                      position: DecorationPosition.foreground,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: surfaceOutline(context.colors),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildHeader(context),
+              const SizedBox(height: 16),
+              _buildIdentity(context),
+              const SizedBox(height: 24),
+              AnimatedSwitcher(
+                duration: motionDuration(context, const Duration(milliseconds: 200)),
+                child: _editing
+                    ? ProfileNameForm(
+                        key: const ValueKey('form'),
+                        initialName: _userName,
+                        email: _userEmail,
+                        saving: _saving,
+                        onSave: _saveName,
+                        onCancel: () => setState(() => _editing = false),
+                      )
+                    : ProfileDetailsCard(
+                        key: const ValueKey('card'),
+                        name: _userName,
+                        email: _userEmail,
+                        onEditName: () => setState(() => _editing = true),
                       ),
-                      child: CircleAvatar(
-                        radius: 60,
-                        backgroundColor: context.colors.card,
-                        backgroundImage: _imageUrl != null
-                            ? NetworkImage(_imageUrl!)
-                            : const AssetImage('assets/images/avatar_placeholder.png')
-                                as ImageProvider,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Nombre
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _editingName
-                          ? SizedBox(
-                              width: 220,
-                              child: TextField(
-                                controller: _nameEditCtrl,
-                                style: context.text.title,
-                                decoration: const InputDecoration(
-                                  hintText: 'Nombre',
-                                  border: UnderlineInputBorder(),
-                                ),
-                              ),
-                            )
-                          : Text(_userName, style: context.text.title),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: _isEditing
-                            ? () => setState(() => _editingName = !_editingName)
-                            : null,
-                        child: Icon(
-                          Icons.edit,
-                          size: 20,
-                          color: _isEditing ? context.colors.brand : context.colors.muted,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-                  Text('Correo: $_userEmail', style: context.text.paragraph),
-
-                  const SizedBox(height: 48),
-
-                  // Botón editar/guardar
-                  SizedBox(
-                    width: 220,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.colors.brandFill,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      onPressed: () async {
-                        if (_isEditing) {
-                          await _saveChanges();
-                          if (!mounted) return;
-                          setState(() {
-                            _isEditing = false;
-                            _editingName = false;
-                          });
-                        } else {
-                          setState(() {
-                            _isEditing = true;
-                            _editingName = true;
-                          });
-                        }
-                      },
-                      child: Text(buttonLabel, style: context.text.buttons),
-                    ),
-                  ),
-                ],
               ),
-            ),
-
-            // Overlay de guardado
-            if (_saving)
-              Container(
-                color: context.colors.page,
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          icon: Icon(Icons.arrow_back, color: context.colors.onPage),
+          onPressed: () => Navigator.pop(context),
+        ),
+        const SizedBox(width: 8),
+        Text('Perfil', style: context.text.title),
+      ],
+    );
+  }
+
+  Widget _buildIdentity(BuildContext context) {
+    return Column(
+      children: [
+        DecoratedBox(
+          position: DecorationPosition.foreground,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: surfaceOutline(context.colors),
+          ),
+          child: CircleAvatar(
+            radius: 42,
+            backgroundColor: context.colors.card,
+            backgroundImage: _imageUrl != null
+                ? NetworkImage(_imageUrl!)
+                : const AssetImage('assets/images/avatar_placeholder.png')
+                    as ImageProvider,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(_userName, style: context.text.subTitle, textAlign: TextAlign.center),
+        const SizedBox(height: 2),
+        Text(_userEmail, style: context.text.caption, textAlign: TextAlign.center),
+      ],
     );
   }
 }
