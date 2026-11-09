@@ -26,6 +26,10 @@ export default function errorHandler(
   if (err instanceof HttpError) {
     return error(res, err.message, err.status);
   }
+  // express.raw rechaza la foto de más de 2 MB con este tipo de error.
+  if ((err as { type?: unknown } | null)?.type === 'entity.too.large') {
+    return error(res, 'La foto pesa demasiado (máximo 2 MB)', HTTP_STATUS.PAYLOAD_TOO_LARGE);
+  }
   logger.error(err instanceof Error ? err.stack ?? err.message : String(err));
   return error(res, INTERNAL_ERROR_MESSAGE, HTTP_STATUS.INTERNAL_ERROR);
 }

@@ -9,8 +9,10 @@ import { Request, Response, NextFunction } from 'express';
 import { services } from '../container';
 import { success, error } from '../utils/apiResponse';
 import { HTTP_STATUS } from '../utils/constants';
+import { assertPng } from '../utils/png';
 
 const service = services.users;
+const photos = services.photos;
 
 export default class UserController {
   static async getById(req: Request, res: Response, next: NextFunction) {
@@ -73,4 +75,27 @@ export default class UserController {
     }
   }
 
+  static async putMyPhoto(req: Request, res: Response, next: NextFunction) {
+    try {
+      const uid = req.user?.uid;
+      if (!uid) return error(res, "Unauthorized", HTTP_STATUS.UNAUTHORIZED);
+
+      const photoURL = await photos.replace(uid, assertPng(req.body));
+      return success(res, { photoURL }, HTTP_STATUS.OK);
+    } catch (err) {
+      return next(err);
+    }
+  }
+
+  static async deleteMyPhoto(req: Request, res: Response, next: NextFunction) {
+    try {
+      const uid = req.user?.uid;
+      if (!uid) return error(res, "Unauthorized", HTTP_STATUS.UNAUTHORIZED);
+
+      await photos.remove(uid);
+      return success(res, null, HTTP_STATUS.OK);
+    } catch (err) {
+      return next(err);
+    }
+  }
 }

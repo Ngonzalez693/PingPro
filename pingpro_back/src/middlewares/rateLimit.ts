@@ -1,5 +1,5 @@
 /**
- * Límites de peticiones por IP.
+ * Límites de peticiones: el registro, por IP; las fotos de perfil, por usuario.
  *
  * El registro crea las cuentas con el Admin SDK, que se salta la protección por
  * IP que Firebase Auth aplica a los registros desde el cliente: sin este límite,
@@ -27,5 +27,19 @@ export const signupLimiter: RateLimitRequestHandler = rateLimit({
       'Demasiados registros desde esta red. Intenta de nuevo en unos minutos.',
       HTTP_STATUS.TOO_MANY_REQUESTS,
     );
+  },
+});
+
+// Va después de authMiddleware: cuenta por usuario, no por IP, para que un
+// club en el mismo wifi no comparta el cupo. 20 por hora sobra para cambiar
+// la foto y frena que alguien llene el bucket.
+export const photoUploadLimiter: RateLimitRequestHandler = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.uid ?? 'anonymous',
+  handler: (_req, res) => {
+    error(res, 'Demasiadas fotos subidas. Intenta de nuevo más tarde.', HTTP_STATUS.TOO_MANY_REQUESTS);
   },
 });

@@ -17,7 +17,10 @@ export const userSchema = Joi.object({
 /**
  * Esquema de PUT /api/users/:id.
  *
- * Solo deja tocar displayName y photoURL. Es deliberado que NO incluya:
+ * Solo deja tocar displayName. Es deliberado que NO incluya:
+ *   - `photoURL`: la foto solo cambia por PUT /api/users/me/photo, que la sube
+ *     al bucket y la guarda también en Firebase Auth. Aceptarla aquí dejaría
+ *     guardar cualquier URL de fuera y desincronizar los dos sitios.
  *   - `roles`: un usuario puede editar su propia cuenta, así que aceptarlo sería
  *     escalada de privilegios directa (mandarse `roles: ['admin']`).
  *   - `email`: la fuente de verdad es Firebase Auth; permitir cambiarlo aquí
@@ -28,5 +31,4 @@ export const userSchema = Joi.object({
  */
 export const userUpdateSchema = Joi.object({
   displayName: Joi.string().min(1).max(60).optional(),
-  photoURL: Joi.string().uri().optional(),
 }).min(1); // un body vacío no es una actualización válida

@@ -25,6 +25,8 @@ import { PostgresUserExerciseStateRepository } from './repositories/implementati
 import { PostgresUserRepository } from './repositories/implementations/PostgresUserRepository';
 import { PostgresUserTrainingStateRepository } from './repositories/implementations/PostgresUserTrainingStateRepository';
 import { AuthService } from './services/AuthService';
+import { ProfilePhotoService } from './services/ProfilePhotoService';
+import { createAvatarStorage } from './services/storage/SupabaseAvatarStorage';
 import { ExerciseService } from './services/ExerciseService';
 import Model3DService from './services/Model3DService';
 import { StatsService } from './services/StatsService';
@@ -62,8 +64,13 @@ const repositories = createPostgresRepositories(pool);
 // cuentas (services.users).
 const authService = new AuthService();
 
+// Sin las variables de Supabase (tests, desarrollo sin bucket) las fotos
+// responden 503 y borrar una cuenta sigue funcionando.
+const photosService = new ProfilePhotoService(repositories.users, createAvatarStorage(process.env), authService);
+
 export const services = {
   auth: authService,
+  photos: photosService,
   users: new UserService(repositories.users, authService),
   exercises: new ExerciseService(repositories.exercises, repositories.exerciseStates),
   trainings: new TrainingService(repositories.trainings, repositories.trainingStates, repositories.exercises),
