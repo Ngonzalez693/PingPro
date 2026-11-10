@@ -27,6 +27,7 @@ import 'package:pingpro_front/widgets/staggered_entrance.dart';
 import 'package:pingpro_front/widgets/summary_icon.dart';
 import 'package:pingpro_front/widgets/training_card.dart';
 import 'package:pingpro_front/widgets/training_card_skeleton.dart';
+import 'package:pingpro_front/widgets/user_avatar.dart';
 import 'package:pingpro_front/models/exercise_model.dart';
 import 'package:pingpro_front/models/training_model.dart';
 import 'package:pingpro_front/core/services/exercises_state.dart';
@@ -103,19 +104,22 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
     );
   }
 
-  void _openProfile() => Navigator.pushNamed(context, '/editProfile');
+  // Al volver, recarga el usuario de Firebase: la foto o el nombre pueden
+  // haber cambiado en la pantalla Perfil.
+  Future<void> _openProfile() async {
+    await Navigator.pushNamed(context, '/editProfile');
+    await FirebaseAuth.instance.currentUser?.reload();
+    if (mounted) setState(() {});
+  }
 
   // Foto, nombre y "Ver perfil" son una sola zona tocable.
-  Widget _buildProfileLink(String name) {
+  Widget _buildProfileLink(String name, String? photoUrl) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: _openProfile,
       child: Row(
         children: [
-          const CircleAvatar(
-            radius: 24,
-            backgroundImage: AssetImage('assets/images/avatar_placeholder.png'),
-          ),
+          UserAvatar(photoUrl: photoUrl, radius: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -199,7 +203,7 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                       ),
                       child: Row(
                         children: [
-                          Expanded(child: _buildProfileLink(name)),
+                          Expanded(child: _buildProfileLink(name, user?.photoURL)),
                           IconButton(
                             icon: Icon(
                               Icons.settings,

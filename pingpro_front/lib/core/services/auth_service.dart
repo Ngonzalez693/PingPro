@@ -12,6 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pingpro_front/core/load_errors.dart';
+import 'package:pingpro_front/core/photo_errors.dart';
 import 'package:pingpro_front/core/services/api_client.dart';
 import 'package:pingpro_front/core/services/api_errors.dart';
 
@@ -290,5 +291,41 @@ class AuthService {
 
     if (resp.statusCode == 200) return;
     throw Exception(backendErrorMessage(resp.body, 'No se pudo guardar el perfil'));
+  }
+
+  /// Sube la foto de perfil (PNG ya recortado) y devuelve su URL. El backend
+  /// la guarda también en Firebase Auth; reload() trae ese cambio al usuario
+  /// actual para que la pestaña Perfil la vea.
+  Future<String> uploadProfilePhoto(Uint8List png) async {
+    final u = _auth.currentUser;
+    if (u == null) throw StateError('No hay sesión iniciada');
+    final token = await withRequestTimeout(u.getIdToken());
+
+    final resp = await apiClient.put(
+      _u('/api/users/me/photo'),
+      headers: {'Content-Type': 'image/png', 'Authorization': 'Bearer $token'},
+      body: png,
+    );
+    if (resp.statusCode != 200) throw PhotoUploadException(resp.statusCode);
+
+    final data = jsonDecode(resp.body);
+    final url = (data is Map && data['data'] is Map) ? data['data']['photoURL'] : null;
+    if (url is! String) throw PhotoUploadException(resp.statusCode);
+    await u.reload();
+    return url;
+  }
+
+  /// Quita la foto de perfil (en el backend y, por él, en Firebase Auth).
+  Future<void> removeProfilePhoto() async {
+    final u = _auth.currentUser;
+    if (u == null) throw StateError('No hay sesión iniciada');
+    final token = await withRequestTimeout(u.getIdToken());
+
+    final resp = await apiClient.delete(
+      _u('/api/users/me/photo'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (resp.statusCode != 200) throw PhotoUploadException(resp.statusCode);
+    await u.reload();
   }
 }

@@ -1,7 +1,7 @@
 name: pingpro_front
 description: "Ping Pro Frontend"
 publish_to: 'none'
-version: 0.8.29+32
+version: 0.8.30+33
 
 environment:
   sdk: ^3.7.0
@@ -25,6 +25,7 @@ dependencies:
   flutter_timezone: ^5.1.1
   path_provider: ^2.1.5
   webview_flutter: ^4.13.0
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:
