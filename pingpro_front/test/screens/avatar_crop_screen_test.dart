@@ -79,4 +79,12 @@ void main() {
     });
     expect(size, const Size(avatarPixels * 1.0, avatarPixels * 1.0));
   });
+
+  // Con zoom, la foto no puede pintarse fuera de la zona de recorte (sobre la
+  // indicación o la barra de estado), donde no la cubre la máscara oscura.
+  testWidgets('la foto queda recortada a la zona de recorte', (tester) async {
+    await openCrop(tester);
+
+    expect(find.ancestor(of: find.byType(InteractiveViewer), matching: find.byType(ClipRect)), findsWidgets);
+  });
 }
