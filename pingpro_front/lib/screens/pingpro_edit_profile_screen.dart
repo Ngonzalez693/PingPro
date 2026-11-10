@@ -5,18 +5,24 @@
 // formulario. El nombre se guarda en el backend (PUT /api/users/{uid}, vía
 // AuthService) y además en Firebase Auth.
 //
-// Cambiar la foto está desactivado hasta tener Supabase Storage: el bucket de
-// Firebase Storage nunca existió (pide el plan Blaze). El avatar muestra la
-// foto si el perfil ya tiene una.
+// La foto se cambia con el botón de cámara del avatar: galería, recorte en un
+// círculo (AvatarCropScreen) y subida al backend, que la guarda en Supabase
+// Storage. También se puede quitar.
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:pingpro_front/core/app_theme.dart';
 import 'package:pingpro_front/core/motion.dart';
+import 'package:pingpro_front/core/photo_errors.dart';
 import 'package:pingpro_front/core/services/auth_service.dart';
+import 'package:pingpro_front/screens/avatar_crop_screen.dart';
+import 'package:pingpro_front/widgets/confirm_action_dialog.dart';
+import 'package:pingpro_front/widgets/photo_options_sheet.dart';
 import 'package:pingpro_front/widgets/profile_details_card.dart';
 import 'package:pingpro_front/widgets/profile_name_form.dart';
+import 'package:pingpro_front/widgets/user_avatar.dart';
 
 class PingproEditProfileScreen extends StatefulWidget {
   const PingproEditProfileScreen({super.key});
@@ -35,6 +41,7 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
   bool _loading = true;
   bool _editing = false;
   bool _saving = false;
+  bool _photoBusy = false;
 
   @override
   void initState() {
@@ -96,6 +103,61 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  Future<void> _onCameraTap() async {
+    final action = await showPhotoOptions(context, hasPhoto: _imageUrl != null);
+    switch (action) {
+      case PhotoAction.pick:
+        await _pickPhoto();
+      case PhotoAction.remove:
+        await _removePhoto();
+      case null:
+        return;
+    }
+  }
+
+  // El tope de 2048 px evita cargar en memoria una foto enorme de la cámara:
+  // el recorte final es de 512 × 512.
+  Future<void> _pickPhoto() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 2048, maxHeight: 2048);
+    if (picked == null || !mounted) return;
+    final bytes = await picked.readAsBytes();
+    if (!mounted) return;
+    final cropped = await Navigator.push<Uint8List>(
+      context,
+      MaterialPageRoute(builder: (_) => AvatarCropScreen(imageBytes: bytes)),
+    );
+    if (cropped == null) return;
+    await _runPhotoChange(
+      () async => _imageUrl = await _authService.uploadProfilePhoto(cropped),
+      done: 'Foto actualizada',
+    );
+  }
+
+  Future<void> _removePhoto() async {
+    final confirmed = await confirmAction(context, message: '¿Quitar la foto?', confirmLabel: 'Quitar');
+    if (!confirmed) return;
+    await _runPhotoChange(() async {
+      await _authService.removeProfilePhoto();
+      _imageUrl = null;
+    }, done: 'Foto quitada');
+  }
+
+  // Si falla, la foto que había se queda y se explica por qué.
+  Future<void> _runPhotoChange(Future<void> Function() change, {required String done}) async {
+    setState(() => _photoBusy = true);
+    String message;
+    try {
+      await change();
+      message = done;
+    } catch (e) {
+      if (kDebugMode) debugPrint('Error con la foto de perfil: $e');
+      message = photoErrorMessage(e);
+    }
+    if (!mounted) return;
+    setState(() => _photoBusy = false);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -160,21 +222,7 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
   Widget _buildIdentity(BuildContext context) {
     return Column(
       children: [
-        DecoratedBox(
-          position: DecorationPosition.foreground,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: surfaceOutline(context.colors),
-          ),
-          child: CircleAvatar(
-            radius: 42,
-            backgroundColor: context.colors.card,
-            backgroundImage: _imageUrl != null
-                ? NetworkImage(_imageUrl!)
-                : const AssetImage('assets/images/avatar_placeholder.png')
-                    as ImageProvider,
-          ),
-        ),
+        UserAvatar(photoUrl: _imageUrl, radius: 42, onCameraTap: _onCameraTap, busy: _photoBusy),
         const SizedBox(height: 12),
         Text(_userName, style: context.text.subTitle, textAlign: TextAlign.center),
         const SizedBox(height: 2),
