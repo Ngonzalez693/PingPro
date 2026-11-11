@@ -59,9 +59,10 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
     final scale = coverScale(image, diameter);
     final dx = (diameter - image.width * scale) / 2;
     final dy = (diameter - image.height * scale) / 2;
-    _transform.value = Matrix4.identity()
-      ..translate(dx, dy)
-      ..scale(scale);
+    _transform.value =
+        Matrix4.identity()
+          ..translate(dx, dy)
+          ..scale(scale);
   }
 
   Future<void> _useImage() async {
@@ -80,19 +81,20 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
   Widget build(BuildContext context) {
     return AlwaysDark(
       child: Builder(
-        builder: (context) => Scaffold(
-          backgroundColor: context.colors.page,
-          body: SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 16),
-                Text('Mueve y ajusta', style: context.text.caption),
-                Expanded(child: _buildCropArea(context)),
-                _buildButtons(context),
-              ],
+        builder:
+            (context) => Scaffold(
+              backgroundColor: context.colors.page,
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    Text('Mueve y ajusta', style: context.text.caption),
+                    Expanded(child: _buildCropArea(context)),
+                    _buildButtons(context),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ),
       ),
     );
   }
@@ -105,35 +107,39 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
         final diameter = constraints.biggest.shortestSide - 48;
         _fitImage(imageSize, diameter);
         final cover = coverScale(imageSize, diameter);
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox.square(
-              dimension: diameter,
-              child: RepaintBoundary(
-                key: _boundary,
-                child: InteractiveViewer(
-                  transformationController: _transform,
-                  constrained: false,
-                  clipBehavior: Clip.none,
-                  minScale: cover,
-                  maxScale: cover * 5,
-                  child: Image.memory(
-                    widget.imageBytes,
-                    width: imageSize.width,
-                    height: imageSize.height,
-                    fit: BoxFit.fill,
+        // La foto se ve fuera del círculo (oscurecida), pero con zoom no puede
+        // salirse de esta zona y pintarse sobre la indicación o la barra.
+        return ClipRect(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox.square(
+                dimension: diameter,
+                child: RepaintBoundary(
+                  key: _boundary,
+                  child: InteractiveViewer(
+                    transformationController: _transform,
+                    constrained: false,
+                    clipBehavior: Clip.none,
+                    minScale: cover,
+                    maxScale: cover * 5,
+                    child: Image.memory(
+                      widget.imageBytes,
+                      width: imageSize.width,
+                      height: imageSize.height,
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
-            ),
-            IgnorePointer(
-              child: CustomPaint(
-                size: constraints.biggest,
-                painter: _CircleMaskPainter(diameter: diameter, ring: context.colors.onPage),
+              IgnorePointer(
+                child: CustomPaint(
+                  size: constraints.biggest,
+                  painter: _CircleMaskPainter(diameter: diameter, ring: context.colors.onPage),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -187,10 +193,11 @@ class _CircleMaskPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final circle = Rect.fromCircle(center: size.center(Offset.zero), radius: diameter / 2);
-    final mask = Path()
-      ..fillType = PathFillType.evenOdd
-      ..addRect(Offset.zero & size)
-      ..addOval(circle);
+    final mask =
+        Path()
+          ..fillType = PathFillType.evenOdd
+          ..addRect(Offset.zero & size)
+          ..addOval(circle);
     canvas.drawPath(mask, Paint()..color = const Color(0xA6000000));
     canvas.drawOval(
       circle,

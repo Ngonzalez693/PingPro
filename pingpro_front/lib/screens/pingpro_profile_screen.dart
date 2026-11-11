@@ -13,6 +13,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pingpro_front/core/app_theme.dart';
+import 'package:pingpro_front/core/refresh_user.dart';
 import 'package:pingpro_front/core/services/session_roles.dart';
 import 'package:pingpro_front/models/content_scope.dart';
 import 'package:pingpro_front/screens/pingpro_create_screen.dart';
@@ -108,7 +109,7 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
   // haber cambiado en la pantalla Perfil.
   Future<void> _openProfile() async {
     await Navigator.pushNamed(context, '/editProfile');
-    await FirebaseAuth.instance.currentUser?.reload();
+    await refreshUser(FirebaseAuth.instance.currentUser?.reload);
     if (mounted) setState(() {});
   }
 
