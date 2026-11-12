@@ -29,6 +29,15 @@ class UserAvatar extends StatefulWidget {
 class _UserAvatarState extends State<UserAvatar> {
   String? _failedUrl;
 
+  // Cada vez que la pantalla lo vuelve a dibujar (al volver, al refrescar) se
+  // reintenta la foto: si falló por estar sin conexión, ahora puede cargar.
+  // NetworkImage ya saca del caché las cargas fallidas.
+  @override
+  void didUpdateWidget(UserAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _failedUrl = null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;

@@ -13,9 +13,12 @@ class PhotoUploadException implements Exception {
 }
 
 const _photoFailedMessage = 'No se pudo guardar la foto. Intenta de nuevo.';
+const _removeFailedMessage = 'No se pudo quitar la foto. Intenta de nuevo.';
 
-String photoErrorMessage(Object error) {
+/// [removing]: el error vino de quitar la foto, no de subirla.
+String photoErrorMessage(Object error, {bool removing = false}) {
   if (isConnectionError(error)) return noConnectionMessage;
+  if (removing) return _removeFailedMessage;
   if (error is! PhotoUploadException) return _photoFailedMessage;
   return switch (error.statusCode) {
     413 => 'La foto pesa demasiado. Prueba con otra.',

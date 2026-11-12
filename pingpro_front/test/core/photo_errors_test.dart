@@ -29,4 +29,13 @@ void main() {
     expect(photoErrorMessage(const PhotoUploadException(500)), 'No se pudo guardar la foto. Intenta de nuevo.');
     expect(photoErrorMessage(StateError('x')), 'No se pudo guardar la foto. Intenta de nuevo.');
   });
+
+  // Al quitar la foto el mensaje no puede hablar de guardar.
+  test('si falla quitar la foto lo dice así', () {
+    expect(
+      photoErrorMessage(const PhotoUploadException(500), removing: true),
+      'No se pudo quitar la foto. Intenta de nuevo.',
+    );
+    expect(photoErrorMessage(TimeoutException('t'), removing: true), noConnectionMessage);
+  });
 }

@@ -56,4 +56,18 @@ void main() {
     await tester.tap(find.byIcon(Icons.photo_camera), warnIfMissed: false);
     expect(taps, 0);
   });
+
+  // Abrir la app sin conexión deja la foto en el avatar por defecto; cuando la
+  // pantalla vuelve a dibujarlo (al volver o al refrescar), lo intenta otra vez.
+  testWidgets('tras fallar la carga, al volver a dibujarse reintenta la foto', (tester) async {
+    await pumpAvatar(tester, photoUrl: 'https://x/u1/a.png');
+    // En los tests la red responde 400: la carga falla de verdad.
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 300)));
+    await tester.pump();
+    expect(imageOf(tester), const AssetImage('assets/images/avatar_placeholder.png'));
+
+    await pumpAvatar(tester, photoUrl: 'https://x/u1/a.png');
+
+    expect(imageOf(tester), const NetworkImage('https://x/u1/a.png'));
+  });
 }
