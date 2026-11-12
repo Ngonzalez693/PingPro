@@ -141,11 +141,15 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
     await _runPhotoChange(() async {
       await _authService.removeProfilePhoto();
       _imageUrl = null;
-    }, done: 'Foto quitada');
+    }, done: 'Foto quitada', removing: true);
   }
 
   // Si falla, la foto que había se queda y se explica por qué.
-  Future<void> _runPhotoChange(Future<void> Function() change, {required String done}) async {
+  Future<void> _runPhotoChange(
+    Future<void> Function() change, {
+    required String done,
+    bool removing = false,
+  }) async {
     setState(() => _photoBusy = true);
     String message;
     try {
@@ -153,7 +157,7 @@ class _PingproEditProfileScreenState extends State<PingproEditProfileScreen> {
       message = done;
     } catch (e) {
       if (kDebugMode) debugPrint('Error con la foto de perfil: $e');
-      message = photoErrorMessage(e);
+      message = photoErrorMessage(e, removing: removing);
     }
     if (!mounted) return;
     setState(() => _photoBusy = false);

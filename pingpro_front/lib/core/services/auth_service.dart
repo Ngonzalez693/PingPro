@@ -13,6 +13,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pingpro_front/core/load_errors.dart';
 import 'package:pingpro_front/core/photo_errors.dart';
+import 'package:pingpro_front/core/refresh_user.dart';
 import 'package:pingpro_front/core/services/api_client.dart';
 import 'package:pingpro_front/core/services/api_errors.dart';
 
@@ -311,7 +312,8 @@ class AuthService {
     final data = jsonDecode(resp.body);
     final url = (data is Map && data['data'] is Map) ? data['data']['photoURL'] : null;
     if (url is! String) throw PhotoUploadException(resp.statusCode);
-    await u.reload();
+    // Ya está guardada: si recargar falla, no es un error de la foto.
+    await refreshUser(u.reload);
     return url;
   }
 
@@ -326,6 +328,6 @@ class AuthService {
       headers: {'Authorization': 'Bearer $token'},
     );
     if (resp.statusCode != 200) throw PhotoUploadException(resp.statusCode);
-    await u.reload();
+    await refreshUser(u.reload);
   }
 }
