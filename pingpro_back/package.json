@@ -84,10 +84,28 @@
     "google-gax": {
       "rimraf": "^6.1.4"
     },
+    "rimraf": {
+      "glob": "^14.0.6"
+    },
     "firebase-tools": {
       "glob": "^14.0.6"
     },
-    "jest": {
+    "archiver-utils": {
+      "glob": "^14.0.6"
+    },
+    "exegesis": {
+      "glob": "^14.0.6"
+    },
+    "@jest/reporters": {
+      "glob": "^14.0.6"
+    },
+    "jest-config": {
+      "glob": "^14.0.6"
+    },
+    "jest-runtime": {
+      "glob": "^14.0.6"
+    },
+    "test-exclude": {
       "glob": "^14.0.6",
       "minimatch": "^11.0.8"
     },
