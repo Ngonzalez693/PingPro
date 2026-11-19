@@ -25,6 +25,7 @@ import 'package:pingpro_front/widgets/exercise_card_skeleton.dart';
 import 'package:pingpro_front/widgets/skeleton_box.dart';
 import 'package:pingpro_front/widgets/skeleton_shimmer.dart';
 import 'package:pingpro_front/widgets/staggered_entrance.dart';
+import 'package:pingpro_front/widgets/stats_section_header.dart';
 import 'package:pingpro_front/widgets/summary_icon.dart';
 import 'package:pingpro_front/widgets/training_card.dart';
 import 'package:pingpro_front/widgets/training_card_skeleton.dart';
@@ -222,13 +223,9 @@ class _PingproProfileScreenState extends State<PingproProfileScreen> {
                     const SizedBox(height: 12),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Estadísticas', style: context.text.subTitle),
-                          const SizedBox(height: 4),
-                          Text(recentActivityCaption(), style: context.text.caption),
-                        ],
+                      child: StatsSectionHeader(
+                        caption: recentActivityCaption(),
+                        onSeeDetail: () => Navigator.pushNamed(context, '/stats'),
                       ),
                     ),
 
